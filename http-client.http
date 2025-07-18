@@ -12,14 +12,12 @@ Content-Type: application/json
     client.global.set("token", response.body.token);
 %}
 
-
-
 ###
 POST {{base_url}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "admin1@gmail.com",
+  "email": "admin@gmail.com",
   "name": "John Doe",
   "password": "123456"
 }

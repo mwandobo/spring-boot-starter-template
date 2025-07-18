@@ -1,6 +1,10 @@
 package com.example.super_start_web_api.features.user.controller;
+import com.example.super_start_web_api.core.dto.ApiResponse;
+import com.example.super_start_web_api.core.dto.PaginationRequest;
+import com.example.super_start_web_api.core.dto.PaginationResponse;
 import com.example.super_start_web_api.features.user.model.User;
 import com.example.super_start_web_api.features.user.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +19,14 @@ public class UserController {
         this.service = service;
     }
 
+
     @GetMapping
-    public List<User> getUsers() {
-        return service.getAllUsers();
+    public ApiResponse<PaginationResponse<User>> getAllUsers(
+            PaginationRequest pagination,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.success(
+                service.findAll(pagination, search)
+        );
     }
 }

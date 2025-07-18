@@ -1,0 +1,15 @@
+package com.example.super_start_web_api.features.user.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponse {
+    private Long id;
+    private String name;
+    private String email;
+    // Add more fields if needed (e.g., role, createdAt, etc.)
+}
