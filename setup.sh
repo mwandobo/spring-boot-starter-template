@@ -19,9 +19,13 @@ OLD_MAIN_CLASS_NAME="SuperStartWebApiApplication"
 PACKAGE_PATH=$(echo "$NEW_PACKAGE" | tr '.' '/')
 OLD_PACKAGE_PATH=$(echo "$OLD_PACKAGE" | tr '.' '/')
 
+# Convert main class name to lowercase for application name
+APP_NAME_LOWERCASE=$(echo "$MAIN_CLASS_NAME" | tr '[:upper:]' '[:lower:]')
+
 echo "⚡ Setting up project with:"
 echo "   Package: $NEW_PACKAGE"
 echo "   Main Class: $MAIN_CLASS_NAME"
+echo "   App Name: $APP_NAME_LOWERCASE"
 echo ""
 
 # Replace package name in Java source files
@@ -57,6 +61,12 @@ rm -rf src/test/java/$OLD_PACKAGE_PATH
 # Rename main application class to the exact name you want
 echo "🔄 Renaming main application class..."
 find src/main/java/$PACKAGE_PATH -type f -name "${OLD_MAIN_CLASS_NAME}.java" -exec bash -c 'mv "$0" "${0%/*}/'$MAIN_CLASS_NAME'.java"' {} \;
+
+# Update application properties with lowercase app name
+echo "🔄 Updating application.properties..."
+if [ -f "src/main/resources/application.properties" ]; then
+    sed -i '' "s|spring.application.name=.*|spring.application.name=$APP_NAME_LOWERCASE|g" src/main/resources/application.properties
+fi
 
 echo "✅ Setup complete!"
 echo "Next steps:"
