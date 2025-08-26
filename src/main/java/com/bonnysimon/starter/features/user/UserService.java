@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.user.service;
+package com.bonnysimon.starter.features.user;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;

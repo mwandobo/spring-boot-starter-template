@@ -47,4 +47,18 @@ public class GlobalExceptionHandler {
                 path
         ));
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex) {
+        String path = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                .getRequest().getRequestURI();
+
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                path
+        ));
+    }
 }

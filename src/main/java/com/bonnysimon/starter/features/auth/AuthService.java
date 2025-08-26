@@ -63,11 +63,9 @@ public class AuthService {
     }
 
 
-
-
     public void register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email is already taken!");
+            throw new IllegalStateException("Email is already taken!");
         }
 
         User user = new User();

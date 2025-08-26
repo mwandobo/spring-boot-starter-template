@@ -1,13 +1,9 @@
-package com.bonnysimon.starter.features.user.controller;
+package com.bonnysimon.starter.features.user;
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.service.UserService;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 @RestController
