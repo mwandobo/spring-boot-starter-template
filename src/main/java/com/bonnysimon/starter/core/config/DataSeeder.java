@@ -2,8 +2,8 @@ package com.bonnysimon.starter.core.config;
 
 import com.bonnysimon.starter.features.permission.Permission;
 import com.bonnysimon.starter.features.permission.PermissionRepository;
-import com.bonnysimon.starter.features.roles.Role;
-import com.bonnysimon.starter.features.roles.RoleRepository;
+import com.bonnysimon.starter.features.role.Role;
+import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -31,7 +31,8 @@ public class DataSeeder {
                     "VIEW_USERS",
                     "CREATE_USER",
                     "UPDATE_USER",
-                    "DELETE_USER"
+                    "DELETE_USER",
+                    "VIEW_ROLE"
             );
 
             Set<Permission> permissions = new HashSet<>();

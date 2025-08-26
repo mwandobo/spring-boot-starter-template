@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.roles;
+package com.bonnysimon.starter.features.role;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

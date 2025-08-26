@@ -1,6 +1,6 @@
 package com.bonnysimon.starter.features.user.model;
 import com.bonnysimon.starter.core.entity.BaseEntity;
-import com.bonnysimon.starter.features.roles.Role;
+import com.bonnysimon.starter.features.role.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 

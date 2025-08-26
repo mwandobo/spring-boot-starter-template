@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.roles;
+package com.bonnysimon.starter.features.role;
 
 import com.bonnysimon.starter.features.permission.Permission;
 import jakarta.persistence.*;
