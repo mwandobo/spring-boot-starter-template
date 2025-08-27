@@ -18,9 +18,6 @@ public class UserService {
         this.repo = repo;
     }
 
-    public List<User> getAllUsers() {
-        return repo.findAll();
-    }
 
     public PaginationResponse<User> findAll(PaginationRequest pagination, String search) {
         Specification<User> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));

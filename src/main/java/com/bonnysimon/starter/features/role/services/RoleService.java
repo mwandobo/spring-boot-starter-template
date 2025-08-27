@@ -9,15 +9,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
-public class RoleAssignmentService {
+public class RoleService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
+
 
     @Transactional
     public User assignRolesToUser(AssignRoleRequest request) {
@@ -30,4 +29,6 @@ public class RoleAssignmentService {
 
         return userRepository.save(user);
     }
+
+
 }
