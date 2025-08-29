@@ -47,3 +47,7 @@ Content-Type: application/json
   "permissionIds": [4,5],
   "roleId": 2
 }
+
+###
+GET {{base_url}}/roles
+Authorization: Bearer {{token}}
