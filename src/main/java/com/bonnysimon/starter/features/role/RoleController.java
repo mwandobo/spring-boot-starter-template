@@ -4,6 +4,7 @@ import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
+import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
 import com.bonnysimon.starter.features.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,11 @@ public class RoleController {
         return ApiResponse.success(
                 service.findAll(pagination, search)
         );
+    }
+
+    @PostMapping()
+    public Role create(@RequestBody CreateRoleRequest request) {
+        return service.create(request);
     }
 
     @PostMapping("/assign")

@@ -47,17 +47,24 @@ public class DataSeeder {
             }
 
             // 2. Default role (ADMIN)
-            Role adminRole = roleRepository.findByName("ADMIN");
-            if (adminRole == null) {
-                adminRole = new Role();
-                adminRole.setName("ADMIN");
-                adminRole.setPermissions(permissions);
-                roleRepository.save(adminRole);
-            } else {
-                // Ensure permissions are synced
-                adminRole.setPermissions(permissions);
-                roleRepository.save(adminRole);
-            }
+//            Role adminRole = roleRepository.findByName("ADMIN");
+//            if (adminRole == null) {
+//                adminRole = new Role();
+//                adminRole.setName("ADMIN");
+//                adminRole.setPermissions(permissions);
+//                roleRepository.save(adminRole);
+//            } else {
+//                // Ensure permissions are synced
+//                adminRole.setPermissions(permissions);
+//                roleRepository.save(adminRole);
+//            }
+
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseGet(() -> {
+                        Role newRole = new Role();
+                        newRole.setName("ADMIN");
+                        return newRole;
+                    });
 
             // 3. Default user (admin@starter.com / password: admin123)
             if (userRepository.findByEmail("admin@starter.com").isEmpty()) {

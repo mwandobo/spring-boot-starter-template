@@ -3,6 +3,7 @@ package com.bonnysimon.starter.features.role;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
+import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +50,32 @@ public class RoleService {
         return userRepository.save(user);
     }
 
+//    @Transactional
+//    public Role create(CreateRoleRequest request) {
+//        Role role = roleRepository.findByName(request.getName())
+//                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+//
+//
+//
+//
+//
+//        return roleRepository.save(request);
+//    }
+
+
+    @Transactional
+    public Role create(CreateRoleRequest request) {
+        // Check if role already exists
+        roleRepository.findByName(request.getName())
+                .ifPresent(r -> {
+                    throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
+                });
+
+        // Map DTO -> Entity
+        Role role = new Role();
+        role.setName(request.getName());
+
+        return roleRepository.save(role);
+    }
 
 }

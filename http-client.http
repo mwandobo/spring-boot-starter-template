@@ -51,3 +51,12 @@ Content-Type: application/json
 ###
 GET {{base_url}}/roles
 Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sub-Admin"
+}
