@@ -78,4 +78,35 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
+    @Transactional
+    public Role update(Long id, CreateRoleRequest request) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+
+        // Check if another role with the same name exists
+        roleRepository.findByName(request.getName())
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
+                });
+
+        // Update fields
+        role.setName(request.getName());
+
+        return roleRepository.save(role);
+    }
+
+    public void delete(Long id, boolean soft) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+
+        if (soft) {
+            // Soft delete (flag from BaseEntity)
+            role.setDeleted(true);
+            roleRepository.save(role);
+        } else {
+            // Hard delete
+            roleRepository.delete(role);
+        }
+    }
 }

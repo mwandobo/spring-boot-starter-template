@@ -60,3 +60,17 @@ Content-Type: application/json
 {
   "name": "Sub-Admin"
 }
+
+###
+PUT {{base_url}}/roles/3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Suba-Admin"
+}
+
+###
+DELETE {{base_url}}/roles/3
+Authorization: Bearer {{token}}
+Content-Type: application/json

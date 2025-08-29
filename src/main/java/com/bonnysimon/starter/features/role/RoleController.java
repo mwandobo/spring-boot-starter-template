@@ -31,8 +31,23 @@ public class RoleController {
         return service.create(request);
     }
 
+    // ✅ Update role
+    @PutMapping("/{id}")
+    public ApiResponse<Role> update(@PathVariable Long id, @RequestBody CreateRoleRequest request) {
+        return ApiResponse.success(service.update(id, request));
+    }
+
     @PostMapping("/assign")
     public User assignRoles(@RequestBody AssignRoleRequest request) {
         return service.assignRolesToUser(request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(name = "soft", defaultValue = "false") boolean soft
+    ) {
+        service.delete(id, soft);
+        return ApiResponse.success(null);
     }
 }
