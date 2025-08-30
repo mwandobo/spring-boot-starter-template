@@ -25,8 +25,7 @@ public class RoleService {
         if (search != null && !search.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->
                     cb.or(
-                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("email")), "%" + search.toLowerCase() + "%")
+                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
                     )
             );
         }
