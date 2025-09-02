@@ -63,7 +63,7 @@ public class DataSeeder {
                     .orElseGet(() -> {
                         Role newRole = new Role();
                         newRole.setName("ADMIN");
-                        return newRole;
+                        return roleRepository.save(newRole); // ✅ Save it here
                     });
 
             // 3. Default user (admin@starter.com / password: admin123)
