@@ -29,5 +29,5 @@ public abstract class BaseEntity {
     private Long version;
 
     @Column()
-    private boolean deleted = false;
+    private Boolean deleted = false;
 }

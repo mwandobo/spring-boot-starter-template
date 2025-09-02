@@ -16,7 +16,8 @@ public class PermissionController {
 
     private final PermissionService service;
 
-    public ApiResponse<PaginationResponse<Permission>> getAllUsers(
+    @GetMapping()
+    public ApiResponse<PaginationResponse<Permission>> getAllPermissions(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {

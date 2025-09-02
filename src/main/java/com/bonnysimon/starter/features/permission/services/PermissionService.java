@@ -24,7 +24,11 @@ public class PermissionService {
     private final PermissionRepository permissionRepository;
 
     public PaginationResponse<Permission> findAll(PaginationRequest pagination, String search) {
-        Specification<Permission> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+        Specification<Permission> spec = (root, query, cb) ->
+                cb.or(
+                        cb.isFalse(root.get("deleted")),
+                        cb.isNull(root.get("deleted"))
+                );
 
         if (search != null && !search.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->
@@ -34,9 +38,7 @@ public class PermissionService {
             );
         }
 
-        Page<Permission> permissions = permissionRepository.findAll(spec, pagination.toPageable());
-
-        Page<Permission> permissionDtos = permissions;
+        Page<Permission> permissionDtos = permissionRepository.findAll(spec, pagination.toPageable());
 
         return PaginationResponse.of(permissionDtos);
     }
