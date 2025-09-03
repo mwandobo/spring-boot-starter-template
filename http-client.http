@@ -7,8 +7,7 @@ Content-Type: application/json
   "password": "admin123"
 }
 
-> {%   <null>
-    // client.global.set("token", response.body.data.token);
+> {%
     client.global.set("token", response.body.token);
 %}
 
@@ -77,4 +76,8 @@ Content-Type: application/json
 
 ###
 GET {{base_url}}/permissions
+Authorization: Bearer {{token}}
+
+###
+GET {{base_url}}/sys-approvals
 Authorization: Bearer {{token}}
