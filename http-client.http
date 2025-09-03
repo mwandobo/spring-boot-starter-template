@@ -81,3 +81,22 @@ Authorization: Bearer {{token}}
 ###
 GET {{base_url}}/sys-approvals
 Authorization: Bearer {{token}}
+
+###
+GET {{base_url}}/user-approvals
+Authorization: Bearer {{token}}
+
+###
+PUT {{base_url}}/user-approvals/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User ApprovalLLL",
+  "description": "This is the approval for user",
+  "sysApprovalId": 1
+}
+
+###
+DELETE {{base_url}}/user-approvals/1
+Authorization: Bearer {{token}}

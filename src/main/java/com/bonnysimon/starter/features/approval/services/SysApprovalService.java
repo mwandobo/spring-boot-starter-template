@@ -4,17 +4,10 @@ import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
 import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
-import com.bonnysimon.starter.features.role.Role;
-import com.bonnysimon.starter.features.role.RoleRepository;
-import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
-import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +27,6 @@ public class SysApprovalService {
         }
 
         Page<SysApproval> dataDtos = repository.findAll(spec, pagination.toPageable());
-
         return PaginationResponse.of(dataDtos);
     }
-
-    
 }
