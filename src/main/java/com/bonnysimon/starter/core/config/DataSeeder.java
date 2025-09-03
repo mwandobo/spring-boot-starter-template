@@ -46,19 +46,6 @@ public class DataSeeder {
                 permissions.add(perm);
             }
 
-            // 2. Default role (ADMIN)
-//            Role adminRole = roleRepository.findByName("ADMIN");
-//            if (adminRole == null) {
-//                adminRole = new Role();
-//                adminRole.setName("ADMIN");
-//                adminRole.setPermissions(permissions);
-//                roleRepository.save(adminRole);
-//            } else {
-//                // Ensure permissions are synced
-//                adminRole.setPermissions(permissions);
-//                roleRepository.save(adminRole);
-//            }
-
             Role adminRole = roleRepository.findByName("ADMIN")
                     .orElseGet(() -> {
                         Role newRole = new Role();
