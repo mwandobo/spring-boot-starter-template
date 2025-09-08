@@ -1,4 +1,8 @@
-> {%
-    // client.global.set("token", response.body.data.token);
-    client.global.set("token", response.body.token);
-%}
+This is the stater template
+
+you can use this to start your own project by running .sh command and giving some parameters
+
+while in root directory to rename it to your desired project name you just run a command
+
+.\setup.sh <<package_name eg com.mycompany.myapp>> <<MainClassName ag MyApp>>
+

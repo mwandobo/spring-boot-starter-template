@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "user_approvals")
+@Table(name = "approval_levels")
 public class ApprovalLevel extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

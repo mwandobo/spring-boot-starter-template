@@ -87,6 +87,47 @@ GET {{base_url}}/user-approvals
 Authorization: Bearer {{token}}
 
 ###
+POST {{base_url}}/user-approvals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User ApprovalLLL",
+  "description": "This is the approval for user",
+  "sysApprovalId": 1
+}
+
+###
+PUT {{base_url}}/user-approvals/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User ApprovalLLL",
+  "description": "This is the approval for user",
+  "sysApprovalId": 1
+}
+
+###
+DELETE {{base_url}}/user-approvals/1
+Authorization: Bearer {{token}}
+
+### approve levels
+GET {{base_url}}/approval-levels
+Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/approval-levels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Top level",
+  "roleId": 1,
+  "userApprovalId": 2
+}
+
+###
 PUT {{base_url}}/user-approvals/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
