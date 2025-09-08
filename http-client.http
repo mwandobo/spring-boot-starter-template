@@ -25,8 +25,6 @@ Content-Type: application/json
 GET {{base_url}}/users
 Authorization: Bearer {{token}}
 
-
-
 ###
 POST {{base_url}}/roles/assign
 Authorization: Bearer {{token}}
@@ -126,7 +124,6 @@ Content-Type: application/json
   "roleId": 1,
   "userApprovalId": 2
 }
-
 
 ### approve levels
 GET {{base_url}}/approval-actions
