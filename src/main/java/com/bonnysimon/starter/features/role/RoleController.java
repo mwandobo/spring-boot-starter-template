@@ -3,6 +3,7 @@ package com.bonnysimon.starter.features.role;
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.features.approval.utils.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
 import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
 import com.bonnysimon.starter.features.user.model.User;
@@ -15,15 +16,16 @@ import org.springframework.web.bind.annotation.*;
 public class RoleController {
 
     private final RoleService service;
+    private final ApprovalStatusUtil approvalStatusUtil;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<Role>> getAllUsers(
+    public ApiResponse<PaginationResponse<Role>> getAllRoles(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
-        return ApiResponse.success(
-                service.findAll(pagination, search)
-        );
+        PaginationResponse<Role> roles = service.findAll(pagination, search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode("Role");
+        return ApiResponse.success(roles, hasApprovalMode);
     }
 
     @PostMapping()

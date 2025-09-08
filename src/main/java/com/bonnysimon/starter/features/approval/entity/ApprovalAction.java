@@ -1,6 +1,7 @@
 package com.bonnysimon.starter.features.approval.entity;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
+import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
 import com.bonnysimon.starter.features.approval.enums.StatusEnum;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.user.model.User;
@@ -18,8 +19,12 @@ public class ApprovalAction extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column()
-    private String action;
+    @Enumerated(EnumType.STRING) // Store enum as text in DB (better readability than ORDINAL)
+    @Column(nullable = false)
+    private ApprovalActionEnum action = ApprovalActionEnum.PENDING; // default value
+
+//    @Column()
+//    private String action;
 
     @Column()
     private String entityName;
