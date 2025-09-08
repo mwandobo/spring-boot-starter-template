@@ -22,6 +22,12 @@ public class ApprovalAction extends BaseEntity {
     private String action;
 
     @Column()
+    private String entityName;
+
+    @Column()
+    private String entityId;
+
+    @Column()
     private String remark;
 
     @Column()

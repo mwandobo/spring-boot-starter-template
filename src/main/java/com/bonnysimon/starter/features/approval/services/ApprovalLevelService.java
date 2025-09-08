@@ -2,7 +2,7 @@ package com.bonnysimon.starter.features.approval.services;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDto;
+import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
 import com.bonnysimon.starter.features.approval.enums.StatusEnum;
@@ -41,7 +41,7 @@ public class ApprovalLevelService {
     }
 
     @Transactional
-    public ApprovalLevel create(ApprovalLevelRequestDto request) {
+    public ApprovalLevel create(ApprovalLevelRequestDTO request) {
         ApprovalLevel level = new ApprovalLevel();
         level.setName(request.getName());
         level.setDescription(request.getDescription());
@@ -68,7 +68,7 @@ public class ApprovalLevelService {
     }
 
     @Transactional
-    public ApprovalLevel update(Long id, ApprovalLevelRequestDto request) {
+    public ApprovalLevel update(Long id, ApprovalLevelRequestDTO request) {
         ApprovalLevel level = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("ApprovalLevel not found"));
 

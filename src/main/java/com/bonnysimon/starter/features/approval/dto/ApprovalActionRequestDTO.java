@@ -4,12 +4,12 @@ import com.bonnysimon.starter.features.approval.enums.StatusEnum;
 import lombok.Data;
 
 @Data
-public class ApprovalLevelRequestDto {
+public class ApprovalActionRequestDTO {
     private String name;
+    private String action;
+    private String entityName;
+    private String entityId;
     private String description;
-    private String level;
-    private Long userApprovalId;
-    private Long roleId;
-    private Long userId;
+    private Long approvalLevelId;
     private StatusEnum status;
 }

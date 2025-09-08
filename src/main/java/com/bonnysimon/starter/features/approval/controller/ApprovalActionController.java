@@ -3,21 +3,24 @@ package com.bonnysimon.starter.features.approval.controller;
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.features.approval.dto.ApprovalActionRequestDTO;
 import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDTO;
+import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
+import com.bonnysimon.starter.features.approval.services.ApprovalActionService;
 import com.bonnysimon.starter.features.approval.services.ApprovalLevelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/approval-levels")
+@RequestMapping("/api/v1/approval-actions")
 @RequiredArgsConstructor
-public class ApprovalLevelController {
+public class ApprovalActionController {
 
-    private final ApprovalLevelService service;
+    private final ApprovalActionService service;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<ApprovalLevel>> getAll(
+    public ApiResponse<PaginationResponse<ApprovalAction>> getAll(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
@@ -25,14 +28,14 @@ public class ApprovalLevelController {
     }
 
     @PostMapping
-    public ApiResponse<ApprovalLevel> create(@RequestBody ApprovalLevelRequestDTO request) {
+    public ApiResponse<ApprovalAction> create(@RequestBody ApprovalActionRequestDTO request) {
         return ApiResponse.success(service.create(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ApprovalLevel> update(
+    public ApiResponse<ApprovalAction> update(
             @PathVariable Long id,
-            @RequestBody ApprovalLevelRequestDTO request
+            @RequestBody ApprovalActionRequestDTO request
     ) {
         return ApiResponse.success(service.update(id, request));
     }

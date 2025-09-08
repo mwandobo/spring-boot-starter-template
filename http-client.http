@@ -127,17 +127,23 @@ Content-Type: application/json
   "userApprovalId": 2
 }
 
+
+### approve levels
+GET {{base_url}}/approval-actions
+Authorization: Bearer {{token}}
+
 ###
-PUT {{base_url}}/user-approvals/1
+PUT {{base_url}}/approval-actions/3
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "User ApprovalLLL",
-  "description": "This is the approval for user",
-  "sysApprovalId": 1
+  "name": "Top levS",
+  "approvalLevelId": 1,
+  "entityName": "Role",
+  "entityId": 1,
+  "description": "This is first action",
+  "action": "approve"
 }
 
-###
-DELETE {{base_url}}/user-approvals/1
-Authorization: Bearer {{token}}
+

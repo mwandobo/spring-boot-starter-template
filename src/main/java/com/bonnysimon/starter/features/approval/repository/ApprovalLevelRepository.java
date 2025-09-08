@@ -1,7 +1,6 @@
 package com.bonnysimon.starter.features.approval.repository;
 
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
-import com.bonnysimon.starter.features.approval.entity.UserApproval;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

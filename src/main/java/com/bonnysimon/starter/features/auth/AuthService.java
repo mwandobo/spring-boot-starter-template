@@ -72,6 +72,10 @@ public class AuthService {
         try {
             logger.info("Attempting login for user: {}", loginRequest.getEmail());
 
+            // Get user from DB
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -83,12 +87,10 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String jwt = jwtUtil.generateToken(loginRequest.getEmail());
+            String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
             logger.info("JWT generated for user: {}", loginRequest.getEmail());
 
-            // Get user from DB
-            User user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
 
             String roleName = user.getRole() != null ? user.getRole().getName() : null;
             Set<String> permissions = user.getRole() != null
