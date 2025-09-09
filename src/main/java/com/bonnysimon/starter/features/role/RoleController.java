@@ -34,6 +34,12 @@ public class RoleController {
     }
 
     // ✅ Update role
+    @GetMapping("/{id}")
+    public ApiResponse<Role> findOne(@PathVariable Long id) {
+        return ApiResponse.success(service.findOne(id));
+    }
+
+    // ✅ Update role
     @PutMapping("/{id}")
     public ApiResponse<Role> update(@PathVariable Long id, @RequestBody CreateRoleRequest request) {
         return ApiResponse.success(service.update(id, request));

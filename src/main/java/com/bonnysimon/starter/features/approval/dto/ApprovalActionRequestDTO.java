@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class ApprovalActionRequestDTO {
     private String name;
-    private ApprovalActionEnum action;
+    private String action;
     private String entityName;
     private String entityId;
     private String description;

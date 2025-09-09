@@ -25,4 +25,7 @@ public class Role extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name="permission_id")
     )
     private Set<Permission> permissions;
+
+    @Transient
+    private String approveStatus;
 }

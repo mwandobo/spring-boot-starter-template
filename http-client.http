@@ -120,7 +120,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "First level",
+  "name": "Third level",
   "roleId": 1,
   "userApprovalId": 3
 }
@@ -140,6 +140,20 @@ Content-Type: application/json
   "entityName": "Role",
   "entityId": 1,
   "description": "This is first action",
+  "action": "approve"
+}
+
+###
+POST {{base_url}}/approval-actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Action2",
+  "approvalLevelId": 2,
+  "entityName": "Role",
+  "entityId": 1,
+  "description": "This is second action",
   "action": "approve"
 }
 

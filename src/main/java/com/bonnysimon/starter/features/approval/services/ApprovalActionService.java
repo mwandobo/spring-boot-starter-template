@@ -6,6 +6,7 @@ import com.bonnysimon.starter.core.services.CurrentUserService;
 import com.bonnysimon.starter.features.approval.dto.ApprovalActionRequestDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
+import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
 import com.bonnysimon.starter.features.approval.repository.ApprovalActionRepository;
 import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
 import com.bonnysimon.starter.features.user.model.User;
@@ -52,7 +53,7 @@ public class ApprovalActionService {
         action.setUser(user);
         action.setName(request.getName());
         action.setDescription(request.getDescription());
-        action.setAction(request.getAction());
+        action.setAction(ApprovalActionEnum.fromString(request.getAction()));
         action.setEntityName(request.getEntityName());
         action.setEntityId(request.getEntityId());
 
@@ -76,7 +77,7 @@ public class ApprovalActionService {
         action.setUser(user);
         action.setName(request.getName());
         action.setDescription(request.getDescription());
-        action.setAction(request.getAction());
+        action.setAction(ApprovalActionEnum.fromString(request.getAction()));
         action.setEntityName(request.getEntityName());
         action.setEntityId(request.getEntityId());
 

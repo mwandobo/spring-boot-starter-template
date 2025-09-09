@@ -2,6 +2,7 @@ package com.bonnysimon.starter.features.role;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.features.approval.utils.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
 import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
 import com.bonnysimon.starter.features.user.model.User;
@@ -18,6 +19,8 @@ public class RoleService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final ApprovalStatusUtil approvalStatusUtil; // 👈 inject util
+
 
     public PaginationResponse<Role> findAll(PaginationRequest pagination, String search) {
         Specification<Role> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
@@ -32,9 +35,17 @@ public class RoleService {
 
         Page<Role> roles = roleRepository.findAll(spec, pagination.toPageable());
 
-        Page<Role> roleDtos = roles;
+        roles.forEach(role -> {
+            if (approvalStatusUtil.hasApprovalMode("Role")) {
+                role.setApproveStatus(
+                        approvalStatusUtil.getApprovalStatus("Role", String.valueOf(role.getId()))
+                );
+            } else {
+                role.setApproveStatus("N/A");
+            }
+        });
 
-        return PaginationResponse.of(roleDtos);
+        return PaginationResponse.of(roles);
     }
 
     @Transactional
@@ -49,17 +60,6 @@ public class RoleService {
         return userRepository.save(user);
     }
 
-//    @Transactional
-//    public Role create(CreateRoleRequest request) {
-//        Role role = roleRepository.findByName(request.getName())
-//                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-//
-//
-//
-//
-//
-//        return roleRepository.save(request);
-//    }
 
 
     @Transactional
@@ -107,5 +107,20 @@ public class RoleService {
             // Hard delete
             roleRepository.delete(role);
         }
+    }
+
+    public Role findOne(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+
+        if (approvalStatusUtil.hasApprovalMode("Role")) {
+            role.setApproveStatus(
+                    approvalStatusUtil.getApprovalStatus("Role", String.valueOf(role.getId()))
+            );
+        } else {
+            role.setApproveStatus("N/A");
+        }
+
+        return role;
     }
 }
