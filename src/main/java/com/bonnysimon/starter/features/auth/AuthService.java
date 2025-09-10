@@ -7,6 +7,7 @@ import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
 import com.bonnysimon.starter.features.permission.Permission;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -28,44 +30,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
-
-
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager,
-                       JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-    }
-
-
-//    public LoginResponse login(LoginRequest loginRequest) {
-//        try {
-//            logger.info("Attempting login for user: {}", loginRequest.getEmail());
-//
-//
-//            Authentication authentication = authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            loginRequest.getEmail(),
-//                            loginRequest.getPassword()
-//                    )
-//            );
-//
-//            logger.info("Authentication successful for user: {}", loginRequest.getEmail());
-//
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            String jwt = jwtUtil.generateToken(loginRequest.getEmail());
-//            logger.info("JWT generated for user: {}", loginRequest.getEmail());
-//
-//            return new LoginResponse(jwt, );
-//        } catch (Exception ex) {
-//            logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
-//            throw ex; // or throw a custom AuthenticationException if you handle that way
-//        }
-//    }
 
 
     public LoginResponse login(LoginRequest loginRequest) {

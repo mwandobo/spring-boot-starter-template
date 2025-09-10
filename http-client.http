@@ -3,7 +3,7 @@ POST {{base_url}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@starter.com",
+  "email": "user@starter.com",
   "password": "admin123"
 }
 
@@ -24,6 +24,36 @@ Content-Type: application/json
 ###
 GET {{base_url}}/users
 Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "name": "Normal user",
+  "roleId": 1
+}
+
+###
+GET {{base_url}}/users/1
+Authorization: Bearer {{token}}
+
+###
+PUT {{base_url}}/users/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "NormalL user",
+  "roleId": 1
+}
+
+###
+DELETE {{base_url}}/users/2
+Authorization: Bearer {{token}}
+
 
 ###
 GET {{base_url}}/roles
