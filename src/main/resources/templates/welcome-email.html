@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Email</title>
+</head>
+<body>
+<h2>Welcome, <span th:text="${name}">User</span>!</h2>
+<p>Thanks for registering with us.</p>
+<p>Your OTP is: <strong th:text="${otp}">123456</strong></p>
+<p>Your Password is: <strong th:text="${password}">123456</strong></p>
+</body>
+</html>

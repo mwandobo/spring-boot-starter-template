@@ -2,14 +2,15 @@ package com.bonnysimon.starter.features.user;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.core.services.EmailService;
 import com.bonnysimon.starter.core.utils.RandomGenerator;
-import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
-import com.bonnysimon.starter.features.auth.AuthService;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.user.dto.CreateUserDTO;
 import com.bonnysimon.starter.features.user.dto.UserResponse;
 import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.user.model.UserOtp;
+import com.bonnysimon.starter.features.user.repository.UserOtpRepository;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,37 +18,24 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Random;
+// other imports...
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
-    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final RandomGenerator randomGenerator;
     private final RoleRepository roleRepository;
+    private final EmailService emailService;
+    private final UserOtpRepository otpRepository;
 
-
-//    public PaginationResponse<UserResponse> findAll(PaginationRequest pagination, String search) {
-//        Specification<User> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-//
-//        if (search != null && !search.trim().isEmpty()) {
-//            spec = spec.and((root, query, cb) ->
-//                    cb.or(
-//                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
-//                            cb.like(cb.lower(root.get("email")), "%" + search.toLowerCase() + "%")
-//                    )
-//            );
-//        }
-//
-//        Page<User> users = repository.findAll(spec, pagination.toPageable());
-//
-//
-//
-//        return PaginationResponse.of(users);
-//    }
 
     public PaginationResponse<UserResponse> findAll(PaginationRequest pagination, String search) {
         Specification<User> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
@@ -90,6 +78,21 @@ public class UserService {
 
        User savedUser = repository.save(user);
 
+        String otp = generateOtp();
+        UserOtp userOtp = new UserOtp();
+        userOtp.setUser(user);
+        userOtp.setOtp(otp);
+        userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+        otpRepository.save(userOtp);
+
+        // Send welcome email
+        try {
+            emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, generateOtp());
+        } catch (Exception e) {
+            // Log the error but don't fail the user creation
+            log.error("Failed to send welcome email to: {}", dto.getEmail(), e);
+        }
+
         return new UserResponse( savedUser,password);
     }
 
@@ -129,6 +132,10 @@ public class UserService {
         } else {
             repository.delete(user);
         }
+    }
+
+    private String generateOtp() {
+        return String.valueOf(100000 + new Random().nextInt(900000)); // 6-digit OTP
     }
 
 

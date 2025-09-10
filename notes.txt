@@ -25,3 +25,8 @@ To throw error there is the dedicated class for this
 
 To get current user you can find in the core/service/CurrentUserService.java
  you can get userId as well as user email
+
+
+ to add looger you just add the following
+ import lombok.extern.slf4j.Slf4j;
+ @Slf4j
