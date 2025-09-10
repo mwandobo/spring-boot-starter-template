@@ -14,5 +14,4 @@ public interface UserApprovalRepository extends JpaRepository<UserApproval, Long
     Page<UserApproval> findAll(Specification<UserApproval> spec, Pageable pageable);
 
     Optional<UserApproval> findBySysApprovalId(Long sysApprovalId);
-
 }

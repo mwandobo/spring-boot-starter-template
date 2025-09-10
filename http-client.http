@@ -26,12 +26,18 @@ GET {{base_url}}/users
 Authorization: Bearer {{token}}
 
 ###
+GET {{base_url}}/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
 POST {{base_url}}/roles/assign
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": 2,
+  "userId": 1,
   "roleId": 1
 }
 
@@ -46,7 +52,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{base_url}}/roles
+GET {{base_url}}/roles/1
 Authorization: Bearer {{token}}
 
 ###
@@ -92,7 +98,7 @@ Content-Type: application/json
 {
   "name": "Role Approval",
   "description": "This is the approval for Roles",
-  "sysApprovalId": 3
+  "sysApprovalId": 2
 }
 
 ###
@@ -120,9 +126,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "Third level",
+  "name": "Second level",
   "roleId": 1,
-  "userApprovalId": 3
+  "userApprovalId": 1
 }
 
 ### approve levels
@@ -149,11 +155,11 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "Action2",
-  "approvalLevelId": 2,
+  "name": "Action5",
+  "approvalLevelId": 1,
   "entityName": "Role",
   "entityId": 1,
-  "description": "This is second action",
+  "description": "This is first action",
   "action": "approve"
 }
 

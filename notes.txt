@@ -17,5 +17,11 @@ For case of Approval
 
 You can see the way it is inserted in role ...
 just in controller you pass entityName to the ApprovalUtilityClass method called hasApprovalMode
-
 for approvalStatus there is another method in the same utility
+
+To throw error there is the dedicated class for this
+    IllegalStateException -- bad request error
+    MethodArgumentNotValidException -- validation error
+
+To get current user you can find in the core/service/CurrentUserService.java
+ you can get userId as well as user email

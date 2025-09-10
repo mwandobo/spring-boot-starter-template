@@ -17,5 +17,6 @@ public interface ApprovalActionRepository extends JpaRepository<ApprovalAction, 
 
     List<ApprovalAction> findByEntityNameAndEntityId(String entityName, String entityId);
 
+    Optional<ApprovalAction> findByApprovalLevelId(Long approvalLevel_id);
 
 }

@@ -12,11 +12,14 @@ import com.bonnysimon.starter.features.approval.repository.ApprovalLevelReposito
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApprovalActionService {
@@ -40,6 +43,11 @@ public class ApprovalActionService {
 
     @Transactional
     public ApprovalAction create(ApprovalActionRequestDTO request) {
+        repository.findByApprovalLevelId(request.getApprovalLevelId())
+                .ifPresent(existing -> {
+                    log.error("Duplicate approval action for level {}", request.getApprovalLevelId());
+                    throw new IllegalStateException("Approval Action has been done for this Level");
+                });
 
         ApprovalLevel approvalLevel = approvalLevelRepository.findById(request.getApprovalLevelId())
                 .orElseThrow(() -> new IllegalArgumentException("Approval Level not found"));

@@ -38,7 +38,7 @@ public class ApprovalAction extends BaseEntity {
     @Column()
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "approval_level_id")
     private ApprovalLevel approvalLevel;
 

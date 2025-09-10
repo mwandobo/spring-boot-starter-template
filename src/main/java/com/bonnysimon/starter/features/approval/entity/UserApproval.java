@@ -20,8 +20,8 @@ public class UserApproval extends BaseEntity {
     @Column()
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "sys_approval_id")
+    @OneToOne(fetch = FetchType.EAGER) // 🔹 one-to-one instead of many-to-one
+    @JoinColumn(name = "sys_approval_id", unique = true, nullable = false) // 🔹 enforce unique
     private SysApproval sysApproval;
 
     @Enumerated(EnumType.STRING) // Store enum as text in DB (better readability than ORDINAL)

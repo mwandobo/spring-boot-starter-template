@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserApprovalService {
     private final SysApprovalRepository sysApprovalRepository;
     private final UserApprovalRepository repository;
+    private final UserRepository userRepository;
 
     public PaginationResponse<UserApproval> findAll(PaginationRequest pagination, String search) {
         Specification<UserApproval> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
@@ -35,12 +36,17 @@ public class UserApprovalService {
 
     @Transactional
     public UserApproval create(UserApprovalRequestDTO request) {
+        repository.findBySysApprovalId(request.getSysApprovalId())
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Approval exists");
+                });
+
         UserApproval userApproval = new UserApproval();
         userApproval.setName(request.getName());
         userApproval.setDescription(request.getDescription());
 
         SysApproval sysApproval = sysApprovalRepository.findById(request.getSysApprovalId())
-                .orElseThrow(() -> new IllegalArgumentException("System approval does not exist"));
+                .orElseThrow(() -> new IllegalStateException("System approval does not exist"));
         userApproval.setSysApproval(sysApproval);
 
         return repository.save(userApproval);
