@@ -3,8 +3,10 @@ import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.utils.ApprovalStatusUtil;
+import com.bonnysimon.starter.features.user.dto.ChangePasswordDTO;
 import com.bonnysimon.starter.features.user.dto.CreateUserDTO;
 import com.bonnysimon.starter.features.user.dto.UserResponse;
+import com.bonnysimon.starter.features.user.dto.VerifyOtpDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,7 +48,6 @@ public class UserController {
         return ApiResponse.success(service.update(id, request));
     }
 
-
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(
             @PathVariable Long id,
@@ -56,5 +57,21 @@ public class UserController {
         return ApiResponse.success(null);
     }
 
+    @GetMapping("/request-password-reset")
+    public ApiResponse<String> requestPasswordReset(@RequestParam String email) {
+        service.requestPasswordReset(email);
+        return ApiResponse.success("Password reset requested. Please check your email.");
+    }
 
+    @PostMapping("/verify-otp")
+    public ApiResponse<String> verifyOtp(@RequestBody VerifyOtpDTO request) {
+        service.verifyOtp(request.getEmail(), request.getOtp());
+        return ApiResponse.success( "OTP verified successfully");
+    }
+
+    @PostMapping("/change-password")
+    public ApiResponse<String> changePassword(@RequestBody ChangePasswordDTO request) {
+        service.resetPassword(request);
+        return ApiResponse.success( "Password changed successfully");
+    }
 }

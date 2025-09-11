@@ -6,13 +6,16 @@ import com.bonnysimon.starter.core.services.EmailService;
 import com.bonnysimon.starter.core.utils.RandomGenerator;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.role.RoleRepository;
+import com.bonnysimon.starter.features.user.dto.ChangePasswordDTO;
 import com.bonnysimon.starter.features.user.dto.CreateUserDTO;
 import com.bonnysimon.starter.features.user.dto.UserResponse;
+import com.bonnysimon.starter.features.user.enums.OtpType;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.model.UserOtp;
 import com.bonnysimon.starter.features.user.repository.UserOtpRepository;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +39,9 @@ public class UserService {
     private final EmailService emailService;
     private final UserOtpRepository otpRepository;
 
+    @Value("${spring.mail.recovery.url}")
+    private String recoveryUrl;
+
 
     public PaginationResponse<UserResponse> findAll(PaginationRequest pagination, String search) {
         Specification<User> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
@@ -55,7 +61,6 @@ public class UserService {
 
         return PaginationResponse.of(userResponses);
     }
-
 
     @Transactional
     public UserResponse create(CreateUserDTO dto) {
@@ -134,9 +139,68 @@ public class UserService {
         }
     }
 
+
+    // Request password reset (send OTP)
+    @Transactional
+    public void requestPasswordReset(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+        String link = recoveryUrl + "?userId=" + user.getId();
+        UserOtp userOtp = new UserOtp();
+        userOtp.setUser(user);
+        userOtp.setLink(link);
+        userOtp.setOtpType(OtpType.OTP_RESET_PASSWORD);
+        userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+        otpRepository.save(userOtp);
+
+        emailService.sendPasswordRecoveryEmail(email, user.getName(), link);
+    }
+
+    // Verify OTP + reset password
+    @Transactional
+    public void resetPassword(ChangePasswordDTO dto) {
+        User user = repository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + dto.getEmail()));
+
+        UserOtp userOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_RESET_PASSWORD)
+                .orElseThrow(() -> new IllegalArgumentException("There is The problem with the system. Data missing"));
+
+        if(userOtp.getExpiry().isBefore(Instant.now())) {
+            throw new IllegalStateException("Request is expired!");
+        }
+
+        if(!dto.getConfirmNewPassword().equals(dto.getNewPassword())) {
+            throw new IllegalStateException("New passwords do not match!");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        repository.save(user);
+    }
+
     private String generateOtp() {
         return String.valueOf(100000 + new Random().nextInt(900000)); // 6-digit OTP
     }
+
+    // Verify OTP + reset password
+    @Transactional
+    public void verifyOtp(String email, String otp) {
+
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+        UserOtp userOtp = otpRepository.findByUserIdAndOtp(user.getId(), otp)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid OTP"));
+
+        if (userOtp.getExpiry().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("OTP expired");
+        }
+
+        userOtp.setVerified(true);
+        otpRepository.save(userOtp);
+    }
+
+
 
 
 }

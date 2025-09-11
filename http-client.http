@@ -37,7 +37,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{base_url}}/users/1
+GET {{base_url}}/users/2
 Authorization: Bearer {{token}}
 
 ###
@@ -52,6 +52,10 @@ Content-Type: application/json
 
 ###
 DELETE {{base_url}}/users/2
+Authorization: Bearer {{token}}
+
+###
+GET {{base_url}}/users/request-password-reset?email=breezojr@gmail.com
 Authorization: Bearer {{token}}
 
 

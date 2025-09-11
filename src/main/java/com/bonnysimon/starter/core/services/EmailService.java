@@ -67,4 +67,23 @@ public class EmailService {
             throw new RuntimeException("Failed to send welcome email", e);
         }
     }
+
+    public void sendPasswordRecoveryEmail(String to, String name, String link) {
+        try {
+            Context context = new Context();
+            context.setVariable("name", name);
+            context.setVariable("email", to);
+            context.setVariable("link", link);
+
+
+            sendTemplateEmail(
+                    to,
+                    "Password Reset",
+                    "password-recovery-email",
+                    context
+            );
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send welcome email", e);
+        }
+    }
 }
