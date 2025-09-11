@@ -17,11 +17,10 @@ public class UserResponse {
     private Role role;
 
     // Additional constructor for easy mapping
-    public UserResponse(User user, String plainPassword) {
+    public UserResponse(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.email = user.getEmail();
-        this.password = plainPassword;
     }
 
     public static UserResponse fromEntity(User user) {

@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.Random;
 // other imports...
 
@@ -64,11 +65,36 @@ public class UserService {
 
     @Transactional
     public UserResponse create(CreateUserDTO dto) {
+        Optional<User> registeringUser = repository.findByEmail(dto.getEmail());
+        String password = randomGenerator.generateRandomPassword(8);
+
+        if(registeringUser.isPresent()) {
+            User presentUser = registeringUser.get();
+            Optional<UserOtp> otp = otpRepository.findByUserIdAndOtpType(presentUser.getId(), OtpType.OTP_REGISTERED );
+            if(otp.isPresent()) {
+                UserOtp userOtp = otp.get();
+                if(userOtp.isVerified()){
+                    throw new IllegalStateException("User Exists is already taken!");
+                }
+
+                if(userOtp.getExpiry().isAfter(Instant.now())) {
+                    throw new IllegalStateException("User Exists OTP not Verified Please Verify before it expires");
+                }
+                String newOtp = generateOtp();
+                userOtp.setOtp(newOtp);
+                userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+                otpRepository.save(userOtp);
+                emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, generateOtp());
+                return new UserResponse( presentUser);
+
+            }
+        }
+
         if (repository.existsByEmail(dto.getEmail())) {
+
             throw new IllegalStateException("Email is already taken!");
         }
 
-        String password = randomGenerator.generateRandomPassword(8);
 
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -98,14 +124,14 @@ public class UserService {
             log.error("Failed to send welcome email to: {}", dto.getEmail(), e);
         }
 
-        return new UserResponse( savedUser,password);
+        return new UserResponse( savedUser);
     }
 
     public UserResponse findOne(Long id) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
 
-        return new UserResponse(user, null);
+        return new UserResponse(user);
     }
 
     @Transactional
@@ -124,7 +150,7 @@ public class UserService {
 
         User savedUser = repository.save(user);
 
-        return new UserResponse(savedUser, null);
+        return new UserResponse(savedUser);
     }
 
     public void delete(Long id, boolean soft) {
@@ -139,12 +165,18 @@ public class UserService {
         }
     }
 
-
     // Request password reset (send OTP)
     @Transactional
     public void requestPasswordReset(String email) {
         User user = repository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalStateException("User not found with email: " + email));
+
+        UserOtp userLoginOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_REGISTERED)
+                .orElseThrow(() -> new IllegalStateException("Your Cant Change Password, Pending OTP Verification"));
+
+        if(!userLoginOtp.isVerified()) {
+            throw new IllegalStateException("Your Cant Change Password, Pending OTP Verification");
+        }
 
         String link = recoveryUrl + "?userId=" + user.getId();
         UserOtp userOtp = new UserOtp();
@@ -161,10 +193,13 @@ public class UserService {
     @Transactional
     public void resetPassword(ChangePasswordDTO dto) {
         User user = repository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + dto.getEmail()));
+                .orElseThrow(() -> new IllegalStateException("User not found with email: " + dto.getEmail()));
+
+        UserOtp userLoginOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_REGISTERED)
+                .orElseThrow(() -> new IllegalStateException("Your OTP Registration was not Verified"));
 
         UserOtp userOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_RESET_PASSWORD)
-                .orElseThrow(() -> new IllegalArgumentException("There is The problem with the system. Data missing"));
+                .orElseThrow(() -> new IllegalStateException("There is The problem with the system. Data missing"));
 
         if(userOtp.getExpiry().isBefore(Instant.now())) {
             throw new IllegalStateException("Request is expired!");
@@ -185,12 +220,11 @@ public class UserService {
     // Verify OTP + reset password
     @Transactional
     public void verifyOtp(String email, String otp) {
-
         User user = repository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalStateException("User not found with email: " + email));
 
         UserOtp userOtp = otpRepository.findByUserIdAndOtp(user.getId(), otp)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid OTP"));
+                .orElseThrow(() -> new IllegalStateException("Invalid OTP"));
 
         if (userOtp.getExpiry().isBefore(Instant.now())) {
             throw new IllegalArgumentException("OTP expired");

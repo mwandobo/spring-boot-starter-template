@@ -23,7 +23,7 @@ public class UserOtp extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "otp_type")
-    private OtpType otpType = OtpType.OTP_RESET_PASSWORD;
+    private OtpType otpType = OtpType.OTP_REGISTERED;
 
     private Instant expiry; // expires in e.g. 10 minutes
 
