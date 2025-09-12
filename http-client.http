@@ -65,7 +65,19 @@ Content-Type: application/json
 
 {
   "email": "breezojr@gmail.com",
-  "otp": "576682"
+  "otp": "847391"
+}
+
+###
+POST {{base_url}}/users/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "breezojr@gmail.com",
+  "oldPassword": "tDg5@182",
+  "newPassword": "asd345@",
+  "confirmNewPassword": "asd345@"
 }
 
 ###

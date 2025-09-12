@@ -3,12 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <title>Welcome Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #28a745;
+        }
+        .highlight {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .otp {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<h2>Welcome, <span th:text="${name}">User</span>!</h2>
-<p>Thanks for registering with us.</p>
-<p>Your Email is: <strong th:text="${email}">123456</strong></p>
-<p>Your OTP is: <strong th:text="${otp}">123456</strong></p>
-<p>Your Password is: <strong th:text="${password}">123456</strong></p>
+<div class="container">
+    <h2>Welcome, <span th:text="${name}">User</span>!</h2>
+    <p>Thank you for registering with us. Your account has been successfully created.</p>
+
+    <p>Your registered email is:
+        <strong class="highlight" th:text="${email}">user@example.com</strong>
+    </p>
+
+    <p>Your one-time password (OTP) is:
+        <strong class="otp" th:text="${otp}">123456</strong>
+    </p>
+
+    <p>Your temporary password is:
+        <strong class="highlight" th:text="${password}">password123</strong>
+    </p>
+
+    <p>For your security, please change this password after logging in for the first time.</p>
+
+    <div class="footer">
+        <p>&copy; 2025 Your Company. All rights reserved.</p>
+    </div>
+</div>
 </body>
 </html>

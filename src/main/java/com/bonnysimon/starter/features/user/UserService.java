@@ -84,17 +84,15 @@ public class UserService {
                 userOtp.setOtp(newOtp);
                 userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
                 otpRepository.save(userOtp);
-                emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, generateOtp());
+                emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, newOtp);
                 return new UserResponse( presentUser);
 
             }
         }
 
         if (repository.existsByEmail(dto.getEmail())) {
-
             throw new IllegalStateException("Email is already taken!");
         }
-
 
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -118,7 +116,7 @@ public class UserService {
 
         // Send welcome email
         try {
-            emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, generateOtp());
+            emailService.sendWelcomeEmail(dto.getEmail(), dto.getName(), password, otp);
         } catch (Exception e) {
             // Log the error but don't fail the user creation
             log.error("Failed to send welcome email to: {}", dto.getEmail(), e);
@@ -130,33 +128,26 @@ public class UserService {
     public UserResponse findOne(Long id) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
-
         return new UserResponse(user);
     }
 
     @Transactional
     public UserResponse update(Long id, CreateUserDTO dto) {
-
        User user = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
-
         user.setName(dto.getName());
-
         if(dto.getRoleId() != null) {
             Role role = roleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new IllegalArgumentException("Role Not found"));
             user.setRole(role);
         }
-
         User savedUser = repository.save(user);
-
         return new UserResponse(savedUser);
     }
 
     public void delete(Long id, boolean soft) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
-
         if (soft) {
             user.setDeleted(true); // soft delete flag from BaseEntity
             repository.save(user);
@@ -170,22 +161,28 @@ public class UserService {
     public void requestPasswordReset(String email) {
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found with email: " + email));
-
         UserOtp userLoginOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_REGISTERED)
-                .orElseThrow(() -> new IllegalStateException("Your Cant Change Password, Pending OTP Verification"));
-
-        if(!userLoginOtp.isVerified()) {
-            throw new IllegalStateException("Your Cant Change Password, Pending OTP Verification");
+                .orElseThrow(() -> new IllegalStateException("You can't change password, pending OTP verification"));
+        if (!userLoginOtp.isVerified()) {
+            throw new IllegalStateException("You can't change password, pending OTP verification");
         }
 
+        // Generate recovery link with userId
         String link = recoveryUrl + "?userId=" + user.getId();
-        UserOtp userOtp = new UserOtp();
-        userOtp.setUser(user);
-        userOtp.setLink(link);
-        userOtp.setOtpType(OtpType.OTP_RESET_PASSWORD);
-        userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
-        otpRepository.save(userOtp);
 
+        // Find existing reset OTP if available
+        UserOtp resetOtp = otpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_RESET_PASSWORD)
+                .orElseGet(UserOtp::new); // if not present, create new one
+
+        // Update or create reset OTP
+        resetOtp.setUser(user);
+        resetOtp.setLink(link);
+        resetOtp.setOtpType(OtpType.OTP_RESET_PASSWORD);
+        resetOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+
+        otpRepository.save(resetOtp);
+
+        // Send recovery email
         emailService.sendPasswordRecoveryEmail(email, user.getName(), link);
     }
 
@@ -203,6 +200,11 @@ public class UserService {
 
         if(userOtp.getExpiry().isBefore(Instant.now())) {
             throw new IllegalStateException("Request is expired!");
+        }
+
+        // ✅ New checker: Verify old password
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            throw new IllegalStateException("Old password is incorrect!");
         }
 
         if(!dto.getConfirmNewPassword().equals(dto.getNewPassword())) {
