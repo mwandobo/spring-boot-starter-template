@@ -5,7 +5,10 @@ import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
 import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
 import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
 import com.bonnysimon.starter.features.permission.Permission;
+import com.bonnysimon.starter.features.user.enums.OtpType;
 import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.user.model.UserOtp;
+import com.bonnysimon.starter.features.user.repository.UserOtpRepository;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,7 +33,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
-
+    private final UserOtpRepository userOtpRepository;
 
     public LoginResponse login(LoginRequest loginRequest) {
         try {
@@ -38,7 +41,14 @@ public class AuthService {
 
             // Get user from DB
             User user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            UserOtp userLoginOtp = userOtpRepository.findByUserIdAndOtpType(user.getId(), OtpType.OTP_REGISTERED)
+                    .orElseThrow(() -> new IllegalStateException("No OTP Validation Information found"));
+
+            if(!userLoginOtp.isVerified()) {
+                throw new IllegalStateException("You can't Log in, pending OTP verification");
+            }
 
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -54,8 +64,6 @@ public class AuthService {
             String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
             logger.info("JWT generated for user: {}", loginRequest.getEmail());
 
-
-
             String roleName = user.getRole() != null ? user.getRole().getName() : null;
             Set<String> permissions = user.getRole() != null
                     ? user.getRole().getPermissions().stream()
@@ -70,7 +78,6 @@ public class AuthService {
             throw ex; // or throw a custom AuthenticationException
         }
     }
-
 
     public void register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
