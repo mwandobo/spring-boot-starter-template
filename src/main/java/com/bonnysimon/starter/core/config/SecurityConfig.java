@@ -44,6 +44,11 @@ public class SecurityConfig {
                 .securityMatcher("/**") // Optional, but helps in defining the scope
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(
+                                "/api/v1/users/request-password-reset",
+                                "/api/v1/users/verify-otp",
+                                "/api/v1/users/change-password"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -56,7 +56,6 @@ Authorization: Bearer {{token}}
 
 ###
 GET {{base_url}}/users/request-password-reset?email=breezojr@gmail.com
-Authorization: Bearer {{token}}
 
 ###
 POST {{base_url}}/users/verify-otp
