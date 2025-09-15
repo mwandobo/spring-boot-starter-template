@@ -50,6 +50,24 @@ To get current user you can find in the core/service/CurrentUserService.java
  where different methods are defined to send different kind of messages
 
  emailSending service have the email configuration class where all email configs are taking place
+email are sent when
+    new user is created
+    recovery email
+    new approval level has been created
+    approval has been done
+
+
+for the case of creating new approval level all users with the same role will receive an email notification
+
+for the case of approval
+    first message will be sent to approving team (current approval level)
+    second message will be sent to next approving level if available
+    last message will be sent to a user created an entity( later to be implemented)
+
+
+
+
+
 
 
 
