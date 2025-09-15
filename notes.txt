@@ -30,3 +30,17 @@ To get current user you can find in the core/service/CurrentUserService.java
  to add looger you just add the following
  import lombok.extern.slf4j.Slf4j;
  @Slf4j
+
+
+ //NOTIFICATIONS
+ all notifications are sent through a notification service
+
+ notification service will receive an array of notifications channels to send notifications
+ it will also receive other necessary data to make sure it can accommodate different channels
+ for starters it will receive information that to be sent to email
+
+ it will decide where and how many channels to send information
+
+
+
+

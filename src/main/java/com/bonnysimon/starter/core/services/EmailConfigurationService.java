@@ -13,7 +13,7 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService {
+public class EmailConfigurationService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
@@ -24,7 +24,6 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(text);
         message.setFrom("noreply@yourdomain.com");
-
         mailSender.send(message);
     }
 
@@ -37,7 +36,6 @@ public class EmailService {
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
         helper.setFrom("noreply@yourdomain.com");
-
         mailSender.send(message);
     }
 
@@ -45,45 +43,5 @@ public class EmailService {
     public void sendTemplateEmail(String to, String subject, String templateName, Context context) throws MessagingException {
         String htmlContent = templateEngine.process(templateName, context);
         sendHtmlEmail(to, subject, htmlContent);
-    }
-
-    // Send welcome email with generated password
-    public void sendWelcomeEmail(String to, String name, String plainPassword, String otp) {
-        try {
-            Context context = new Context();
-            context.setVariable("name", name);
-            context.setVariable("password", plainPassword);
-            context.setVariable("email", to);
-            context.setVariable("otp", otp);
-
-
-            sendTemplateEmail(
-                    to,
-                    "Welcome to Our Platform - Your Account Details",
-                    "welcome-email",
-                    context
-            );
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send welcome email", e);
-        }
-    }
-
-    public void sendPasswordRecoveryEmail(String to, String name, String link) {
-        try {
-            Context context = new Context();
-            context.setVariable("name", name);
-            context.setVariable("email", to);
-            context.setVariable("link", link);
-
-
-            sendTemplateEmail(
-                    to,
-                    "Password Reset",
-                    "password-recovery-email",
-                    context
-            );
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send welcome email", e);
-        }
     }
 }
