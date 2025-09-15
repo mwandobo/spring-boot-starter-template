@@ -41,6 +41,19 @@ To get current user you can find in the core/service/CurrentUserService.java
 
  it will decide where and how many channels to send information
 
+ for email sending
+ a payload is sent to notification services stating which channel it will use
+ it also specify the context since we will be using template
+ also will specify the list of the recipients emails
+
+ then the request is further forwarded to emailSending service
+ where different methods are defined to send different kind of messages
+
+ emailSending service have the email configuration class where all email configs are taking place
+
+
+
+
 
 
 

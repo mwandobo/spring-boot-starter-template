@@ -43,14 +43,16 @@ public class NotificationService {
                     log.warn("No recipients provided for EMAIL notification with keyword: {}", keyword);
                     return;
                 }
-
                 log.info("Sending EMAIL notification with keyword: {} to recipients: {}", keyword, recipients);
-
                 try {
                     if (keyword == NotificationKeywordEnum.WELCOME_MESSAGE) {
                         emailSendingService.sendWelcomeEmail(context, recipients);
                         log.info("WELCOME_MESSAGE email sent successfully to recipients: {}", recipients);
-                    } else {
+                    }else if(keyword == NotificationKeywordEnum.RECOVERY_MESSAGE){
+                        emailSendingService.sendPasswordRecoveryEmail(context, recipients);
+                        log.info("RECOVERY_MESSAGE email sent successfully to recipients: {}", recipients);
+                    }
+                    else {
                         log.warn("Email keyword {} is not handled yet", keyword);
                     }
                 } catch (Exception e) {

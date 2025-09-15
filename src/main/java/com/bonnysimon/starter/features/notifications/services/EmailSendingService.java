@@ -20,34 +20,6 @@ public class EmailSendingService {
     private final TemplateEngine templateEngine;
     private final EmailConfigurationService emailConfigurationService;
 
-    // Simple text email
-
-//    // Send welcome email with generated password
-//    public void sendWelcomeEmail(Context context, List<String> recipients) {
-////    public void sendWelcomeEmail(String to, String name, String plainPassword, String otp) {
-//        try {
-////            Context context = new Context();
-////            context.setVariable("name", name);
-////            context.setVariable("password", plainPassword);
-////            context.setVariable("email", to);
-////            context.setVariable("otp", otp);
-//
-//
-//
-//
-//            emailConfigurationService.sendTemplateEmail(
-//                    to,
-//                    "Welcome to Our Platform - Your Account Details",
-//                    "welcome-email",
-//                    context
-//            );
-//
-//
-//        } catch (MessagingException e) {
-//            throw new RuntimeException("Failed to send welcome email", e);
-//        }
-//    }
-
 
 // Send welcome email with generated password to multiple recipients
 public void sendWelcomeEmail(Context context, List<String> recipients) {
@@ -65,21 +37,17 @@ public void sendWelcomeEmail(Context context, List<String> recipients) {
     }
 }
 
-
-    public void sendPasswordRecoveryEmail(String to, String name, String link) {
+        public void sendPasswordRecoveryEmail(Context context,List<String> recipients) {
         try {
-            Context context = new Context();
-            context.setVariable("name", name);
-            context.setVariable("email", to);
-            context.setVariable("link", link);
 
-
-            emailConfigurationService.sendTemplateEmail(
-                    to,
-                    "Password Reset",
-                    "password-recovery-email",
-                    context
-            );
+            for (String to : recipients) {
+                emailConfigurationService.sendTemplateEmail(
+                        to,
+                        "Password Reset",
+                        "password-recovery-email",
+                        context
+                );
+            }
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send welcome email", e);
         }

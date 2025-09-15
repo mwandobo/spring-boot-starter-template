@@ -66,93 +66,9 @@ public class UserService {
         }
 
         Page<User> users = repository.findAll(spec, pagination.toPageable());
-
         Page<UserResponse> userResponses = users.map(UserResponse::fromEntity);
-
         return PaginationResponse.of(userResponses);
     }
-
-//    @Transactional
-//    public UserResponse create(CreateUserDTO dto) {
-//        Optional<User> registeringUser = repository.findByEmail(dto.getEmail());
-//        String password = randomGenerator.generateRandomPassword(8);
-//
-//        if(registeringUser.isPresent()) {
-//            User presentUser = registeringUser.get();
-//            Optional<UserOtp> otp = otpRepository.findByUserIdAndOtpType(presentUser.getId(), OtpType.OTP_REGISTERED );
-//            if(otp.isPresent()) {
-//                UserOtp userOtp = otp.get();
-//                if(userOtp.isVerified()){
-//                    throw new IllegalStateException("User Exists is already taken!");
-//                }
-//
-//                if(userOtp.getExpiry().isAfter(Instant.now())) {
-//                    throw new IllegalStateException("User Exists OTP not Verified Please Verify before it expires");
-//                }
-//                String newOtp = generateOtp();
-//                userOtp.setOtp(newOtp);
-//                userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
-//                otpRepository.save(userOtp);
-//
-//                Context context = new Context();
-//                context.setVariable("name", dto.getName());
-//                context.setVariable("password", password);
-//                context.setVariable("email", dto.getEmail());
-//                context.setVariable("otp", otp);
-//
-//                SendNotificationDTO sendNotificationDTO = getSendNotificationDTO(dto, context);
-//                notificationService.sendNotification(sendNotificationDTO);
-//                return new UserResponse( presentUser);
-//            }
-//        }
-//
-//        if (repository.existsByEmail(dto.getEmail())) {
-//            throw new IllegalStateException("Email is already taken!");
-//        }
-//
-//        User user = new User();
-//        user.setEmail(dto.getEmail());
-//        user.setPassword(passwordEncoder.encode(password));
-//        user.setName(dto.getName());
-//
-//        if(dto.getRoleId() != null) {
-//            Role role = roleRepository.findById(dto.getRoleId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Role Not found"));
-//            user.setRole(role);
-//        }
-//
-//       User savedUser = repository.save(user);
-//
-//        String otp = generateOtp();
-//        UserOtp userOtp = new UserOtp();
-//        userOtp.setUser(user);
-//        userOtp.setOtp(otp);
-//        userOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
-//        otpRepository.save(userOtp);
-//
-//        // Send welcome email
-//        try {
-//
-//            Context context = new Context();
-//            context.setVariable("name", dto.getName());
-//            context.setVariable("password", password);
-//            context.setVariable("email", dto.getEmail());
-//            context.setVariable("otp", otp);
-//
-//            SendNotificationDTO sendNotificationDTO = getSendNotificationDTO(dto, context);
-//
-//            notificationService.sendNotification(sendNotificationDTO);
-//
-//        } catch (Exception e) {
-//            // Log the error but don't fail the user creation
-//            log.error("Failed to send welcome email to: {}", dto.getEmail(), e);
-//        }
-//
-//        return new UserResponse( savedUser);
-//    }
-
-
-
 
     @Transactional
     public UserResponse create(CreateUserDTO dto) {
@@ -231,39 +147,24 @@ public class UserService {
             context.setVariable("email", dto.getEmail());
             context.setVariable("otp", otp);
 
-            SendNotificationDTO notificationDTO = createNotificationDTO(dto, context);
+            SendNotificationDTO notificationDTO = createNotificationDTO(dto, context, NotificationKeywordEnum.WELCOME_MESSAGE);
             notificationService.sendNotification(notificationDTO);
         } catch (Exception e) {
             log.error("Failed to send welcome notification to: {}", dto.getEmail(), e);
         }
     }
 
-    private SendNotificationDTO createNotificationDTO(CreateUserDTO dto, Context context) {
+    private SendNotificationDTO createNotificationDTO(CreateUserDTO dto, Context context, NotificationKeywordEnum keyword) {
         List<String> recipients = new ArrayList<>();
         recipients.add(dto.getEmail());
 
         SendNotificationDTO notificationDTO = new SendNotificationDTO();
         notificationDTO.setChannel(NotificationChannelsEnum.EMAIL);
-        notificationDTO.setNotificationKeyword(NotificationKeywordEnum.WELCOME_MESSAGE);
+        notificationDTO.setNotificationKeyword(keyword);
         notificationDTO.setContext(context);
         notificationDTO.setRecipients(recipients);
         return notificationDTO;
     }
-
-
-
-    private static SendNotificationDTO getSendNotificationDTO(CreateUserDTO dto, Context context) {
-        List<String> recipients = new ArrayList<>();
-        recipients.add(dto.getEmail());
-
-        SendNotificationDTO sendNotificationDTO = new SendNotificationDTO();
-        sendNotificationDTO.setChannel(NotificationChannelsEnum.EMAIL);
-        sendNotificationDTO.setNotificationKeyword(NotificationKeywordEnum.WELCOME_MESSAGE);
-        sendNotificationDTO.setContext(context);
-        sendNotificationDTO.setRecipients(recipients);
-        return sendNotificationDTO;
-    }
-
 
     public UserResponse findOne(Long id) {
         User user = repository.findById(id)
@@ -319,11 +220,22 @@ public class UserService {
         resetOtp.setLink(link);
         resetOtp.setOtpType(OtpType.OTP_RESET_PASSWORD);
         resetOtp.setExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
-
         otpRepository.save(resetOtp);
 
-        // Send recovery email
-        emailSendingService.sendPasswordRecoveryEmail(email, user.getName(), link);
+        Context newContext = new Context();
+        newContext.setVariable("name", user.getName());
+        newContext.setVariable("email", user.getEmail());
+        newContext.setVariable("link", link);
+
+        SendNotificationDTO notificationDTO = new SendNotificationDTO();
+        notificationDTO.setChannel(NotificationChannelsEnum.EMAIL);
+        notificationDTO.setNotificationKeyword(NotificationKeywordEnum.RECOVERY_MESSAGE);
+        notificationDTO.setContext(newContext);
+
+        List<String> recipients = new ArrayList<>();
+        recipients.add(user.getEmail());
+        notificationDTO.setRecipients(recipients);
+        notificationService.sendNotification(notificationDTO);
     }
 
     // Verify OTP + reset password
