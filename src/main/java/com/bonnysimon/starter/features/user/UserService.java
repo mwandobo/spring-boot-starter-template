@@ -60,7 +60,7 @@ public class UserService {
             spec = spec.and((root, query, cb) ->
                     cb.or(
                             cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("email")), "%" + search.toLowerCase() + "%")
+                             cb.like(cb.lower(root.get("email")), "%" + search.toLowerCase() + "%")
                     )
             );
         }

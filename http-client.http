@@ -89,7 +89,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": 1,
+  "userId": 4,
   "roleId": 1
 }
 
@@ -154,14 +154,14 @@ Content-Type: application/json
 }
 
 ###
-PUT {{base_url}}/user-approvals/1
+POST {{base_url}}/user-approvals
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "name": "User ApprovalLLL",
   "description": "This is the approval for user",
-  "sysApprovalId": 1
+  "sysApprovalId": 2
 }
 
 ###
@@ -178,7 +178,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "Second level",
+  "name": "first level",
   "roleId": 1,
   "userApprovalId": 1
 }

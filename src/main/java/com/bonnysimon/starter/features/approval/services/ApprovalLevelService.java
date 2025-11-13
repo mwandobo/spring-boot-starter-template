@@ -8,6 +8,10 @@ import com.bonnysimon.starter.features.approval.entity.UserApproval;
 import com.bonnysimon.starter.features.approval.enums.StatusEnum;
 import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
 import com.bonnysimon.starter.features.approval.repository.UserApprovalRepository;
+import com.bonnysimon.starter.features.notifications.dto.SendNotificationDTO;
+import com.bonnysimon.starter.features.notifications.enums.NotificationChannelsEnum;
+import com.bonnysimon.starter.features.notifications.enums.NotificationKeywordEnum;
+import com.bonnysimon.starter.features.notifications.services.NotificationService;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.user.model.User;
@@ -17,6 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.context.Context;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +33,7 @@ public class ApprovalLevelService {
     private final UserApprovalRepository userApprovalRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public PaginationResponse<ApprovalLevel> findAll(PaginationRequest pagination, String search) {
         Specification<ApprovalLevel> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
@@ -40,7 +48,34 @@ public class ApprovalLevelService {
         return PaginationResponse.of(approvalLevels);
     }
 
-    @Transactional
+//    @Transactional
+//    public ApprovalLevel create(ApprovalLevelRequestDTO request) {
+//        ApprovalLevel level = new ApprovalLevel();
+//        level.setName(request.getName());
+//        level.setDescription(request.getDescription());
+//        level.setLevel(request.getLevel());
+//        level.setStatus(request.getStatus() != null ? request.getStatus() : StatusEnum.PENDING);
+//
+//        UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
+//                .orElseThrow(() -> new IllegalArgumentException("UserApproval not found"));
+//        level.setUserApproval(userApproval);
+//
+//        if (request.getRoleId() != null) {
+//            Role role = roleRepository.findById(request.getRoleId())
+//                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+//            level.setRole(role);
+//        }
+//
+//        if (request.getUserId() != null) {
+//            User user = userRepository.findById(request.getUserId())
+//                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+//            level.setUser(user);
+//        }
+//
+//        return repository.save(level);
+//    }
+
+
     public ApprovalLevel create(ApprovalLevelRequestDTO request) {
         ApprovalLevel level = new ApprovalLevel();
         level.setName(request.getName());
@@ -52,20 +87,59 @@ public class ApprovalLevelService {
                 .orElseThrow(() -> new IllegalArgumentException("UserApproval not found"));
         level.setUserApproval(userApproval);
 
+        Role role = null;
+        User user = null;
+
         if (request.getRoleId() != null) {
-            Role role = roleRepository.findById(request.getRoleId())
+            role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new IllegalArgumentException("Role not found"));
             level.setRole(role);
         }
 
         if (request.getUserId() != null) {
-            User user = userRepository.findById(request.getUserId())
+            user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             level.setUser(user);
         }
 
-        return repository.save(level);
+        ApprovalLevel saved = repository.save(level);
+
+        // 🔔 Send notifications
+        sendCreateLevelNotification(saved, role, user);
+
+        return saved;
     }
+
+    private void sendCreateLevelNotification(ApprovalLevel level, Role role, User user) {
+        Context context = new Context();
+        context.setVariable("levelName", level.getName());
+        context.setVariable("description", level.getDescription());
+        context.setVariable("status", level.getStatus().name());
+
+        List<String> recipients;
+
+        if (role != null) {
+            // ✅ Find all users in this role
+            recipients = userRepository.findAllByRoleId(role.getId())
+                    .stream()
+                    .map(User::getEmail)
+                    .toList();
+        } else if (user != null) {
+            recipients = List.of(user.getEmail());
+        } else {
+            return; // no recipients
+        }
+
+        SendNotificationDTO dto = SendNotificationDTO.builder()
+                .channel(NotificationChannelsEnum.EMAIL)
+                .notificationKeyword(NotificationKeywordEnum.CREATE_LEVEL)
+                .context(context)
+                .recipients(recipients)
+                .build();
+
+        notificationService.sendNotification(dto);
+    }
+
 
     @Transactional
     public ApprovalLevel update(Long id, ApprovalLevelRequestDTO request) {

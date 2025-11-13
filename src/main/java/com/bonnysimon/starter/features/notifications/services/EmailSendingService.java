@@ -36,6 +36,8 @@ public class EmailSendingService {
                 return "Welcome to Our Platform - Your Account Details";
             case RECOVERY_MESSAGE:
                 return "Password Reset";
+            case CREATE_LEVEL:
+                return "Approval Level Created";
             default:
                 return "Notification from Our Platform";
         }
@@ -47,6 +49,8 @@ public class EmailSendingService {
                 return "welcome-email";
             case RECOVERY_MESSAGE:
                 return "password-recovery-email";
+            case CREATE_LEVEL:
+                return "create-level-email";
             default:
                 return "generic-email";
         }
