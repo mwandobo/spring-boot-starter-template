@@ -4,6 +4,7 @@ import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.permission.dto.AssignPermissionRequest;
+import com.bonnysimon.starter.features.permission.dto.PermissionResponseDto;
 import com.bonnysimon.starter.features.permission.services.PermissionService;
 import com.bonnysimon.starter.features.role.Role;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class PermissionController {
     private final PermissionService service;
 
     @GetMapping()
-    public ApiResponse<PaginationResponse<Permission>> getAllPermissions(
+    public ApiResponse<PaginationResponse<PermissionResponseDto>> getAllPermissions(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {

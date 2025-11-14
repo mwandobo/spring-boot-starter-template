@@ -5,6 +5,7 @@ import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.permission.Permission;
 import com.bonnysimon.starter.features.permission.PermissionRepository;
 import com.bonnysimon.starter.features.permission.dto.AssignPermissionRequest;
+import com.bonnysimon.starter.features.permission.dto.PermissionResponseDto;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class PermissionService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
 
-    public PaginationResponse<Permission> findAll(PaginationRequest pagination, String search) {
+    public PaginationResponse<PermissionResponseDto> findAll(PaginationRequest pagination, String search) {
         Specification<Permission> spec = (root, query, cb) ->
                 cb.or(
                         cb.isFalse(root.get("deleted")),
@@ -38,7 +39,7 @@ public class PermissionService {
             );
         }
 
-        Page<Permission> permissionDtos = permissionRepository.findAll(spec, pagination.toPageable());
+        Page<PermissionResponseDto> permissionDtos = permissionRepository.findAll(spec, pagination.toPageable());
 
         return PaginationResponse.of(permissionDtos);
     }

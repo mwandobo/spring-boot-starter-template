@@ -12,9 +12,12 @@ public class Permission extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column()
     private String name;
 
     @Column()
     private String description;
+
+    @Column()
+    private String group;
 }
