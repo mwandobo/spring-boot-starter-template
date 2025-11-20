@@ -7,6 +7,7 @@ import com.bonnysimon.starter.features.approval.dto.ApprovalActionRequestDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.services.ApprovalActionService;
 import com.bonnysimon.starter.features.notification.dto.CreateNotificationDto;
+import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class NotificationController {
     private final NotificationService service;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<NotificationEntity>> getAll(
+    public ApiResponse<PaginationResponse<NotificationResponseDto>> getAll(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {

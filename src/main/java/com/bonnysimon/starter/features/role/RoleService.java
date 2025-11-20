@@ -30,9 +30,7 @@ public class RoleService {
             );
         }
 
-        Page<Role> roles = roleRepository.findAll(spec, pagination.toPageable());
-
-        Page<Role> roleDtos = roles;
+        Page<Role> roleDtos = roleRepository.findAll(spec, pagination.toPageable());
 
         return PaginationResponse.of(roleDtos);
     }
