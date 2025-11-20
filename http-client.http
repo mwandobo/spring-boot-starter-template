@@ -162,4 +162,24 @@ Content-Type: application/json
 GET {{base_url}}/mail/send-email
 Authorization: Bearer {{token}}
 
+###
+GET {{base_url}}/notifications
+Authorization: Bearer {{token}}
 
+###
+POST {{base_url}}/notifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Urgent: Action Required",
+  "description": "Please review the pending request",
+  "forName": "Jane Smith",
+  "forId": "EMP002",
+  "isRead": false,
+  "expiresAt": "2024-11-30T17:00:00",
+  "redirectUrl": "/requests/456",
+  "group": "urgent",
+  "userId": 1,
+  "recipientId": 1
+}
