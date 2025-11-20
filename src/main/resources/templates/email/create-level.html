@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>New Approval Level Created</title>
@@ -15,15 +15,15 @@
 <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse; background: #f8f9fa; border: 1px solid #dee2e6; margin-top: 10px;">
     <tr>
         <td width="30%" style="border: 1px solid #dee2e6;"><strong>Level Name</strong></td>
-        <td style="border: 1px solid #dee2e6;">${levelName}</td>
+        <td style="border: 1px solid #dee2e6;" th:text="${levelName}">Level Name</td>
     </tr>
     <tr>
         <td style="border: 1px solid #dee2e6;"><strong>Description</strong></td>
-        <td style="border: 1px solid #dee2e6;">${description}</td>
+        <td style="border: 1px solid #dee2e6;" th:text="${description}">Description</td>
     </tr>
     <tr>
         <td style="border: 1px solid #dee2e6;"><strong>Status</strong></td>
-        <td style="border: 1px solid #dee2e6;">${status}</td>
+        <td style="border: 1px solid #dee2e6;" th:text="${status}">Status</td>
     </tr>
 </table>
 
@@ -33,7 +33,7 @@
         You can now manage or assign actions for this approval level in the administration panel.
     </p>
 
-    <a href="${manageLevelLink}"
+    <a th:href="${manageLevelLink}"
        style="display: inline-block; background: #007bff; color: white; padding: 10px 20px;
               text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 5px;">
         Manage Approval Levels
@@ -55,7 +55,7 @@
 
 <div style="border-top: 1px solid #dee2e6; margin-top: 20px; padding-top: 10px; text-align: center; color: #6c757d; font-size: 0.85em;">
     This is an automated message — please do not reply.<br/>
-    © ${year} Mwalimu Commercial Bank PLC. All rights reserved.
+    © <span th:text="${year}">2025</span> Mwalimu Commercial Bank PLC. All rights reserved.
 </div>
 
 </body>
