@@ -2,12 +2,15 @@ package com.bonnysimon.starter.features.notification;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.features.mail.EmailPayload;
+import com.bonnysimon.starter.features.mail.EmailService;
 import com.bonnysimon.starter.features.notification.dto.CreateNotificationDto;
 import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
-import com.bonnysimon.starter.features.role.Role;
-import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
+import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
+import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -23,31 +27,11 @@ import java.util.stream.Collectors;
 public class NotificationService {
     private final NotificationRepository repository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private NotificationResponseDto convertToResponseDto(NotificationEntity entity) {
         return NotificationResponseDto.fromEntity(entity);
     }
-//    public PaginationResponse<NotificationEntity> findAll(PaginationRequest pagination, String search) {
-//        // Base spec: filter out deleted notifications
-//        Specification<NotificationEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-//
-//        // Optional search filter (case-insensitive)
-//        if (search != null && !search.trim().isEmpty()) {
-//            String likePattern = "%" + search.trim().toLowerCase() + "%";
-//            spec = spec.and((root, query, cb) ->
-//                    cb.or(
-//                            cb.like(cb.lower(root.get("title")), likePattern),
-//                            cb.like(cb.lower(root.get("description")), likePattern)
-//                    )
-//            );
-//        }
-//
-//        // Execute paginated query
-//        Page<NotificationEntity> notificationsPage = repository.findAll(spec, pagination.toPageable());
-//
-//        // Wrap in PaginationResponse
-//        return PaginationResponse.of(notificationsPage);
-//    }
 
     public PaginationResponse<NotificationResponseDto> findAll(PaginationRequest pagination, String search) {
         // Base spec: filter out deleted notifications
@@ -131,18 +115,50 @@ public class NotificationService {
         return saved;
     }
 
-//
-//    public Role create(CreateRoleRequest request) {
-//        // Check if role already exists
-//        roleRepository.findByName(request.getName())
-//                .ifPresent(r -> {
-//                    throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
-//                });
-//
-//        // Map DTO -> Entity
-//        Role role = new Role();
-//        role.setName(request.getName());
-//
-//        return roleRepository.save(role);
-//    }
+    public String sendNotification(SendNotificationDto dto) throws MessagingException {
+
+        NotificationChannelsEnum channel = dto.getChannel();
+        String template = dto.getTemplate();
+        List<String> recipients = dto.getRecipients();
+        String userId = dto.getUserId();
+        String subject = dto.getSubject();
+        Map<String, Object> context = dto.getContext();
+        String description = dto.getDescription();
+        String forName = dto.getForName();
+        String forId = dto.getForId();
+        String redirectUrl = dto.getRedirectUrl();
+
+        // 1. SEND EMAIL IF CHANNEL IS EMAIL
+        if (NotificationChannelsEnum.EMAIL.name().equalsIgnoreCase(String.valueOf(channel))) {
+
+            EmailPayload emailPayload = EmailPayload.builder()
+                    .to(recipients)
+                    .subject(subject)
+                    .template(template)
+                    .context(context)
+                    .build();
+
+            emailService.sendHtmlEmail(emailPayload); // async or sync based on your implementation
+        }
+
+        // 2. CREATE NOTIFICATION RECORDS FOR EACH RECIPIENT
+        for (String recipientId : recipients) {
+
+            CreateNotificationDto createDto = new CreateNotificationDto();
+            createDto.setTitle(subject);
+            createDto.setDescription(description);
+            createDto.setForName(forName);
+            createDto.setForId(forId);
+//            createDto.setUserId(Long.valueOf(dto.getUserId()));
+//            createDto.setRecipientId(Long.valueOf(recipientId));
+            createDto.setRedirectUrl(redirectUrl);
+            createDto.setGroup(""); // same behavior as NestJS
+
+            this.create(createDto);
+        }
+
+        return "notification sent successfully";
+    }
+
+
 }

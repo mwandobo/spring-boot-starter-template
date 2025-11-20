@@ -183,3 +183,30 @@ Content-Type: application/json
   "userId": 1,
   "recipientId": 1
 }
+
+###
+POST {{base_url}}/notifications/send-notifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "EMAIL",
+  "template": "create-level",
+  "subject": "New Approval Level Created",
+  "recipients": [
+    "breezojr@gmail.com",
+    "bonifacesimon04@gmail.com"
+  ],
+  "userId": 1,
+  "description": "New approval level has been added",
+  "forName": "Level Manager",
+  "forId": "level-123",
+  "redirectUrl": "https://mcb.or.tz/system/levels/level-123",
+  "context": {
+    "levelName": "Finance Level 1",
+    "description": "Handles all finance approvals",
+    "status": "Active",
+    "manageLevelLink": "https://mcb.or.tz/admin/levels",
+    "year": "2025"
+  }
+}

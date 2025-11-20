@@ -8,6 +8,8 @@ import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.services.ApprovalActionService;
 import com.bonnysimon.starter.features.notification.dto.CreateNotificationDto;
 import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
+import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +32,12 @@ public class NotificationController {
     public ApiResponse<NotificationEntity> create(@RequestBody CreateNotificationDto request) {
         return ApiResponse.success(service.create(request));
     }
+
+    @PostMapping("/send-notifications")
+    public ApiResponse<String> sendNotifaction(@RequestBody SendNotificationDto request) throws MessagingException {
+        return ApiResponse.success(service.sendNotification(request));
+    }
+
 
 //
 //    @PutMapping("/{id}")

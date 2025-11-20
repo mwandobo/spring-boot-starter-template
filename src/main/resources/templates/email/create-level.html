@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Approval Level Created</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px;">
+
+<h2 style="color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 8px;">New Approval Level Created</h2>
+
+<p>Hello,</p>
+
+<p>A new approval level has been successfully created in the system. Below are the details:</p>
+
+<table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse; background: #f8f9fa; border: 1px solid #dee2e6; margin-top: 10px;">
+    <tr>
+        <td width="30%" style="border: 1px solid #dee2e6;"><strong>Level Name</strong></td>
+        <td style="border: 1px solid #dee2e6;">${levelName}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Description</strong></td>
+        <td style="border: 1px solid #dee2e6;">${description}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Status</strong></td>
+        <td style="border: 1px solid #dee2e6;">${status}</td>
+    </tr>
+</table>
+
+<div style="background: #e7f1ff; border-left: 4px solid #007bff; border-radius: 4px; padding: 12px 15px; margin: 15px 0;">
+    <strong>ℹ️ Next Steps:</strong>
+    <p style="margin: 8px 0;">
+        You can now manage or assign actions for this approval level in the administration panel.
+    </p>
+
+    <a href="${manageLevelLink}"
+       style="display: inline-block; background: #007bff; color: white; padding: 10px 20px;
+              text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 5px;">
+        Manage Approval Levels
+    </a>
+</div>
+
+<p style="margin-top: 15px;">
+    If you have any questions or need assistance, please contact your system administrator.
+</p>
+
+<br/>
+
+<p style="font-size: 0.95em; color: #343a40;">
+    Regards,<br/>
+    <strong>System Administrator</strong><br/>
+    <span style="color: #007bff;">Mwalimu Commercial Bank PLC</span><br/>
+    <small>Automated System Notification</small>
+</p>
+
+<div style="border-top: 1px solid #dee2e6; margin-top: 20px; padding-top: 10px; text-align: center; color: #6c757d; font-size: 0.85em;">
+    This is an automated message — please do not reply.<br/>
+    © ${year} Mwalimu Commercial Bank PLC. All rights reserved.
+</div>
+
+</body>
+</html>

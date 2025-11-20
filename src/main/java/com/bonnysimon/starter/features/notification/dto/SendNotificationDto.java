@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,10 +19,6 @@ public class SendNotificationDto {
     @NotBlank(message = "Template is required")
     private String template;
 
-    @Pattern(
-            regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[3-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
-            message = "Invalid UUID format"
-    )
     private String userId;
 
     private String subject;
@@ -37,7 +35,7 @@ public class SendNotificationDto {
 
     private String redirectUrl;
 
-    private String group;
+    private String groupName;
 
-    private Object context;
+    private Map<String, Object> context;
 }
