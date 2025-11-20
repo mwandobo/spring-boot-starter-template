@@ -120,7 +120,7 @@ public class NotificationService {
         NotificationChannelsEnum channel = dto.getChannel();
         String template = dto.getTemplate();
         List<String> recipients = dto.getRecipients();
-        String userId = dto.getUserId();
+        Long userId = dto.getUserId();
         String subject = dto.getSubject();
         Map<String, Object> context = dto.getContext();
         String description = dto.getDescription();
@@ -149,7 +149,7 @@ public class NotificationService {
             createDto.setDescription(description);
             createDto.setForName(forName);
             createDto.setForId(forId);
-//            createDto.setUserId(Long.valueOf(dto.getUserId()));
+            createDto.setUserId(dto.getUserId());
 //            createDto.setRecipientId(Long.valueOf(recipientId));
             createDto.setRedirectUrl(redirectUrl);
             createDto.setGroup(""); // same behavior as NestJS

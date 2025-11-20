@@ -18,24 +18,15 @@ public class SendNotificationDto {
 
     @NotBlank(message = "Template is required")
     private String template;
-
-    private String userId;
-
+    private Long userId;
     private String subject;
     private String description;
     private String forName;
     private String forId;
-
     private Boolean isRead;
-
     private String expiresAt;
-
-    // IMPORTANT: TS allowed string or list → in Java, use List<String>
     private java.util.List<String> recipients;
-
     private String redirectUrl;
-
     private String groupName;
-
     private Map<String, Object> context;
 }
