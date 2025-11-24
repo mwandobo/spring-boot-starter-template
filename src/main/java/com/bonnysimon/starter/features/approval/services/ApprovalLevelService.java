@@ -5,19 +5,24 @@ import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
-import com.bonnysimon.starter.features.approval.enums.StatusEnum;
 import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
 import com.bonnysimon.starter.features.approval.repository.UserApprovalRepository;
 import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApprovalLevelService {
@@ -42,27 +47,37 @@ public class ApprovalLevelService {
 
     @Transactional
     public ApprovalLevel create(ApprovalLevelRequestDTO request) {
+        Optional<UserApproval> userApproval = userApprovalRepository.findById(request.getUserApprovalId());
+        if (userApproval.isEmpty()) {
+            throw new IllegalStateException("User Approval Not Found");
+        }
+
+        Optional<Role> role = roleRepository.findById(request.getRoleId());
+        if (role.isEmpty()) {
+            throw new IllegalStateException("Role Not Found");
+        }
+
+        Optional<ApprovalLevel> existing = repository
+                .findByRoleIdAndUserApprovalId(request.getRoleId(), request.getUserApprovalId());
+
+        if (existing.isPresent()) {
+            throw new IllegalStateException("Approval Level already exists for this role and userApproval");
+        }
+
+        int nextLevel = updateApprovalLevelOrder(
+                request.getUserApprovalId(),
+                "CREATE",
+                null
+        );
+
+
+
         ApprovalLevel level = new ApprovalLevel();
         level.setName(request.getName());
         level.setDescription(request.getDescription());
-        level.setLevel(request.getLevel());
-        level.setStatus(request.getStatus() != null ? request.getStatus() : StatusEnum.PENDING);
-
-        UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
-                .orElseThrow(() -> new IllegalArgumentException("UserApproval not found"));
-        level.setUserApproval(userApproval);
-
-        if (request.getRoleId() != null) {
-            Role role = roleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-            level.setRole(role);
-        }
-
-        if (request.getUserId() != null) {
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            level.setUser(user);
-        }
+        level.setLevel(nextLevel);
+        level.setUserApproval(userApproval.get());
+        level.setRole(role.get());
 
         return repository.save(level);
     }
@@ -74,7 +89,6 @@ public class ApprovalLevelService {
 
         level.setName(request.getName());
         level.setDescription(request.getDescription());
-        level.setLevel(request.getLevel());
         if (request.getStatus() != null) {
             level.setStatus(request.getStatus());
         }
@@ -87,7 +101,7 @@ public class ApprovalLevelService {
 
         if (request.getRoleId() != null) {
             Role role = roleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+                    .orElseThrow(() -> new IllegalStateException("Role not found"));
             level.setRole(role);
             level.setUser(null); // clear user if role is set
         }
@@ -114,4 +128,37 @@ public class ApprovalLevelService {
             repository.delete(level);
         }
     }
+
+
+    @Transactional
+    public int updateApprovalLevelOrder(
+            Long userApprovalId,
+            String action,
+            ApprovalLevel affectedLevel
+    ) {
+
+        List<ApprovalLevel> levels = repository.findByUserApprovalIdOrderByLevelAsc(userApprovalId);
+
+        if ("CREATE".equalsIgnoreCase(action)) {
+            // Return next level
+            return levels.isEmpty() ? 1 : levels.get(levels.size() - 1).getLevel() + 1;
+        }
+
+        if ("DELETE".equalsIgnoreCase(action) && affectedLevel != null) {
+            int deletedLevelNum = affectedLevel.getLevel();
+
+            // Shift levels down after deletion
+            for (ApprovalLevel lvl : levels) {
+                if (lvl.getLevel() > deletedLevelNum) {
+                    lvl.setLevel(lvl.getLevel() - 1);
+                    repository.save(lvl); // update
+                }
+            }
+
+            return deletedLevelNum;
+        }
+
+        return 1;
+    }
+
 }

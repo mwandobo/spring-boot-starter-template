@@ -15,14 +15,14 @@ public class ApprovalLevel extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @Column()
     private String description;
 
     @Column()
-    private String level;
+    private Integer level;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_approval_id")

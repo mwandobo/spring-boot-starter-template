@@ -15,7 +15,6 @@ public class SendNotificationDto {
 
     @NotNull
     private NotificationChannelsEnum channel;
-
     @NotBlank(message = "Template is required")
     private String template;
     private Long userId;

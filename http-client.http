@@ -90,9 +90,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "User ApprovalLLL",
+  "name": "User Approval",
   "description": "This is the approval for user",
-  "sysApprovalId": 1
+  "sysApprovalId": 2
 }
 
 ###
@@ -121,7 +121,7 @@ Content-Type: application/json
 
 {
   "name": "Top level",
-  "roleId": 1,
+  "roleId": 2,
   "userApprovalId": 2
 }
 
