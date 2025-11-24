@@ -121,6 +121,8 @@ public class ApprovalLevelService {
         ApprovalLevel level = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("ApprovalLevel not found"));
 
+        updateApprovalLevelOrder(level.getUserApproval().getId(), "DELETE", level);
+
         if (soft) {
             level.setDeleted(true);
             repository.save(level);

@@ -111,7 +111,7 @@ DELETE {{base_url}}/user-approvals/1
 Authorization: Bearer {{token}}
 
 ###
-GET {{base_url}}/approval-levels
+DELETE {{base_url}}/approval-levels/6
 Authorization: Bearer {{token}}
 
 ###
