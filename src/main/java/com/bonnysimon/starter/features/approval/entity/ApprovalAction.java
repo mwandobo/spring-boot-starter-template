@@ -32,10 +32,10 @@ public class ApprovalAction extends BaseEntity {
     private String entityName;
 
     @Column()
-    private String entityId;
+    private Long entityId;
 
     @Column()
-    private String entityCreatorId;
+    private Long entityCreatorId;
 
     @Column()
     private String remark;

@@ -11,10 +11,15 @@ import com.bonnysimon.starter.features.approval.repository.ApprovalLevelReposito
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +47,17 @@ public class ApprovalActionService {
 
         ApprovalLevel approvalLevel = approvalLevelRepository.findById(request.getApprovalLevelId())
                 .orElseThrow(() -> new IllegalArgumentException("Approval Level not found"));
+
+        Optional<ApprovalAction> existing =
+                repository.findByApprovalLevelIdAndEntityId(
+                        request.getApprovalLevelId(),
+                        request.getEntityId()
+                );
+
+        if (existing.isPresent()) {
+            throw new IllegalStateException( "Approval Action has been done for this level "+
+                    approvalLevel.getName() + " and entity " + request.getEntityName());
+        }
 
         Long userId = currentUserService.getCurrentUserId();
         User user = userRepository.findById(userId)

@@ -121,7 +121,7 @@ GET {{base_url}}/approval-actions
 Authorization: Bearer {{token}}
 
 ###
-PUT {{base_url}}/approval-actions/3
+POST {{base_url}}/approval-actions
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -131,7 +131,7 @@ Content-Type: application/json
   "entityName": "Role",
   "entityId": 1,
   "description": "This is first action",
-  "action": "approve"
+  "action": "APPROVED"
 }
 
 

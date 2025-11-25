@@ -9,7 +9,7 @@ public class ApprovalActionRequestDTO {
     private String name;
     private ApprovalActionEnum action;
     private String entityName;
-    private String entityId;
+    private Long entityId;
     private String description;
     private Long approvalLevelId;
     private StatusEnum status;
