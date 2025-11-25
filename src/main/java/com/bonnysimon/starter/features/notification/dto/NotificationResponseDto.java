@@ -13,7 +13,7 @@ public class NotificationResponseDto {
     private String title;
     private String description;
     private String forName;
-    private String forId;
+    private Long forId;
     private boolean isRead;
     private String expiresAt;
     private Long userId;

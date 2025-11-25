@@ -23,7 +23,7 @@ public class NotificationEntity extends BaseEntity {
     private String forName;
 
     @Column(name = "for_id", length = 255)
-    private String forId;
+    private Long forId;
 
     @Column(name = "is_read")
     private boolean isRead = false;

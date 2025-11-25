@@ -125,7 +125,7 @@ public class NotificationService {
         Map<String, Object> context = dto.getContext();
         String description = dto.getDescription();
         String forName = dto.getForName();
-        String forId = dto.getForId();
+        Long forId = dto.getForId();
         String redirectUrl = dto.getRedirectUrl();
 
         // 1. SEND EMAIL IF CHANNEL IS EMAIL

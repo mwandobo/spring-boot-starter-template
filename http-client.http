@@ -3,7 +3,7 @@ POST {{base_url}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@starter.com",
+  "email": "breezojr@gmail.com",
   "password": "admin123"
 }
 
@@ -92,18 +92,7 @@ Content-Type: application/json
 {
   "name": "User Approval",
   "description": "This is the approval for user",
-  "sysApprovalId": 2
-}
-
-###
-POST {{base_url}}/user-approvals
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "Roles Approval",
-  "description": "This is the approval for user",
-  "sysApprovalId": 2
+  "sysApprovalId": 1
 }
 
 ###
@@ -121,8 +110,10 @@ Content-Type: application/json
 
 {
   "name": "Top level",
-  "roleId": 2,
-  "userApprovalId": 2
+  "roleId": 1,
+  "userApprovalId": 1,
+  "description": "This is some descriptions"
+
 }
 
 ### approve levels

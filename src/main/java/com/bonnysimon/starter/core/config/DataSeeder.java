@@ -54,10 +54,10 @@ public class DataSeeder {
                     });
 
             // 3. Default user (admin@starter.com / password: admin123)
-            if (userRepository.findByEmail("admin@starter.com").isEmpty()) {
+            if (userRepository.findByEmail("breezojr@gmail.com").isEmpty()) {
                 User adminUser = new User();
                 adminUser.setName("Super Admin"); // if you have username field
-                adminUser.setEmail("admin@starter.com"); // if you use email
+                adminUser.setEmail("breezojr@gmail.com"); // if you use email
                 adminUser.setPassword(passwordEncoder.encode("admin123"));
                 adminUser.setRole(adminRole);
                 userRepository.save(adminUser);

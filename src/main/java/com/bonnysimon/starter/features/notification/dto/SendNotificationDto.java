@@ -21,7 +21,7 @@ public class SendNotificationDto {
     private String subject;
     private String description;
     private String forName;
-    private String forId;
+    private Long forId;
     private Boolean isRead;
     private String expiresAt;
     private java.util.List<String> recipients;

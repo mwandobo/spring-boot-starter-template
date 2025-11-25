@@ -19,7 +19,7 @@ public class CreateNotificationDto {
     private String forName;
 
     @NotBlank(message = "forId is required")
-    private String forId;
+    private Long forId;
 
     private Boolean isRead; // optional
 

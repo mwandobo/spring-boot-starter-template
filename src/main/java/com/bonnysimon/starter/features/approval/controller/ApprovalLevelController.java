@@ -6,6 +6,7 @@ import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.services.ApprovalLevelService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class ApprovalLevelController {
     }
 
     @PostMapping
-    public ApiResponse<ApprovalLevel> create(@RequestBody ApprovalLevelRequestDTO request) {
+    public ApiResponse<ApprovalLevel> create(@RequestBody ApprovalLevelRequestDTO request) throws MessagingException {
         return ApiResponse.success(service.create(request));
     }
 
