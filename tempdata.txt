@@ -1,0 +1,39 @@
+context.put("userName", entityCreator.getName());
+context.put("requestDescription", dto.getDescription());
+context.put("assets", dto.getExtraData1());
+context.put("finalLevelName", approvalLevel.getName());
+context.put("approvedBy", performedByUser.getName());
+context.put("approvalDate", LocalDate.now().toString());
+context.put("priority", "Normal");
+context.put("priorityColor", "blue");
+context.put("approvalLink", dto.getRedirectUrl());
+context.put("year", Year.now().getValue());
+
+
+
+
+context.put("userName", performedByUser.getName());
+context.put("requestDescription", dto.getDescription());
+context.put("assets", dto.getExtraData1());
+context.put("currentLevelName", approvalLevel.getName());
+context.put("nextLevelName", nextLevel.getName());
+context.put("submittedBy", performedByUser.getEmail());
+context.put("submissionDate", LocalDate.now().toString());
+context.put("priority", "Normal");
+context.put("priorityColor", "blue");
+context.put("dueDate", "Not specified");
+context.put("approvalLink", dto.getRedirectUrl());
+context.put("year", Year.now().getValue());
+
+
+
+context.put("userName", entityCreator.getName());
+context.put("requestName", dto.getEntityName());
+context.put("assets", dto.getExtraData1());
+context.put("requestDescription", dto.getDescription());
+context.put("rejectedBy", performedByUser.getName());
+context.put("rejectionDate", LocalDate.now().toString());
+context.put("priority", "Normal");
+context.put("priorityColor", "red");
+context.put("approvalLink", dto.getRedirectUrl());
+context.put("year", Year.now().getValue());

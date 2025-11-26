@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+</head>
+
+<body style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px;">
+
+<h2 style="color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 8px;">
+    ✅ Request Approved - Congratulations
+</h2>
+
+<p>Hello <span th:text="${userName}">User</span>,</p>
+
+<p>Good news! Your submitted request has been <strong>approved</strong> successfully.</p>
+
+<div style="background: #e8f4fd; border-left: 4px solid #007bff; padding: 12px 15px; margin: 15px 0;">
+    <strong>Request Details:</strong>
+    <p style="margin: 5px 0;" th:text="${requestDescription}">Description</p>
+</div>
+
+<table cellpadding="8" cellspacing="0" width="100%"
+       style="border-collapse: collapse; background: #f8f9fa; border: 1px solid #dee2e6; margin-top: 10px;">
+    <tr>
+        <td width="30%" style="border: 1px solid #dee2e6;"><strong>Requested Assets</strong></td>
+        <td style="border: 1px solid #dee2e6;">
+            <span th:if="${assets != null}">
+                <span th:each="item, iter : ${assets}">
+                    <span th:text="${item.asset.name}"></span>
+                    <span th:if="${!iter.last}">, </span>
+                </span>
+            </span>
+            <span th:if="${assets == null}">N/A</span>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Final Approval Level</strong></td>
+        <td style="border: 1px solid #dee2e6;" th:text="${finalLevelName}">Final Level</td>
+    </tr>
+
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Approved By</strong></td>
+        <td style="border: 1px solid #dee2e6;" th:text="${approvedBy}">Approver Name</td>
+    </tr>
+
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Approval Date</strong></td>
+        <td style="border: 1px solid #dee2e6;" th:text="${approvalDate}">2025-01-01</td>
+    </tr>
+
+    <tr>
+        <td style="border: 1px solid #dee2e6;"><strong>Priority</strong></td>
+        <td style="border: 1px solid #dee2e6;">
+            <span th:style="'color:' + ${priorityColor} + '; font-weight:bold;'"
+                  th:text="${priority}">Normal</span>
+        </td>
+    </tr>
+</table>
+
+<div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 12px; margin: 15px 0;">
+    <strong>🎉 Request Approved:</strong>
+    <p style="margin: 8px 0;">
+        Your request has passed all approval stages and is now officially approved.
+    </p>
+    <a th:href="${approvalLink}"
+       style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 5px;">
+        View Approved Request
+    </a>
+</div>
+
+<p style="margin-top: 15px;">
+    You can now proceed with any follow-up actions or documentation related to this request.
+</p>
+
+<br/>
+
+<p style="font-size: 0.95em; color: #343a40;">
+    Regards,<br/>
+    <strong>Approval System</strong><br/>
+    <span style="color: #007bff;">Mwalimu Commercial Bank PLC</span><br/>
+    <small>Automated Approval Notification</small>
+</p>
+
+<div style="border-top: 1px solid #dee2e6; margin-top: 20px; padding-top: 10px; text-align: center; color: #6c757d; font-size: 0.85em;">
+    This is an automated message — please do not reply.<br/>
+    © <span th:text="${year}">2025</span> Mwalimu Commercial Bank PLC. All rights reserved.
+</div>
+
+</body>
+</html>

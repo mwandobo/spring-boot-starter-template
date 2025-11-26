@@ -130,8 +130,13 @@ Content-Type: application/json
   "approvalLevelId": 1,
   "entityName": "Role",
   "entityId": 1,
+  "entityCreatorId": 1,
   "description": "This is first action",
-  "action": "APPROVED"
+  "action": "REJECTED",
+  "extraData1": [
+    { "asset": { "name": "Asset One" } },
+    { "asset": { "name": "Asset Two" } }
+  ]
 }
 
 
