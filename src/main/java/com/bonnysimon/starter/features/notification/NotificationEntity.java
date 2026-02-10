@@ -16,7 +16,11 @@ public class NotificationEntity extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+//    @Column(columnDefinition = "TEXT")
+//    private String description;
+
+    @Lob
+    @Column
     private String description;
 
     @Column(name = "for_name", length = 255)
