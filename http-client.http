@@ -100,7 +100,7 @@ DELETE {{base_url}}/user-approvals/1
 Authorization: Bearer {{token}}
 
 ###
-DELETE {{base_url}}/approval-levels/6
+GET {{base_url}}/approval-levels
 Authorization: Bearer {{token}}
 
 ###
@@ -111,9 +111,8 @@ Content-Type: application/json
 {
   "name": "Top level",
   "roleId": 1,
-  "userApprovalId": 1,
+  "userApprovalId": 2,
   "description": "This is some descriptions"
-
 }
 
 ### approve levels
@@ -128,7 +127,7 @@ Content-Type: application/json
 {
   "name": "Top levS",
   "approvalLevelId": 1,
-  "entityName": "Role",
+  "entityName": "User",
   "entityId": 1,
   "entityCreatorId": 1,
   "description": "This is first action",
