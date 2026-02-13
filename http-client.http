@@ -235,4 +235,3 @@ Content-Type: application/json
 ###
 DELETE {{base_url}}/departments/1
 Authorization: Bearer {{token}}
-

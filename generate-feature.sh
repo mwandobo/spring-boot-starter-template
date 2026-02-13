@@ -13,6 +13,31 @@ fi
 FEATURE_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
 
+# -------------------------------
+# Plural handling (explicit)
+# -------------------------------
+if [ -z "$2" ]; then
+  # no suffix provided → no plural
+  FEATURE_PLURAL="$FEATURE_LOWER"
+else
+  case "$2" in
+    s)
+      FEATURE_PLURAL="${FEATURE_LOWER}s"
+      ;;
+    es)
+      FEATURE_PLURAL="${FEATURE_LOWER}es"
+      ;;
+    ies)
+      FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
+      ;;
+    *)
+      echo "❌ Invalid plural suffix: $2 (use: s | es | ies)"
+      exit 1
+      ;;
+  esac
+fi
+
+
 BASE_PACKAGE="com.bonnysimon.starter.features"
 BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
 
@@ -185,7 +210,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/${FEATURE_LOWER}s")
+@RequestMapping("/api/v1/${FEATURE_PLURAL}")
 @RequiredArgsConstructor
 public class ${FEATURE_UPPER}Controller {
 
@@ -251,23 +276,23 @@ EOF
 # HTTP Client Requests (SAFE)
 # -------------------------------
 HTTP_FILE="http-client.http"
-HTTP_MARKER="### FEATURE: ${FEATURE_LOWER}s"
+HTTP_MARKER="### FEATURE: ${FEATURE_PLURAL}"
 
 touch "$HTTP_FILE"
 
 if grep -Fxq "$HTTP_MARKER" "$HTTP_FILE"; then
-  echo "⚠️ HTTP requests for '${FEATURE_LOWER}' already exist — skipping"
+  echo "⚠️ HTTP requests for '${FEATURE_PLURAL}' already exist — skipping"
 else
 cat <<EOF >> "$HTTP_FILE"
 
 $HTTP_MARKER
 
 ###
-GET {{base_url}}/${FEATURE_LOWER}s
+GET {{base_url}}/${FEATURE_PLURAL}
 Authorization: Bearer {{token}}
 
 ###
-POST {{base_url}}/${FEATURE_LOWER}s
+POST {{base_url}}/${FEATURE_PLURAL}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -277,7 +302,7 @@ Content-Type: application/json
 }
 
 ###
-PUT {{base_url}}/${FEATURE_LOWER}s/1
+PUT {{base_url}}/${FEATURE_PLURAL}/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -287,7 +312,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{base_url}}/${FEATURE_LOWER}s/1
+DELETE {{base_url}}/${FEATURE_PLURAL}/1
 Authorization: Bearer {{token}}
 
 EOF
