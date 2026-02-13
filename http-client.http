@@ -205,3 +205,34 @@ Content-Type: application/json
     "year": "2025"
   }
 }
+
+### FEATURE: departments
+
+###
+GET {{base_url}}/departments
+Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/departments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name",
+  "description": "Sample Description"
+}
+
+###
+PUT {{base_url}}/departments/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name Edited ",
+  "description": "Sample Description Edited"
+}
+
+###
+DELETE {{base_url}}/departments/1
+Authorization: Bearer {{token}}
+

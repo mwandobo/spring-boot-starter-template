@@ -4,4 +4,4 @@ as the response in the notification we need to create the responseDtos for the r
 
 remove 500 error
 
-in the generate-feature sript i will have to check for those that dont pruraled by adding s only
+in the generate-feature script i will have to check for those that dont pruraled by adding s only

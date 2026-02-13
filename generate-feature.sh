@@ -124,6 +124,7 @@ public class ${FEATURE_UPPER}Service {
 
         ${FEATURE_UPPER}Entity entity = new ${FEATURE_UPPER}Entity();
         entity.setName(request.getName());
+        entity.setDescription(request.getDescription());
 
         return repository.save(entity);
     }
@@ -146,6 +147,7 @@ public class ${FEATURE_UPPER}Service {
                 });
 
         entity.setName(request.getName());
+        entity.setDescription(request.getDescription());
 
         return repository.save(entity);
     }
@@ -240,7 +242,55 @@ import lombok.Data;
 @Data
 public class Create${FEATURE_UPPER}DTO {
     private String name;
+    private String description;
 }
 EOF
+
+
+# -------------------------------
+# HTTP Client Requests (SAFE)
+# -------------------------------
+HTTP_FILE="http-client.http"
+HTTP_MARKER="### FEATURE: ${FEATURE_LOWER}s"
+
+touch "$HTTP_FILE"
+
+if grep -Fxq "$HTTP_MARKER" "$HTTP_FILE"; then
+  echo "⚠️ HTTP requests for '${FEATURE_LOWER}' already exist — skipping"
+else
+cat <<EOF >> "$HTTP_FILE"
+
+$HTTP_MARKER
+
+###
+GET {{base_url}}/${FEATURE_LOWER}s
+Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/${FEATURE_LOWER}s
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name",
+  "description": "Sample Description"
+}
+
+###
+PUT {{base_url}}/${FEATURE_LOWER}s/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name Edited",
+  "description": "Sample Description Edited"
+}
+
+###
+DELETE {{base_url}}/${FEATURE_LOWER}s/1
+Authorization: Bearer {{token}}
+
+EOF
+fi
 
 echo "✅ Feature '$FEATURE_UPPER' created successfully!"
