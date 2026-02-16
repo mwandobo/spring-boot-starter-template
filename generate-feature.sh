@@ -125,11 +125,10 @@ public class ${FEATURE_UPPER}Service {
 
         if (search != null && !search.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(
-                            cb.lower(root.get("name")),
-                            "%" + search.toLowerCase() + "%"
-                    )
-                    cb.like(cb.lower(root.get("description")), "%" + search.toLowerCase() + "%")
+                   cb.or(
+                          cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
+                          cb.like(cb.lower(root.get("description")), "%" + search.toLowerCase() + "%")
+                  )
             );
         }
 
