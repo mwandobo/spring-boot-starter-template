@@ -53,6 +53,18 @@ if [ -f "$SERVICE_FILE" ]; then
 fi
 
 # -------------------------------
+# Service search (findAll)
+# -------------------------------
+SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
+
+if grep -q "$SEARCH_LINE" "$SERVICE_FILE"; then
+  sed -i "\|$SEARCH_LINE|d" "$SERVICE_FILE"
+  echo "✅ Removed '$PROPERTY_NAME' from search spec"
+else
+  echo "⚠️ Search spec does not contain '$PROPERTY_NAME'"
+fi
+
+# -------------------------------
 # HTTP Client
 # -------------------------------
 if [ -f "$HTTP_FILE" ]; then

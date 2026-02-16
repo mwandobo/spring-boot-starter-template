@@ -92,7 +92,7 @@ Content-Type: application/json
 {
   "name": "User Approval",
   "description": "This is the approval for user",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
   "sysApprovalId": 1
 }
 
@@ -114,7 +114,7 @@ Content-Type: application/json
   "roleId": 1,
   "userApprovalId": 2,
   "description": "This is some descriptions"
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
 }
 
 ### approve levels
@@ -133,7 +133,7 @@ Content-Type: application/json
   "entityId": 1,
   "entityCreatorId": 1,
   "description": "This is first action",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
   "action": "REJECTED",
   "extraData1": [
     { "asset": { "name": "Asset One" } },
@@ -153,7 +153,7 @@ Content-Type: application/json
   "entityName": "Role",
   "entityId": 1,
   "description": "This is first action",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
   "action": "approve"
 }
 
@@ -173,7 +173,7 @@ Content-Type: application/json
 {
   "title": "Urgent: Action Required",
   "description": "Please review the pending request",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
   "forName": "Jane Smith",
   "forId": "EMP002",
   "isRead": false,
@@ -199,14 +199,14 @@ Content-Type: application/json
   ],
   "userId": 1,
   "description": "New approval level has been added",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
   "forName": "Level Manager",
   "forId": "level-123",
   "redirectUrl": "https://mcb.or.tz/system/levels/level-123",
   "context": {
     "levelName": "Finance Level 1",
     "description": "Handles all finance approvals",
-  ,"code": "Sample Code"
+  ,"status": "Sample Status"
     "manageLevelLink": "https://mcb.or.tz/admin/levels",
     "year": "2025"
   }
@@ -216,4 +216,37 @@ Content-Type: application/json
 
 
 
+
+
+### FEATURE: department
+
+###
+GET {{base_url}}/department
+Authorization: Bearer {{token}}
+
+###
+POST {{base_url}}/department
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name",
+  "description": "Sample Description"
+  ,"status": "Sample Status"
+}
+
+###
+PUT {{base_url}}/department/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sample Name Edited",
+  "description": "Sample Description Edited"
+  ,"status": "Sample Status"
+}
+
+###
+DELETE {{base_url}}/department/1
+Authorization: Bearer {{token}}
 

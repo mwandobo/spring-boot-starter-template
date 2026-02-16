@@ -57,18 +57,21 @@ else
   echo "⚠️ DTO already has '$PROPERTY_NAME'"
 fi
 
-## -------------------------------
-## Service (create + update)
-## -------------------------------
-#SETTER="entity.set$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}(request.get$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}());"
-#
-#if ! grep -q "$SETTER" "$SERVICE_FILE"; then
-#  sed -i "/entity.setDescription/a\\
-#        $SETTER" "$SERVICE_FILE"
-#  echo "✅ Service updated"
-#else
-#  echo "⚠️ Service already maps '$PROPERTY_NAME'"
-#fi
+# -------------------------------
+# Service search (findAll)
+# -------------------------------
+SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
+
+# Only add if not present
+if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
+  # Append after the description line
+  sed -i "/cb.like(cb.lower(root.get(\"description\"))/a\\
+                          ,$SEARCH_LINE" "$SERVICE_FILE"
+
+  echo "✅ Search spec extended with '$PROPERTY_NAME'"
+else
+  echo "⚠️ Search already contains '$PROPERTY_NAME'"
+fi
 
 # -------------------------------
 # Service (create + update + search)
@@ -82,71 +85,6 @@ if ! grep -q "$SETTER" "$SERVICE_FILE"; then
 else
   echo "⚠️ Service already maps '$PROPERTY_NAME'"
 fi
-
-# ---- search specification ----
-#if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-#  sed -i "/cb.like(cb.lower(root.get(\"description\"))/{
-#    s/)/),\\
-#                        $SEARCH_LINE/
-#  }" "$SERVICE_FILE"
-#  echo "✅ Service search updated"
-#else
-#  echo "⚠️ Service search already includes '$PROPERTY_NAME'"
-#fi
-
-#if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-#  sed -i "/cb.like(cb.lower(root.get(\"description\"))/{
-#    s/)/),\\
-#                    $SEARCH_EXPR/
-#  }" "$SERVICE_FILE"
-#  echo "✅ Service search updated"
-#else
-#  echo "⚠️ Service search already contains '$PROPERTY_NAME'"
-#fi
-
-#SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
-#
-#if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-#  sed -i "/cb.or(/,/)/{
-#    /cb.like(cb.lower(root.get(\"description\")))/ s/)/),\
-#                          $SEARCH_LINE/
-#  }" "$SERVICE_FILE"
-#
-#  echo "✅ Search spec extended with '$PROPERTY_NAME'"
-#else
-#  echo "⚠️ Search already contains '$PROPERTY_NAME'"
-#fi
-
-#SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
-#
-#if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-#  sed -i "/cb.or(/,/)/{
-#    /)/{
-#      s/)/,\n                          $SEARCH_LINE\n                  )/
-#      b
-#    }
-#  }" "$SERVICE_FILE"
-#
-#  echo "✅ Search spec extended with '$PROPERTY_NAME'"
-#else
-#  echo "⚠️ Search already contains '$PROPERTY_NAME'"
-#fi
-
-
-SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
-
-if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-  sed -i "/cb.or(/,/)/{
-    /cb.like(cb.lower(root.get(\"description\"))/a\\
-                          ,$SEARCH_LINE
-  }" "$SERVICE_FILE"
-
-  echo "✅ Search spec extended with '$PROPERTY_NAME'"
-else
-  echo "⚠️ Search already contains '$PROPERTY_NAME'"
-fi
-
-
 
 
 # -------------------------------
