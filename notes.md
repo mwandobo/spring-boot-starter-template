@@ -16,4 +16,5 @@ then log as below
         log.info("User ID: {}", userId);
         log.info("Payload: {}", new ObjectMapper().writeValueAsString(payload));
 
+./add-property.sh department status String true
 

@@ -129,6 +129,7 @@ public class ${FEATURE_UPPER}Service {
                             cb.lower(root.get("name")),
                             "%" + search.toLowerCase() + "%"
                     )
+                    cb.like(cb.lower(root.get("description")), "%" + search.toLowerCase() + "%")
             );
         }
 

@@ -92,6 +92,7 @@ Content-Type: application/json
 {
   "name": "User Approval",
   "description": "This is the approval for user",
+  ,"code": "Sample Code"
   "sysApprovalId": 1
 }
 
@@ -113,6 +114,7 @@ Content-Type: application/json
   "roleId": 1,
   "userApprovalId": 2,
   "description": "This is some descriptions"
+  ,"code": "Sample Code"
 }
 
 ### approve levels
@@ -131,6 +133,7 @@ Content-Type: application/json
   "entityId": 1,
   "entityCreatorId": 1,
   "description": "This is first action",
+  ,"code": "Sample Code"
   "action": "REJECTED",
   "extraData1": [
     { "asset": { "name": "Asset One" } },
@@ -150,6 +153,7 @@ Content-Type: application/json
   "entityName": "Role",
   "entityId": 1,
   "description": "This is first action",
+  ,"code": "Sample Code"
   "action": "approve"
 }
 
@@ -169,6 +173,7 @@ Content-Type: application/json
 {
   "title": "Urgent: Action Required",
   "description": "Please review the pending request",
+  ,"code": "Sample Code"
   "forName": "Jane Smith",
   "forId": "EMP002",
   "isRead": false,
@@ -194,14 +199,17 @@ Content-Type: application/json
   ],
   "userId": 1,
   "description": "New approval level has been added",
+  ,"code": "Sample Code"
   "forName": "Level Manager",
   "forId": "level-123",
   "redirectUrl": "https://mcb.or.tz/system/levels/level-123",
   "context": {
     "levelName": "Finance Level 1",
     "description": "Handles all finance approvals",
-    "status": "Active",
+  ,"code": "Sample Code"
     "manageLevelLink": "https://mcb.or.tz/admin/levels",
     "year": "2025"
   }
 }
+
+
