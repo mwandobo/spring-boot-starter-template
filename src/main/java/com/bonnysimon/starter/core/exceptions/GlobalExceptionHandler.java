@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
@@ -60,5 +61,20 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 path
         ));
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NoHandlerFoundException ex) {
+
+        String path = ex.getRequestURL();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.NOT_FOUND.value(),
+                        "Not Found",
+                        "The requested endpoint does not exist",
+                        path
+                ));
     }
 }

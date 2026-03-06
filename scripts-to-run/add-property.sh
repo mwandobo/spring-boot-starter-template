@@ -4,17 +4,44 @@
 # Add Property to Feature
 # ===============================
 
-if [ $# -lt 3 ]; then
-  echo "❌ Usage: ./add-property.sh <feature> <propertyName> <type> [mandatory]"
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --feature)
+      FEATURE="$2"
+      shift 2
+      ;;
+    --name)
+      PROPERTY_NAME="$2"
+      shift 2
+      ;;
+    --type)
+      PROPERTY_TYPE="$2"
+      shift 2
+      ;;
+    --mandatory)
+      MANDATORY="$2"
+      shift 2
+      ;;
+    *)
+      echo "❌ Unknown parameter: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# -------------------------------
+# Validate
+# -------------------------------
+if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" || -z "$PROPERTY_TYPE" ]]; then
+  echo "❌ Usage:"
+  echo "./add-property.sh --feature department --name code --type String --mandatory true"
   exit 1
 fi
 
-FEATURE_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
 
-PROPERTY_NAME="$2"
-PROPERTY_TYPE="$3"
-MANDATORY="${4:-false}"
+MANDATORY="${MANDATORY:-false}"
 
 BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
 ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
@@ -23,7 +50,7 @@ SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
 HTTP_FILE="http-client.http"
 
 # -------------------------------
-# Validate
+# Validate files
 # -------------------------------
 for f in "$ENTITY_FILE" "$DTO_FILE" "$SERVICE_FILE"; do
   [ ! -f "$f" ] && echo "❌ Missing file: $f" && exit 1
@@ -58,13 +85,11 @@ else
 fi
 
 # -------------------------------
-# Service search (findAll)
+# Service search
 # -------------------------------
 SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
 
-# Only add if not present
 if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-  # Append after the description line
   sed -i "/cb.like(cb.lower(root.get(\"description\"))/a\\
                           ,$SEARCH_LINE" "$SERVICE_FILE"
 
@@ -74,9 +99,11 @@ else
 fi
 
 # -------------------------------
-# Service (create + update + search)
+# Service create/update
 # -------------------------------
-SETTER="entity.set$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}(request.get$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}());"
+PROP_CAP="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
+
+SETTER="entity.set${PROP_CAP}(request.get${PROP_CAP}());"
 
 if ! grep -q "$SETTER" "$SERVICE_FILE"; then
   sed -i "/entity.setDescription/a\\
@@ -85,7 +112,6 @@ if ! grep -q "$SETTER" "$SERVICE_FILE"; then
 else
   echo "⚠️ Service already maps '$PROPERTY_NAME'"
 fi
-
 
 # -------------------------------
 # HTTP client

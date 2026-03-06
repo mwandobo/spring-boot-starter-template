@@ -4,23 +4,69 @@
 # Spring Boot Feature Generator
 # ===============================
 
-if [ -z "$1" ]; then
+#if [ -z "$1" ]; then
+#  echo "❌ Feature name is required"
+#  echo "Usage: ./generate-feature.sh department"
+#  exit 1
+#fi
+
+
+
+
+
+
+
+
+
+FEATURE_NAME=""
+PLURAL_SUFFIX=""
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --name)
+      FEATURE_NAME="$2"
+      shift 2
+      ;;
+    --plural)
+      PLURAL_SUFFIX="$2"
+      shift 2
+      ;;
+    *)
+      echo "❌ Unknown parameter: $1"
+      echo "Usage: ./generate-feature.sh --name department --plural s"
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$FEATURE_NAME" ]; then
   echo "❌ Feature name is required"
-  echo "Usage: ./generate-feature.sh department"
+  echo "Usage: ./generate-feature.sh --name department --plural s"
   exit 1
 fi
 
-FEATURE_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+
+
+
+
+
+#FEATURE_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+
+FEATURE_LOWER=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+
+
+
 
 # -------------------------------
 # Plural handling (explicit)
 # -------------------------------
-if [ -z "$2" ]; then
-  # no suffix provided → no plural
+if [ -z "$PLURAL_SUFFIX" ]; then
   FEATURE_PLURAL="$FEATURE_LOWER"
 else
-  case "$2" in
+  case "$PLURAL_SUFFIX" in
     s)
       FEATURE_PLURAL="${FEATURE_LOWER}s"
       ;;
@@ -31,7 +77,7 @@ else
       FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
       ;;
     *)
-      echo "❌ Invalid plural suffix: $2 (use: s | es | ies)"
+      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
       exit 1
       ;;
   esac

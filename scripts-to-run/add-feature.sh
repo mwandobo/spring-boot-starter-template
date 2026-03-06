@@ -162,7 +162,7 @@ public class ${FEATURE_UPPER}Service {
     public ${FEATURE_UPPER}Entity create(Create${FEATURE_UPPER}DTO request) {
         repository.findByName(request.getName())
                 .ifPresent(existing -> {
-                    throw new IllegalArgumentException(
+                    throw new IllegalStateException(
                             "${FEATURE_UPPER} with name '" + request.getName() + "' already exists"
                     );
                 });
@@ -178,7 +178,7 @@ public class ${FEATURE_UPPER}Service {
     public ${FEATURE_UPPER}Entity update(Long id, Create${FEATURE_UPPER}DTO request) {
         ${FEATURE_UPPER}Entity entity = repository.findById(id)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new IllegalStateException(
                                 "${FEATURE_UPPER} not found with id: " + id
                         )
                 );
@@ -186,7 +186,7 @@ public class ${FEATURE_UPPER}Service {
         repository.findByName(request.getName())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
-                    throw new IllegalArgumentException(
+                    throw new IllegalStateException(
                             "${FEATURE_UPPER} with name '" + request.getName() + "' already exists"
                     );
                 });
@@ -201,7 +201,7 @@ public class ${FEATURE_UPPER}Service {
     public void delete(Long id, boolean soft) {
         ${FEATURE_UPPER}Entity entity = repository.findById(id)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new IllegalStateException(
                                 "${FEATURE_UPPER} not found with id: " + id
                         )
                 );
