@@ -21,7 +21,7 @@ public class CurrentUserService {
         if (token != null && jwtUtil.validateToken(token)) {
             return jwtUtil.extractUserId(token);
         }
-        throw new RuntimeException("User not authenticated or invalid token");
+        throw new IllegalStateException("User not authenticated or invalid token");
     }
 
     public String getCurrentUserEmail() {
@@ -29,7 +29,7 @@ public class CurrentUserService {
         if (token != null && jwtUtil.validateToken(token)) {
             return jwtUtil.extractEmail(token);
         }
-        throw new RuntimeException("User not authenticated or invalid token");
+        throw new IllegalStateException("User not authenticated or invalid token");
     }
 
     private String extractTokenFromRequest() {

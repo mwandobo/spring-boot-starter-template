@@ -175,7 +175,7 @@ public class ApprovalLevelService {
     @Transactional
     public ApprovalLevel update(Long id, ApprovalLevelRequestDTO request) {
         ApprovalLevel level = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ApprovalLevel not found"));
+                .orElseThrow(() -> new IllegalStateException("ApprovalLevel not found"));
 
         level.setName(request.getName());
         level.setDescription(request.getDescription());
@@ -185,7 +185,7 @@ public class ApprovalLevelService {
 
         if (request.getUserApprovalId() != null) {
             UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
-                    .orElseThrow(() -> new IllegalArgumentException("UserApproval not found"));
+                    .orElseThrow(() -> new IllegalStateException("UserApproval not found"));
             level.setUserApproval(userApproval);
         }
 
@@ -209,7 +209,7 @@ public class ApprovalLevelService {
     @Transactional
     public void delete(Long id, boolean soft) {
         ApprovalLevel level = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ApprovalLevel not found"));
+                .orElseThrow(() -> new IllegalStateException("ApprovalLevel not found"));
 
         updateApprovalLevelOrder(level.getUserApproval().getId(), "DELETE", level);
 

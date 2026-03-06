@@ -74,7 +74,7 @@ public class AuthService {
 
             // Get user from DB
             User user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
 
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -90,8 +90,6 @@ public class AuthService {
             String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
             logger.info("JWT generated for user: {}", loginRequest.getEmail());
 
-
-
             String roleName = user.getRole() != null ? user.getRole().getName() : null;
             Set<String> permissions = user.getRole() != null
                     ? user.getRole().getPermissions().stream()
@@ -103,7 +101,7 @@ public class AuthService {
 
         } catch (Exception ex) {
             logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
-            throw ex; // or throw a custom AuthenticationException
+            throw new IllegalStateException(ex.getMessage()); // or throw a custom AuthenticationException
         }
     }
 

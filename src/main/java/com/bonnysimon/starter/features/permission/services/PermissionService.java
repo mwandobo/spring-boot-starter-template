@@ -46,7 +46,7 @@ public class PermissionService {
     @Transactional
     public Role assignPermissionsToRole(AssignPermissionRequest request) {
         Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new IllegalStateException("Role not found"));
 
         List<Permission> permissions = permissionRepository.findAllById(request.getPermissionIds());
         role.setPermissions(new HashSet<>(permissions));

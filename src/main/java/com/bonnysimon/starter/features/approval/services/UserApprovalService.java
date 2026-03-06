@@ -40,7 +40,7 @@ public class UserApprovalService {
         userApproval.setDescription(request.getDescription());
 
         SysApproval sysApproval = sysApprovalRepository.findById(request.getSysApprovalId())
-                .orElseThrow(() -> new IllegalArgumentException("System approval does not exist"));
+                .orElseThrow(() -> new IllegalStateException("System approval does not exist"));
         userApproval.setSysApproval(sysApproval);
 
         return repository.save(userApproval);
@@ -49,19 +49,19 @@ public class UserApprovalService {
     @Transactional
     public UserApproval update(Long id, UserApprovalRequestDTO request) {
         UserApproval userApproval = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("UserApproval not found with id: " + id));
+                .orElseThrow(() -> new IllegalStateException("UserApproval not found with id: " + id));
 
         // Check if another userApproval with the same name exists
         UserApproval existing = repository.findByName(request.getName());
         if (existing != null && !existing.getId().equals(id)) {
-            throw new IllegalArgumentException("UserApproval with name '" + request.getName() + "' already exists");
+            throw new IllegalStateException("UserApproval with name '" + request.getName() + "' already exists");
         }
 
         userApproval.setName(request.getName());
         userApproval.setDescription(request.getDescription());
 
         SysApproval sysApproval = sysApprovalRepository.findById(request.getSysApprovalId())
-                .orElseThrow(() -> new IllegalArgumentException("System approval does not exist"));
+                .orElseThrow(() -> new IllegalStateException("System approval does not exist"));
         userApproval.setSysApproval(sysApproval);
 
         return repository.save(userApproval);
@@ -70,7 +70,7 @@ public class UserApprovalService {
     @Transactional
     public void delete(Long id, boolean soft) {
         UserApproval userApproval = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("UserApproval not found with id: " + id));
+                .orElseThrow(() -> new IllegalStateException("UserApproval not found with id: " + id));
 
         if (soft) {
             userApproval.setDeleted(true); // soft delete flag from BaseEntity

@@ -38,10 +38,10 @@ public class RoleService {
     @Transactional
     public User assignRolesToUser(AssignRoleRequest request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalStateException("User not found"));
 
         Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalStateException("User not found"));
         user.setRole(role);
 
         return userRepository.save(user);
@@ -50,7 +50,7 @@ public class RoleService {
 //    @Transactional
 //    public Role create(CreateRoleRequest request) {
 //        Role role = roleRepository.findByName(request.getName())
-//                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+//                .orElseThrow(() -> new IllegalStateException("Role not found"));
 //
 //
 //
@@ -65,7 +65,7 @@ public class RoleService {
         // Check if role already exists
         roleRepository.findByName(request.getName())
                 .ifPresent(r -> {
-                    throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
+                    throw new IllegalStateException("Role with name '" + request.getName() + "' already exists");
                 });
 
         // Map DTO -> Entity
@@ -78,13 +78,13 @@ public class RoleService {
     @Transactional
     public Role update(Long id, CreateRoleRequest request) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+                .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
 
         // Check if another role with the same name exists
         roleRepository.findByName(request.getName())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
+                    throw new IllegalStateException("Role with name '" + request.getName() + "' already exists");
                 });
 
         // Update fields
@@ -95,7 +95,7 @@ public class RoleService {
 
     public void delete(Long id, boolean soft) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+                .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
 
         if (soft) {
             // Soft delete (flag from BaseEntity)

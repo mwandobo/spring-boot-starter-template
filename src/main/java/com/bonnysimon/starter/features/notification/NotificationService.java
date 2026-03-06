@@ -80,7 +80,7 @@ public class NotificationService {
             if (userOpt.isPresent()) {
                 user = userOpt.get();
             } else {
-                throw new RuntimeException("User not found with id: " + dto.getUserId());
+                throw new IllegalStateException("User not found with id: " + dto.getUserId());
             }
         }
 
@@ -91,7 +91,7 @@ public class NotificationService {
             if (notifiedOpt.isPresent()) {
                 notifiedPersonnel = notifiedOpt.get();
             } else {
-                throw new RuntimeException("Recipient not found with id: " + dto.getRecipientId());
+                throw new IllegalStateException("Recipient not found with id: " + dto.getRecipientId());
             }
         }
 

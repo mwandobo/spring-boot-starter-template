@@ -16,5 +16,12 @@ then log as below
         log.info("User ID: {}", userId);
         log.info("Payload: {}", new ObjectMapper().writeValueAsString(payload));
 
+to add feature in the project run command
+    ./scripts-to-run/add-feature.sh --name <feature-name> --plural <prural-indicator>
+    forexample
+    ./scripts-to-run/add-feature.sh --name department --plural s 
+    so far we have handled s es ies so far
+    
+
 ./add-property.sh department status String true
 

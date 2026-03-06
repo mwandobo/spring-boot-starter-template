@@ -56,7 +56,7 @@ public class ApprovalActionService {
     public ApprovalAction create(ApprovalActionRequestDTO request) {
 
         ApprovalLevel approvalLevel = approvalLevelRepository.findById(request.getApprovalLevelId())
-                .orElseThrow(() -> new IllegalArgumentException("Approval Level not found"));
+                .orElseThrow(() -> new IllegalStateException("Approval Level not found"));
 
         Optional<ApprovalAction> existing =
                 repository.findByApprovalLevelIdAndEntityId(
@@ -105,15 +105,15 @@ public class ApprovalActionService {
     @Transactional
     public ApprovalAction update(Long id, ApprovalActionRequestDTO request) {
         ApprovalAction action = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Approval Action not found"));
+                .orElseThrow(() -> new IllegalStateException("Approval Action not found"));
 
         ApprovalLevel approvalLevel = approvalLevelRepository.findById(request.getApprovalLevelId())
-                .orElseThrow(() -> new IllegalArgumentException("Approval Level not found"));
+                .orElseThrow(() -> new IllegalStateException("Approval Level not found"));
 
         Long userId = currentUserService.getCurrentUserId();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User Not found"));
+                .orElseThrow(() -> new IllegalStateException("User Not found"));
 
         action.setApprovalLevel(approvalLevel);
         action.setUser(user);
@@ -129,7 +129,7 @@ public class ApprovalActionService {
     @Transactional
     public void delete(Long id, boolean soft) {
         ApprovalAction action = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ApprovalAction not found"));
+                .orElseThrow(() -> new IllegalStateException("ApprovalAction not found"));
 
         if (soft) {
             action.setDeleted(true);
