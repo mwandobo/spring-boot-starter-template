@@ -16,7 +16,7 @@ POST {{base_url}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "admin@gmail.com",
+  "email": "bonifacesimon04@gmail.com",
   "name": "John Doe",
   "password": "123456"
 }
@@ -92,7 +92,6 @@ Content-Type: application/json
 {
   "name": "User Approval",
   "description": "This is the approval for user",
-  ,"status": "Sample Status"
   "sysApprovalId": 1
 }
 
@@ -112,9 +111,8 @@ Content-Type: application/json
 {
   "name": "Top level",
   "roleId": 1,
-  "userApprovalId": 2,
+  "userApprovalId": 1,
   "description": "This is some descriptions"
-  ,"status": "Sample Status"
 }
 
 ### approve levels
@@ -133,7 +131,6 @@ Content-Type: application/json
   "entityId": 1,
   "entityCreatorId": 1,
   "description": "This is first action",
-  ,"status": "Sample Status"
   "action": "REJECTED",
   "extraData1": [
     { "asset": { "name": "Asset One" } },
@@ -153,7 +150,6 @@ Content-Type: application/json
   "entityName": "Role",
   "entityId": 1,
   "description": "This is first action",
-  ,"status": "Sample Status"
   "action": "approve"
 }
 
@@ -173,7 +169,6 @@ Content-Type: application/json
 {
   "title": "Urgent: Action Required",
   "description": "Please review the pending request",
-  ,"status": "Sample Status"
   "forName": "Jane Smith",
   "forId": "EMP002",
   "isRead": false,
@@ -199,14 +194,12 @@ Content-Type: application/json
   ],
   "userId": 1,
   "description": "New approval level has been added",
-  ,"status": "Sample Status"
   "forName": "Level Manager",
   "forId": "level-123",
   "redirectUrl": "https://mcb.or.tz/system/levels/level-123",
   "context": {
     "levelName": "Finance Level 1",
     "description": "Handles all finance approvals",
-  ,"status": "Sample Status"
     "manageLevelLink": "https://mcb.or.tz/admin/levels",
     "year": "2025"
   }

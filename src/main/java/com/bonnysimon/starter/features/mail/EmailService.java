@@ -1,8 +1,10 @@
 package com.bonnysimon.starter.features.mail;
 
+import com.bonnysimon.starter.core.config.RabbitConfig;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -10,13 +12,13 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final RabbitTemplate rabbitTemplate;
 
 
     public void sendSimpleEmail(String to, String subject, String text) {
@@ -45,6 +47,15 @@ public class EmailService {
         helper.setSubject(emailPayload.getSubject());
         helper.setText(htmlContent, true);
         helper.setFrom("Mwalimu Commercial Bank <no-reply@mwalimucommercialbank.co.tz>");
+
         mailSender.send(mimeMessage);
+    }
+
+
+
+    public void queueEmail(EmailPayload emailPayload) {
+        // Push the email payload to the queue
+        rabbitTemplate.convertAndSend(RabbitConfig.QUEUE, emailPayload);
+
     }
 }

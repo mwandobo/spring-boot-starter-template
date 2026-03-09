@@ -138,7 +138,7 @@ public class NotificationService {
                     .context(context)
                     .build();
 
-            emailService.sendHtmlEmail(emailPayload); // async or sync based on your implementation
+            emailService.queueEmail(emailPayload); // async or sync based on your implementation
         }
 
         // 2. CREATE NOTIFICATION RECORDS FOR EACH RECIPIENT

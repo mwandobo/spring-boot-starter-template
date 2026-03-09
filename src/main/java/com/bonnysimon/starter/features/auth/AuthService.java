@@ -40,34 +40,6 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-
-//    public LoginResponse login(LoginRequest loginRequest) {
-//        try {
-//            logger.info("Attempting login for user: {}", loginRequest.getEmail());
-//
-//
-//            Authentication authentication = authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            loginRequest.getEmail(),
-//                            loginRequest.getPassword()
-//                    )
-//            );
-//
-//            logger.info("Authentication successful for user: {}", loginRequest.getEmail());
-//
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            String jwt = jwtUtil.generateToken(loginRequest.getEmail());
-//            logger.info("JWT generated for user: {}", loginRequest.getEmail());
-//
-//            return new LoginResponse(jwt, );
-//        } catch (Exception ex) {
-//            logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
-//            throw ex; // or throw a custom AuthenticationException if you handle that way
-//        }
-//    }
-
-
     public LoginResponse login(LoginRequest loginRequest) {
         try {
             logger.info("Attempting login for user: {}", loginRequest.getEmail());
@@ -104,7 +76,6 @@ public class AuthService {
             throw new IllegalStateException(ex.getMessage()); // or throw a custom AuthenticationException
         }
     }
-
 
     public void register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
