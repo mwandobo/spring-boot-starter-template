@@ -1,13 +1,9 @@
 package com.bonnysimon.starter.features.auth;
 
-import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
-import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
-import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
+import com.bonnysimon.starter.features.auth.dtos.*;
+import com.bonnysimon.starter.features.auth.services.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -26,8 +22,37 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterRequest registerRequest) {
-        authService.register(registerRequest);
-        return ResponseEntity.ok().build();
+    public  ResponseEntity<RegisterResponse>  register(@RequestBody RegisterRequest registerRequest) {
+        RegisterResponse response =  authService.register(registerRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    // --------- VERIFY OTP ---------
+    @PostMapping("/verify-otp")
+    public ResponseEntity<OtpVerificationResponse> verifyOtp(
+            @RequestParam String email,
+            @RequestBody OtpVerificationRequest request
+    ) {
+        boolean isValid = authService.verifyOtp(email, request.getOtp());
+        OtpVerificationResponse response = new OtpVerificationResponse(isValid);
+        return ResponseEntity.ok(response);
+    }
+
+    // --------- CHANGE PASSWORD ---------
+    @PostMapping("/change-password")
+    public ResponseEntity<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request.getEmail(), request.getOldPassword(), request.getNewPassword());
+        ChangePasswordResponse response = new ChangePasswordResponse("Password changed successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // --------- PASSWORD RECOVERY REQUEST ---------
+    @PostMapping("/password-recovery-request")
+    public ResponseEntity<PasswordRecoveryResponse> passwordRecoveryRequest(
+            @RequestParam String email
+    ) {
+        authService.passwordRecoveryRequest(email);
+        PasswordRecoveryResponse response = new PasswordRecoveryResponse("OTP sent for password recovery");
+        return ResponseEntity.ok(response);
     }
 }

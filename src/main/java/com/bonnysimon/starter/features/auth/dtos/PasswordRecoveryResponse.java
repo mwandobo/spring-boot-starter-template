@@ -9,9 +9,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Data
-public class LoginResponse {
-    private String token;
-    private String email;
-    private String role;
-    private Set<String> permissions;
+public class PasswordRecoveryResponse {
+    private String message;
 }

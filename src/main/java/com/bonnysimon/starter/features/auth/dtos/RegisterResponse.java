@@ -4,14 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Set;
-
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Data
-public class LoginResponse {
-    private String token;
+public class RegisterResponse {
     private String email;
-    private String role;
-    private Set<String> permissions;
+    private String name;
+
 }

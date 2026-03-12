@@ -11,12 +11,26 @@ Content-Type: application/json
     client.global.set("token", response.body.token);
 %}
 
+
+###
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "bonifacesimonmwandobo@gmail.com",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
 ###
 POST {{base_url}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "bonifacesimon04@gmail.com",
+  "email": "bonifacesimonmwandobo@gmail.com",
   "name": "John Doe",
   "password": "123456"
 }

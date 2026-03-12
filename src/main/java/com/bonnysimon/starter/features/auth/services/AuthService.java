@@ -1,17 +1,18 @@
-package com.bonnysimon.starter.features.auth;
+package com.bonnysimon.starter.features.auth.services;
 
 import com.bonnysimon.starter.core.utils.JwtUtil;
 import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
 import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
 import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
+import com.bonnysimon.starter.features.auth.dtos.RegisterResponse;
 import com.bonnysimon.starter.features.permission.Permission;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
+import lombok.Data;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -21,24 +22,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Data
 public class AuthService {
-
     private final UserRepository userRepository;
+    private final OtpService otpService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
-
-
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager,
-                       JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-    }
 
     public LoginResponse login(LoginRequest loginRequest) {
         try {
@@ -54,6 +45,12 @@ public class AuthService {
                             loginRequest.getPassword()
                     )
             );
+
+            if (!Boolean.TRUE.equals(user.getIsOtpVerified())) {
+                throw new IllegalStateException("User OTP is not verified yet");
+            }
+
+
 
             logger.info("Authentication successful for user: {}", loginRequest.getEmail());
 
@@ -77,7 +74,7 @@ public class AuthService {
         }
     }
 
-    public void register(RegisterRequest registerRequest) {
+    public RegisterResponse register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new IllegalStateException("Email is already taken!");
         }
@@ -87,5 +84,50 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         userRepository.save(user);
+
+        return new RegisterResponse(user.getName(), user.getEmail());
+    }
+
+    // --------- VERIFY OTP ---------
+    public boolean verifyOtp(String email, String otpCode) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        boolean valid = otpService.verifyOtp(user.getId(), otpCode);
+        if (valid) {
+            logger.info("OTP verified for user: {}", email);
+        } else {
+            logger.warn("OTP verification failed for user: {}", email);
+        }
+        return valid;
+    }
+
+    // --------- CHANGE PASSWORD ---------
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalStateException("Old password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        logger.info("Password changed successfully for user: {}", email);
+    }
+
+    // --------- PASSWORD RECOVERY REQUEST ---------
+    public void passwordRecoveryRequest(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        // Generate OTP for password reset
+        String otp = otpService.generateOtp(user.getId());
+
+        // Send OTP to user email or phone (hypothetical method)
+        otpService.sendOtp(user.getEmail(), otp);
+
+        logger.info("Password recovery OTP sent for user: {}", email);
     }
 }
