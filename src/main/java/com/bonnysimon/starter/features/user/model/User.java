@@ -11,8 +11,9 @@ public class User extends BaseEntity {
     private String name;
     private String email;
     private String password;
-    private Boolean isOtpVerified;
-    private Boolean isRecoveryRequested;
+    private String otp;
+    private Boolean isOtpVerified = false;
+    private Boolean isRecoveryRequested = false;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")

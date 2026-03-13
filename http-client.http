@@ -30,10 +30,28 @@ POST {{base_url}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "bonifacesimonmwandobo@gmail.com",
-  "name": "John Doe",
+  "email": "bonifacesimon04@gmail.com",
+  "name": "Boniface Mwandobo",
   "password": "123456"
 }
+
+###
+POST {{base_url}}/auth/verify-otp?email=bonifacesimon04@gmail.com
+Content-Type: application/json
+
+{
+  "otp": "607276"
+}
+
+###
+GET {{base_url}}/auth/password-recovery-request?email=bonifacesimon04@gmail.com
+
+
+
+
+###
+GET {{base_url}}/users/
+Authorization: Bearer {{token}}
 
 ###
 GET {{base_url}}/users

@@ -60,45 +60,6 @@ public class ApprovalLevelService {
         return PaginationResponse.of(approvalLevels);
     }
 
-//    @Transactional
-//    public ApprovalLevel create(ApprovalLevelRequestDTO request) {
-//        Optional<UserApproval> userApproval = userApprovalRepository.findById(request.getUserApprovalId());
-//        if (userApproval.isEmpty()) {
-//            throw new IllegalStateException("User Approval Not Found");
-//        }
-//
-//        Optional<Role> role = roleRepository.findById(request.getRoleId());
-//        if (role.isEmpty()) {
-//            throw new IllegalStateException("Role Not Found");
-//        }
-//
-//        Optional<ApprovalLevel> existing = repository
-//                .findByRoleIdAndUserApprovalId(request.getRoleId(), request.getUserApprovalId());
-//
-//        if (existing.isPresent()) {
-//            throw new IllegalStateException("Approval Level already exists for this role and userApproval");
-//        }
-//
-//        int nextLevel = updateApprovalLevelOrder(
-//                request.getUserApprovalId(),
-//                "CREATE",
-//                null
-//        );
-//
-//
-//
-//        ApprovalLevel level = new ApprovalLevel();
-//        level.setName(request.getName());
-//        level.setDescription(request.getDescription());
-//        level.setLevel(nextLevel);
-//        level.setUserApproval(userApproval.get());
-//        level.setRole(role.get());
-//
-//        return repository.save(level);
-//    }
-
-
-
 
     @Transactional
     public ApprovalLevel create(ApprovalLevelRequestDTO request) throws MessagingException {
@@ -313,6 +274,4 @@ public class ApprovalLevelService {
             return obj.toString();
         }
     }
-
-
 }

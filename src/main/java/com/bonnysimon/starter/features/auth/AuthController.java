@@ -47,7 +47,7 @@ public class AuthController {
     }
 
     // --------- PASSWORD RECOVERY REQUEST ---------
-    @PostMapping("/password-recovery-request")
+    @GetMapping("/password-recovery-request")
     public ResponseEntity<PasswordRecoveryResponse> passwordRecoveryRequest(
             @RequestParam String email
     ) {
