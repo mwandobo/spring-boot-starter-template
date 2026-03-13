@@ -106,6 +106,7 @@ public class AuthService {
 
         String otp = otpService.generateOtp(user.getId());
         user.setOtp(otp);
+        user.setIsRecoveryRequested(true);
 
         userRepository.save(user);
 
@@ -122,40 +123,52 @@ public class AuthService {
         boolean valid = otpService.verifyOtp(user.getId(), otpCode);
         if (valid) {
             logger.info("OTP verified for user: {}", email);
+            user.setIsOtpVerified(true);
+            userRepository.save(user);
         } else {
             logger.warn("OTP verification failed for user: {}", email);
         }
         return valid;
     }
 
-    // --------- CHANGE PASSWORD ---------
-    public void changePassword(String email, String oldPassword, String newPassword) {
+    // --------- PASSWORD RECOVERY REQUEST ---------
+    public void passwordRecoveryRequest(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
+        String otp = otpService.generateOtp(user.getId());
+
+        user.setIsRecoveryRequested(true);
+        user.setOtp(otp);
+        userRepository.save(user);
+
+        sendAuthNotification(user,otp,"password-change", "Request For Password Change");
+
+        logger.info("Password recovery OTP sent for user: {}", email);
+    }
+
+    // --------- CHANGE PASSWORD ---------
+    public void changePassword(String email, String oldPassword, String newPassword) {
+
+        logger.info("Password recovery OTP sent for user: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        if (!user.getIsRecoveryRequested()) {
+            throw new IllegalStateException("No Request For Change Password Found");
+        }
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalStateException("Old password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setIsRecoveryRequested(false);
         userRepository.save(user);
 
         logger.info("Password changed successfully for user: {}", email);
     }
 
-    // --------- PASSWORD RECOVERY REQUEST ---------
-    public void passwordRecoveryRequest(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("User not found"));
-
-        // Generate OTP for password reset
-        String otp = otpService.generateOtp(user.getId());
-
-        // Send OTP to user email or phone (hypothetical method)
-        otpService.sendOtp(user.getEmail(), otp);
-
-        logger.info("Password recovery OTP sent for user: {}", email);
-    }
 
 
 //    @Transactional
@@ -196,14 +209,23 @@ public class AuthService {
     public void sendAuthNotification(User user, String otp, String template, String subject) {
 
         try {
-
             log.info("Auth notification for user={}", toJson(user));
 
             String redirectUrl = frontEndUrl + "/"
                     + FrontEndRouteConstants.CREATE_APPROVAL_LEVEL_REDIRECT_URL;
 
             Map<String, Object> context = new HashMap<>();
-            context.put("otp", otp);
+
+            if (otp != null && !otp.isBlank()) {
+                context.put("otp", otp);
+            }
+
+            if ("password-change".equals(template)) {
+                context.put("name", user.getName());
+                context.put("expiryMinutes", 5);
+                context.put("year", Year.now().getValue());
+            }
+
             context.put("expiryMinutes", 5);
             context.put("year", Year.now().getValue());
 
@@ -226,9 +248,6 @@ public class AuthService {
             log.error("Failed to send auth notification for user={}", user.getEmail(), e);
         }
     }
-
-
-
 
     private String toJson(Object obj) {
         try {
