@@ -2,7 +2,6 @@ package com.bonnysimon.starter.features.auth.services;
 
 import com.bonnysimon.starter.core.constants.FrontEndRouteConstants;
 import com.bonnysimon.starter.core.utils.JwtUtil;
-import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
 import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
 import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
@@ -11,11 +10,9 @@ import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
 import com.bonnysimon.starter.features.permission.Permission;
-import com.bonnysimon.starter.features.role.Role;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.mail.MessagingException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,9 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -148,9 +142,6 @@ public class AuthService {
 
     // --------- CHANGE PASSWORD ---------
     public void changePassword(String email, String oldPassword, String newPassword) {
-
-        logger.info("Password recovery OTP sent for user: {}", email);
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
@@ -169,45 +160,7 @@ public class AuthService {
         logger.info("Password changed successfully for user: {}", email);
     }
 
-
-
-//    @Transactional
-//    public void sendAuthNotification(User user, String otp, String template, String subject) throws MessagingException {
-//
-//        log.info("Approval level passed level={}", toJson(user));
-//
-//        String redirectUrl = frontEndUrl + "/"
-//                + FrontEndRouteConstants.CREATE_APPROVAL_LEVEL_REDIRECT_URL;
-//
-//        Map<String, Object> context = new HashMap<>();
-//
-//        context.put("otp", otp);
-//        context.put("expiryMinutes", 5);
-//        context.put("year", Year.now().getValue());
-//
-//
-//        List<String> recipients = new ArrayList<>();
-//        recipients.add(user.getEmail());
-//
-//
-//        // Build notification DTO
-//        SendNotificationDto dto = new SendNotificationDto();
-//        dto.setChannel(NotificationChannelsEnum.EMAIL);
-//        dto.setRecipients(recipients);
-//        dto.setForName(user.getName());
-//        dto.setForId(user.getId());
-//        dto.setContext(context);
-//        dto.setTemplate(template);
-//        dto.setSubject(subject);
-//        dto.setDescription(subject);
-//        dto.setRedirectUrl(redirectUrl);
-//
-//        // Send notification
-//        notificationService.sendNotification(dto);
-//    }
-
     public void sendAuthNotification(User user, String otp, String template, String subject) {
-
         try {
             log.info("Auth notification for user={}", toJson(user));
 
@@ -256,5 +209,4 @@ public class AuthService {
             return obj.toString();
         }
     }
-
 }
