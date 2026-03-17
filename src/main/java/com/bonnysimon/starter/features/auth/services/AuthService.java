@@ -125,6 +125,7 @@ public class AuthService {
         return valid;
     }
 
+
     // --------- PASSWORD RECOVERY REQUEST ---------
     public void passwordRecoveryRequest(String email) {
         User user = userRepository.findByEmail(email)

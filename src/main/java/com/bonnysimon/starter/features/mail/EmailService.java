@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -33,6 +34,7 @@ public class EmailService {
     public void sendHtmlEmail(          EmailPayload emailPayload) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+
         String[] recipients = emailPayload.getTo().toArray(new String[0]);
 
         Context thymeleafContext = new Context();
@@ -47,6 +49,14 @@ public class EmailService {
         helper.setSubject(emailPayload.getSubject());
         helper.setText(htmlContent, true);
         helper.setFrom("Mwalimu Commercial Bank <no-reply@mwalimucommercialbank.co.tz>");
+
+        helper.addInline("mwalimuMobile",
+                new ClassPathResource("static/images/email/mwalimu-mobile.png"),
+                "image/png");
+
+        helper.addInline("faida",
+                new ClassPathResource("static/images/email/faida.png"),
+                "image/png");
 
         mailSender.send(mimeMessage);
     }

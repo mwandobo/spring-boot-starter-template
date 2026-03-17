@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+
+<div th:fragment="footer">
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.5;">
+        <tr>
+            <td>
+                <p style="font-weight: bold; margin: 0 0 8px 0;">
+                    Regards
+                </p>
+            </td>
+        </tr>
+    </table>
+    <!-- Promotion Image Banner (left aligned) -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+
+        <tr>
+            <td align="left" style="text-align: left;">
+                <img th:src="|cid:mwalimuMobile|"
+                     alt="Kula faida utakavyo - Fixed Deposit Promotion"
+                     align="left"
+                     style="max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0; float: left;"
+                     width="600" />
+            </td>
+        </tr>
+    </table>
+
+    <!-- Signature / Contact Block -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.5;">
+        <tr>
+            <td>
+                <p style="margin: 4px 0; color: #EC7A29; font-weight: bold;">
+                    Nestory B. Mlingi
+                </p>
+                <p style="margin: 4px 0; font-weight: bold;  color: #84A2D8; ">
+                    Systems Alternative and Delivery Channel | Mwalimu Commercial Bank PLC
+                </p>
+
+                <p style="margin: 12px 0 4px 0; color: #84A2D8;">
+                    Mlimani Tower - Mezzanine Floor, Sam Nujoma Road<br/>
+                    P. O. Box 61002, Dar es Salaam
+                </p>
+
+                <p style="margin: 4px 0; color: #84A2D8;">
+                    Tel: +255 22 277 5131 | Mobile: +255 714 870 896
+                </p>
+                <!-- Email & Web (reduced bottom margin) -->
+                <p style="margin: 2px 0 4px 0; color: #7E9ED6;">
+                    E-mail:
+                    <a href="mailto:info@mwalimubank.co.tz" style="text-decoration: none;">
+                        info@mwalimubank.co.tz
+                    </a>
+                    | Web:
+                    <a href="https://mwalimubank.co.tz" style="text-decoration: none;">
+                        www.mwalimubank.co.tz
+                    </a>
+                </p>
+
+                <!-- Banner (remove or minimize vertical margins) -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0;">
+                    <tr>
+                        <td>
+                            <img th:src="|cid:faida|"
+                                 style="max-width: 100%; height: auto; display: block; border-radius: 6px;"
+                                 width="600"/>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Core Values (remove top margin, keep small bottom if needed) -->
+                <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 12px; color: #7E9ED6;">
+                    <span style="color: #EC7A29;">CORE VALUES:</span>
+                    Efficiency | Integrity | Customer Focus | Team Work | Innovation
+                </p>
+
+                <!-- Disclaimer -->
+                <p style="font-size: 12px; color: #AEBDD0; line-height: 1.4; margin: 15px 0 0 0;">
+                    Disclaimer:<br/>
+                    This Email and files transmitted along-with are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you are not the intended recipient, and have received this Email in error please notify the sender immediately and destroy the original message. Please note that any views or opinions presented in this Email and in any file or attachment are solely those of the sender and do not necessarily represent those of Mwalimu Commercial Bank PLC. Finally, the recipient should check this Email and any attachments for the presence of viruses. Mwalimu Commercial Bank PLC accepts no liability or responsibility for any damage caused by any virus transmitted by this Email.
+                </p>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>
