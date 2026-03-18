@@ -50,12 +50,15 @@ public class EmailService {
         helper.setText(htmlContent, true);
         helper.setFrom("Mwalimu Commercial Bank <no-reply@mwalimucommercialbank.co.tz>");
 
-        helper.addInline("mwalimuMobile",
-                new ClassPathResource("static/images/email/mwalimu-mobile.png"),
-                "image/png");
-
-        helper.addInline("faida",
-                new ClassPathResource("static/images/email/faida.png"),
+//        helper.addInline("mwalimuMobile",
+//                new ClassPathResource("static/images/email/mwalimu-mobile.png"),
+//                "image/png");
+//
+//        helper.addInline("faida",
+//                new ClassPathResource("static/images/email/faida.png"),
+//                "image/png");
+        helper.addInline("faidamax",
+                new ClassPathResource("static/images/email/faidamax.png"),
                 "image/png");
 
         mailSender.send(mimeMessage);
