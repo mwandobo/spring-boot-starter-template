@@ -165,7 +165,7 @@ Content-Type: application/json
 
 {
   "name": "Top levS",
-  "approvalLevelId": 1,
+  "approvalLevelId": 41,
   "entityName": "User",
   "entityId": 1,
   "entityCreatorId": 1,

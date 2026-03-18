@@ -191,8 +191,8 @@ public class ApprovalActionService {
                 notification.setForName(approvalLevel.getUserApproval().getSysApproval().getEntityName());
                 notification.setForId(approvalLevel.getId());
                 notification.setContext(context);
-                notification.setTemplate("create-level");
-                notification.setSubject("New Level Created");
+                notification.setTemplate("approval-rejected");
+                notification.setSubject("Approval Rejected");
                 notification.setDescription(
                         "Approval For Entity " + dto.getEntityName() + " has been Rejected"
                 );
