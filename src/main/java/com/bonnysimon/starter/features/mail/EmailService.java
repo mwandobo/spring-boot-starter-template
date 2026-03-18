@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +21,9 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final RabbitTemplate rabbitTemplate;
+
+    @Value("${app.mail.send-via-queue:true}")
+    private boolean sendViaQueue;
 
 
     public void sendSimpleEmail(String to, String subject, String text) {
@@ -71,4 +75,20 @@ public class EmailService {
         rabbitTemplate.convertAndSend(RabbitConfig.QUEUE, emailPayload);
 
     }
+
+
+    public void sendEmail(EmailPayload emailPayload) {
+        if (sendViaQueue) {
+            queueEmail(emailPayload);
+        } else {
+            try {
+                sendHtmlEmail(emailPayload);
+            } catch (MessagingException e) {
+                throw new RuntimeException("Failed to send email directly", e);
+            }
+        }
+    }
+
+
+
 }
