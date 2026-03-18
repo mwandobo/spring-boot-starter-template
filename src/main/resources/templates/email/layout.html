@@ -10,24 +10,13 @@
 
     <!-- EMAIL CONTENT -->
     <div th:replace="${content}"></div>
-
     <br/>
 
-    <!-- FOOTER -->
-<!--    <div th:replace="email/fragments/footer :: footer"></div>-->
-<!--    <div th:replace="~{email/fragments/footer :: footer}"></div>-->
-
-<!--    <div th:replace="~{email/fragments/footer :: footer}"></div>-->
 
     <div th:replace="~{email/fragments/footer :: footer}">
         <!-- THIS TEXT SHOULD DISAPPEAR IF FRAGMENT LOADS -->
         FRAGMENT STILL NOT LOADING - OLD VERSION ACTIVE!
     </div>
-
-    <!--                    This Email and files transmitted along-with are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you are not the intended recipient, and have received this Email in error please notify the sender immediately and destroy the original message. Please note that any views or opinions presented in this Email and in any file or attachment are solely those of the sender and do not necessarily represent those of Mwalimu Commercial Bank PLC. Finally, the recipient should check this Email and any attachments for the presence of viruses. Mwalimu Commercial Bank PLC accepts no liability or responsibility for any damage caused by any virus transmitted by this Email.-->
-
-
-
 </div>
 
 </body>
