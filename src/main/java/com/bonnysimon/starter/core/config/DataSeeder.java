@@ -58,6 +58,7 @@ public class DataSeeder {
                 User adminUser = new User();
                 adminUser.setName("Super Admin"); // if you have username field
                 adminUser.setEmail("breezojr@gmail.com"); // if you use email
+                adminUser.setPhone("0764010158"); // if you use email
                 adminUser.setIsOtpVerified(true); // if you use email
                 adminUser.setPassword(passwordEncoder.encode("admin123"));
                 adminUser.setRole(adminRole);

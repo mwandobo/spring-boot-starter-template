@@ -26,6 +26,7 @@ Content-Type: application/json
 
 ###
 POST {{base_url}}/auth/register
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

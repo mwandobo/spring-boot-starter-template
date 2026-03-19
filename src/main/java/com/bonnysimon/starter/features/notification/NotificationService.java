@@ -1,5 +1,6 @@
 package com.bonnysimon.starter.features.notification;
 
+import com.bonnysimon.starter.core.config.CustomUserDetails;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.mail.EmailPayload;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -123,6 +126,21 @@ public class NotificationService {
         Long userId = dto.getUserId();
         String subject = dto.getSubject();
         Map<String, Object> context = dto.getContext();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        CustomUserDetails customUser = (CustomUserDetails) auth.getPrincipal();
+
+        User user = customUser.getUser(); // ✅ REAL entity
+
+
+
+
+
+
+
+
+
+                context.put("user", user);
         String description = dto.getDescription();
         String forName = dto.getForName();
         Long forId = dto.getForId();

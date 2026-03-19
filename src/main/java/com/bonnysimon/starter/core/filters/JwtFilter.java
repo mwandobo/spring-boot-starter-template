@@ -1,5 +1,6 @@
 package com.bonnysimon.starter.core.filters;
 
+import com.bonnysimon.starter.core.config.CustomUserDetails;
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import com.bonnysimon.starter.core.utils.JwtUtil;
@@ -39,8 +40,19 @@ public class JwtFilter extends OncePerRequestFilter {
                 User user = userRepository.findByEmail(email).orElse(null);
 
                 if (user != null) {
+//                    UsernamePasswordAuthenticationToken auth =
+//                            new UsernamePasswordAuthenticationToken(user, null, List.of());
+                    CustomUserDetails userDetails = new CustomUserDetails(user);
+
                     UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(user, null, List.of());
+
+
+
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }

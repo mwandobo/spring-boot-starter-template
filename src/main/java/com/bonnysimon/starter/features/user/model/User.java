@@ -10,6 +10,10 @@ import lombok.Data;
 public class User extends BaseEntity {
     private String name;
     private String email;
+
+    @Column(name = "phone", nullable = true)
+    private String phone;
+    
     private String password;
     private String otp;
     private Boolean isOtpVerified = false;
