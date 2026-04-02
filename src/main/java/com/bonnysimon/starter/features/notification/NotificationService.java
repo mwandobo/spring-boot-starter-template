@@ -1,6 +1,8 @@
 package com.bonnysimon.starter.features.notification;
 
 import com.bonnysimon.starter.core.config.CustomUserDetails;
+import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.mail.EmailPayload;
@@ -12,6 +14,8 @@ import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEn
 import com.bonnysimon.starter.features.user.model.User;
 import com.bonnysimon.starter.features.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,27 +40,30 @@ public class NotificationService {
         return NotificationResponseDto.fromEntity(entity);
     }
 
-    public PaginationResponse<NotificationResponseDto> findAll(PaginationRequest pagination, String search) {
-        // Base spec: filter out deleted notifications
+    public PagedResponse<NotificationResponseDto> findAll(
+            PaginationRequest pagination,
+            String search
+    ) {
         Specification<NotificationEntity> spec = getEntitySpecification(search);
-        // Execute paginated query
-        Page<NotificationEntity> notificationsPage = repository.findAll(spec, pagination.toPageable());
 
-        // Convert entities to DTOs
+        Page<NotificationEntity> notificationsPage =
+                repository.findAll(spec, pagination.toPageable());
+
         List<NotificationResponseDto> dtoList = notificationsPage.getContent()
                 .stream()
                 .map(this::convertToResponseDto)
-                .collect(Collectors.toList());
+                .toList();
 
-        // Create new page with DTOs
-        Page<NotificationResponseDto> dtoPage = new PageImpl<>(
+        return new PagedResponse<>(
                 dtoList,
-                notificationsPage.getPageable(),
-                notificationsPage.getTotalElements()
+                new PaginationDto(
+                        notificationsPage.getTotalElements(),
+                        notificationsPage.getNumber() + 1,
+                        notificationsPage.getSize(),
+                        notificationsPage.getTotalPages()
+                ),
+                false // or dynamic logic
         );
-
-        // Wrap in PaginationResponse
-        return PaginationResponse.of(dtoPage);
     }
 
     private static Specification<NotificationEntity> getEntitySpecification(String search) {
@@ -133,13 +140,6 @@ public class NotificationService {
         User user = customUser.getUser(); // ✅ REAL entity
 
 
-
-
-
-
-
-
-
                 context.put("user", user);
         String description = dto.getDescription();
         String forName = dto.getForName();
@@ -178,7 +178,6 @@ public class NotificationService {
         return "notification sent successfully";
     }
 
-
     public List<NotificationResponseDto> findByUserId(Long userId) {
 
         List<NotificationEntity> notifications = repository.findAll((root, query, cb) ->
@@ -194,4 +193,31 @@ public class NotificationService {
     }
 
 
+    public void delete(Long notificationId, boolean soft) {
+        NotificationEntity  notification = repository.findById(notificationId)
+                .orElseThrow(() -> new IllegalStateException("Notification not found"));
+        if (soft) {
+            // Soft delete (flag from BaseEntity)
+            notification.setDeleted(true);
+            repository.save(notification);
+        } else {
+            // Hard delete
+            repository.delete(notification);
+        }
+    }
+
+
+    public NotificationResponseDto findOne  (Long notificationId) {
+        NotificationEntity  notification = repository.findById(notificationId)
+                .orElseThrow(() -> new IllegalStateException("Notification not found"));
+        return convertToResponseDto(notification);
+    }
+
+    @Transactional
+    public NotificationResponseDto read  (Long notificationId) {
+        NotificationEntity  notification = repository.findById(notificationId)
+                .orElseThrow(() -> new IllegalStateException("Notification not found"));
+        notification.setRead(true);
+        return convertToResponseDto(notification);
+    }
 }

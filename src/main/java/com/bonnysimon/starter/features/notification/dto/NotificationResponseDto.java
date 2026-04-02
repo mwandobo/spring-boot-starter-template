@@ -38,6 +38,7 @@ public class NotificationResponseDto {
         dto.setExpiresAt(notification.getExpiresAt());
         dto.setRedirectUrl(notification.getRedirectUrl());
         dto.setGroup(notification.getGroupName());
+        dto.setRead(notification.isRead());
 
         dto.setUpdatedAt(notification.getUpdatedAt() != null ? notification.getUpdatedAt().toString() : null);
         dto.setCreatedAt(notification.getCreatedAt() != null ? notification.getCreatedAt().toString() : null);

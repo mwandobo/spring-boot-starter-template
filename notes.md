@@ -25,3 +25,6 @@ to add feature in the project run command
 
 ./add-property.sh department status String true
 
+
+import org.springframework.transaction.annotation.Transactional; no need for save
+

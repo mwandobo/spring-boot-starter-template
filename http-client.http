@@ -245,8 +245,9 @@ Content-Type: application/json
   }
 }
 
-
-
+###
+GET {{base_url}}/notifications/194/read
+Authorization: Bearer {{token}}
 
 
 
