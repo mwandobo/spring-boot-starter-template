@@ -37,23 +37,4 @@ public class NotificationController {
     public ApiResponse<String> sendNotifaction(@RequestBody SendNotificationDto request) throws MessagingException {
         return ApiResponse.success(service.sendNotification(request));
     }
-
-
-//
-//    @PutMapping("/{id}")
-//    public ApiResponse<ApprovalAction> update(
-//            @PathVariable Long id,
-//            @RequestBody ApprovalActionRequestDTO request
-//    ) {
-//        return ApiResponse.success(service.update(id, request));
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public ApiResponse<Void> delete(
-//            @PathVariable Long id,
-//            @RequestParam(name = "soft", defaultValue = "false") boolean soft
-//    ) {
-//        service.delete(id, soft);
-//        return ApiResponse.success(null);
-//    }
 }

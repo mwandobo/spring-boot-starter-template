@@ -7,17 +7,26 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public record PaginationResponse<T>(
-        List<T> content,
-        int currentPage,
-        int totalPages,
-        long totalItems
+        List<T> data,
+        Pagination pagination
 ) {
+
+    public record Pagination(
+            long total,
+            int page,
+            int limit,
+            int totalPages
+    ) {}
+
     public static <T> PaginationResponse<T> of(Page<T> page) {
         return new PaginationResponse<>(
                 page.getContent(),
-                page.getNumber() + 1,
-                page.getTotalPages(),
-                page.getTotalElements()
+                new Pagination(
+                        page.getTotalElements(),
+                        page.getNumber() + 1,
+                        page.getSize(),
+                        page.getTotalPages()
+                )
         );
     }
 }

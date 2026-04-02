@@ -12,6 +12,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class RoleService {
@@ -46,6 +48,17 @@ public class RoleService {
 
         return userRepository.save(user);
     }
+
+
+    public Role findOne(Long id) {
+        Role role = roleRepository.findWithPermissionsById(id)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+       return role;
+    }
+
+
+
 
 //    @Transactional
 //    public Role create(CreateRoleRequest request) {

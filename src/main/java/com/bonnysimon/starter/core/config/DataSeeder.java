@@ -53,6 +53,13 @@ public class DataSeeder {
                         return roleRepository.save(newRole); // ✅ Save it here
                     });
 
+
+// ✅ Assign permissions to role
+            adminRole.setPermissions(permissions);
+
+// ✅ Save again to persist relationship
+            roleRepository.save(adminRole);
+
             // 3. Default user (admin@starter.com / password: admin123)
             if (userRepository.findByEmail("breezojr@gmail.com").isEmpty()) {
                 User adminUser = new User();

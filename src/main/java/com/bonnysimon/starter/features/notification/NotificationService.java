@@ -179,4 +179,19 @@ public class NotificationService {
     }
 
 
+    public List<NotificationResponseDto> findByUserId(Long userId) {
+
+        List<NotificationEntity> notifications = repository.findAll((root, query, cb) ->
+                cb.and(
+                        cb.equal(root.get("user").get("id"), userId),
+                        cb.isFalse(root.get("deleted"))
+                )
+        );
+
+        return notifications.stream()
+                .map(this::convertToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+
 }

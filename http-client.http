@@ -8,7 +8,7 @@ Content-Type: application/json
 }
 
 > {%
-    client.global.set("token", response.body.token);
+    client.global.set("token", response.body.access_token);
 %}
 
 ###
@@ -58,7 +58,7 @@ Content-Type: application/json
 
 
 ###
-GET {{base_url}}/users/
+GET {{base_url}}/user
 Authorization: Bearer {{token}}
 
 ###
@@ -86,7 +86,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{base_url}}/roles
+GET {{base_url}}/roles/1
 Authorization: Bearer {{token}}
 
 ###

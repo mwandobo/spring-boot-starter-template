@@ -31,11 +31,23 @@ public class RoleController {
         return service.create(request);
     }
 
+    @GetMapping("/{id}")
+    public Role getOne(
+            @PathVariable Long id
+    ) {
+        return  service.findOne(id);
+    }
+
     // ✅ Update role
     @PutMapping("/{id}")
     public ApiResponse<Role> update(@PathVariable Long id, @RequestBody CreateRoleRequest request) {
         return ApiResponse.success(service.update(id, request));
     }
+
+
+
+
+
 
     @PostMapping("/assign")
     public User assignRoles(@RequestBody AssignRoleRequest request) {

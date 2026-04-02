@@ -6,7 +6,9 @@ import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
 import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
 import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
 import com.bonnysimon.starter.features.auth.dtos.RegisterResponse;
+import com.bonnysimon.starter.features.notification.NotificationEntity;
 import com.bonnysimon.starter.features.notification.NotificationService;
+import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
 import com.bonnysimon.starter.features.permission.Permission;
@@ -44,6 +46,49 @@ public class AuthService {
     @Value("${spring.front.end.url}")
     private String frontEndUrl;
 
+//    public LoginResponse login(LoginRequest loginRequest) {
+//        try {
+//            logger.info("Attempting login for user: {}", loginRequest.getEmail());
+//
+//            // Get user from DB
+//            User user = userRepository.findByEmail(loginRequest.getEmail())
+//                    .orElseThrow(() -> new IllegalStateException("User not found"));
+//
+//            Authentication authentication = authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(
+//                            loginRequest.getEmail(),
+//                            loginRequest.getPassword()
+//                    )
+//            );
+//
+//            if (!Boolean.TRUE.equals(user.getIsOtpVerified())) {
+//                throw new IllegalStateException("User OTP is not verified yet");
+//            }
+//
+//
+//            logger.info("Authentication successful for user: {}", loginRequest.getEmail());
+//
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//            String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
+//            logger.info("JWT generated for user: {}", loginRequest.getEmail());
+//
+//            String roleName = user.getRole() != null ? user.getRole().getName() : null;
+//            Set<String> permissions = user.getRole() != null
+//                    ? user.getRole().getPermissions().stream()
+//                    .map(Permission::getName)
+//                    .collect(Collectors.toSet())
+//                    : Set.of();
+//
+//            return new LoginResponse(jwt, user.getEmail(), roleName, permissions);
+//
+//        } catch (Exception ex) {
+//            logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
+//            throw new IllegalStateException(ex.getMessage()); // or throw a custom AuthenticationException
+//        }
+//    }
+
+
     public LoginResponse login(LoginRequest loginRequest) {
         try {
             logger.info("Attempting login for user: {}", loginRequest.getEmail());
@@ -63,14 +108,11 @@ public class AuthService {
                 throw new IllegalStateException("User OTP is not verified yet");
             }
 
-
-            logger.info("Authentication successful for user: {}", loginRequest.getEmail());
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
-            logger.info("JWT generated for user: {}", loginRequest.getEmail());
 
+            // Role + permissions
             String roleName = user.getRole() != null ? user.getRole().getName() : null;
             Set<String> permissions = user.getRole() != null
                     ? user.getRole().getPermissions().stream()
@@ -78,14 +120,21 @@ public class AuthService {
                     .collect(Collectors.toSet())
                     : Set.of();
 
-            return new LoginResponse(jwt, user.getEmail(), roleName, permissions);
+            // 🔥 Fetch notifications (like NestJS)
+            List<NotificationResponseDto> notifications = notificationService.findByUserId(user.getId());
+
+            // 🔥 Return structured response
+            return new LoginResponse(
+                    jwt,
+                    user,
+                    notifications
+            );
 
         } catch (Exception ex) {
             logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
-            throw new IllegalStateException(ex.getMessage()); // or throw a custom AuthenticationException
+            throw new IllegalStateException(ex.getMessage());
         }
     }
-
     public RegisterResponse register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new IllegalStateException("Email is already taken!");
