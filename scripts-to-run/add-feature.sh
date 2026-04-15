@@ -211,7 +211,6 @@ cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Service.java"
 package $BASE_PACKAGE.$FEATURE_LOWER;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
 import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
 import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
 import $BASE_PACKAGE.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
@@ -220,6 +219,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.core.dto.PaginationDto;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -227,27 +229,53 @@ public class ${FEATURE_UPPER}Service {
 
     private final ${FEATURE_UPPER}Repository repository;
 
-    public PaginationResponse<${FEATURE_UPPER}Entity> findAll(
+    public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
             PaginationRequest pagination,
             String search
     ) {
-        Specification<${FEATURE_UPPER}Entity> spec =
-                (root, query, cb) -> cb.isFalse(root.get("deleted"));
-
-        if (search != null && !search.trim().isEmpty()) {
-            spec = spec.and((root, query, cb) ->
-                   cb.or(
-                          cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
-                          cb.like(cb.lower(root.get("description")), "%" + search.toLowerCase() + "%")
-                  )
-            );
-        }
+        Specification<${FEATURE_UPPER}Entity> spec = getEntitySpecification(search);
 
         Page<${FEATURE_UPPER}Entity> page =
                 repository.findAll(spec, pagination.toPageable());
 
-        return PaginationResponse.of(page);
+        List<${FEATURE_UPPER}ResponseDTO> dtoList = page.getContent()
+                        .stream()
+                        .map(${FEATURE_UPPER}ResponseDTO::fromEntity)
+                        .toList();
+
+        return new PagedResponse<>(
+                        dtoList,
+                        new PaginationDto(
+                                page.getTotalElements(),
+                                page.getNumber() + 1,
+                                page.getSize(),
+                                page.getTotalPages()
+                        ),
+                        false // or dynamic logic
+                );
     }
+
+        private static Specification< ${FEATURE_UPPER}Entity> getEntitySpecification(String search) {
+            Specification< ${FEATURE_UPPER}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+
+            // Optional search filter (case-insensitive)
+            if (search != null && !search.trim().isEmpty()) {
+                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                spec = spec.and((root, query, cb) ->
+                        cb.or(
+                                cb.like(cb.lower(root.get("title")), likePattern),
+                                cb.like(cb.lower(root.get("description")), likePattern)
+                        )
+                );
+            }
+            return spec;
+        }
+
+
+
+
+
+
 
     @Transactional
     public ${FEATURE_UPPER}Entity create(Create${FEATURE_UPPER}DTO request) {
@@ -323,6 +351,8 @@ import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
+import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
+import com.bonnysimon.starter.core.dto.PagedResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -334,13 +364,11 @@ public class ${FEATURE_UPPER}Controller {
     private final ${FEATURE_UPPER}Service service;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<${FEATURE_UPPER}Entity>> findAll(
+    public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
-        return ApiResponse.success(
-                service.findAll(pagination, search)
-        );
+                return service.findAll(pagination, search);
     }
 
     @PostMapping
@@ -351,6 +379,13 @@ public class ${FEATURE_UPPER}Controller {
                 service.create(request)
         );
     }
+
+     @GetMapping("/{id}")
+        public ${FEATURE_UPPER}ResponseDTO findOne(
+                @PathVariable Long id
+        ) {
+            return service.findOne(id);
+        }
 
     @PutMapping("/{id}")
     public ApiResponse<${FEATURE_UPPER}Entity> update(
