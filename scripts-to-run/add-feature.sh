@@ -6,6 +6,30 @@
 
 FEATURE_NAME=""
 PLURAL_SUFFIX=""
+PARENT=""
+
+#while [[ "$#" -gt 0 ]]; do
+#  case $1 in
+#    --name)
+#      FEATURE_NAME="$2"
+#      shift 2
+#      ;;
+#    --plural)
+#      PLURAL_SUFFIX="$2"
+#      shift 2
+#      ;;
+#    --parent)
+#      PARENT="$2"
+#      shift 2
+#      ;;
+#    *)
+#      echo "❌ Unknown parameter: $1"
+#      echo "Usage: ./generate-feature.sh --name department --plural s"
+#      exit 1
+#      ;;
+#  esac
+#done
+
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -17,13 +41,25 @@ while [[ "$#" -gt 0 ]]; do
       PLURAL_SUFFIX="$2"
       shift 2
       ;;
+    --parent)
+      PARENT="$2"
+      shift 2
+      ;;
+    --help|-h)
+      echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural <s|es|ies>] [--parent <parent>]"
+      echo "Example: ./generate-feature.sh --name department --plural s --parent admin"
+      exit 0
+      ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./generate-feature.sh --name department --plural s"
+      echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural <s|es|ies>] [--parent <parent>]"
       exit 1
       ;;
   esac
 done
+
+
+
 
 if [ -z "$FEATURE_NAME" ]; then
   echo "❌ Feature name is required"
@@ -33,6 +69,7 @@ fi
 
 FEATURE_LOWER=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
 
 # -------------------------------
 # Plural handling (explicit)
@@ -59,7 +96,12 @@ fi
 
 
 BASE_PACKAGE="com.bonnysimon.starter.features"
-BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+if [ -n "$PARENT_LOWER" ]; then
+  BASE_PACKAGE="$BASE_PACKAGE.$PARENT_LOWER"
+  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+else
+  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+fi
 
 echo "🚀 Creating feature: $FEATURE_UPPER"
 
@@ -115,6 +157,54 @@ public interface ${FEATURE_UPPER}Repository extends JpaRepository<${FEATURE_UPPE
 EOF
 
 # -------------------------------
+# DTO
+# -------------------------------
+cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
+package $BASE_PACKAGE.$FEATURE_LOWER.dto;
+
+import lombok.Data;
+
+@Data
+public class Create${FEATURE_UPPER}DTO {
+    private String name;
+    private String description;
+}
+EOF
+
+
+# -------------------------------
+# RESPONSE DTO
+# -------------------------------
+cat <<EOF > "$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
+package $BASE_PACKAGE.$FEATURE_LOWER.dto;
+
+import $BASE_PACKAGE.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
+import java.time.format.DateTimeFormatter;
+import lombok.Data;
+
+@Data
+public class ${FEATURE_UPPER}ResponseDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private String createdAt;
+    private String updatedAt;
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public static  ${FEATURE_UPPER}ResponseDTO fromEntity( ${FEATURE_UPPER}Entity ${FEATURE_LOWER}) {
+            ${FEATURE_UPPER}ResponseDTO dto = new ${FEATURE_UPPER}ResponseDTO();
+            dto.setId(${FEATURE_LOWER}.getId());
+            dto.setName(${FEATURE_LOWER}.getName());
+            dto.setDescription(${FEATURE_LOWER}.getDescription());
+            dto.setUpdatedAt(${FEATURE_LOWER}.getUpdatedAt() != null ? ${FEATURE_LOWER}.getUpdatedAt().toString() : null);
+            dto.setCreatedAt(${FEATURE_LOWER}.getCreatedAt() != null ? ${FEATURE_LOWER}.getCreatedAt().toString() : null);
+            return dto;
+        }
+}
+EOF
+
+# -------------------------------
 # Service (CRUD)
 # -------------------------------
 cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Service.java"
@@ -122,8 +212,9 @@ package $BASE_PACKAGE.$FEATURE_LOWER;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.features.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
-import com.bonnysimon.starter.features.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
+import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
+import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
+import $BASE_PACKAGE.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -173,6 +264,12 @@ public class ${FEATURE_UPPER}Service {
 
         return repository.save(entity);
     }
+
+      public ${FEATURE_UPPER}ResponseDTO findOne  (Long  ${FEATURE_LOWER}Id) {
+            ${FEATURE_UPPER}Entity   ${FEATURE_LOWER} = repository.findById( ${FEATURE_LOWER}Id)
+                   .orElseThrow(() -> new IllegalStateException(" ${FEATURE_UPPER} not found"));
+           return  ${FEATURE_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER});
+       }
 
     @Transactional
     public ${FEATURE_UPPER}Entity update(Long id, Create${FEATURE_UPPER}DTO request) {
@@ -225,7 +322,7 @@ package $BASE_PACKAGE.$FEATURE_LOWER;
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.features.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
+import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -276,20 +373,7 @@ public class ${FEATURE_UPPER}Controller {
 }
 EOF
 
-# -------------------------------
-# DTO
-# -------------------------------
-cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
-package $BASE_PACKAGE.$FEATURE_LOWER.dto;
 
-import lombok.Data;
-
-@Data
-public class Create${FEATURE_UPPER}DTO {
-    private String name;
-    private String description;
-}
-EOF
 
 
 # -------------------------------
