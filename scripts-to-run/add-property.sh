@@ -1,8 +1,14 @@
 #!/bin/bash
 
 # ===============================
-# Add Property to Feature
+# Add Property to Feature (Robust Version)
 # ===============================
+
+FEATURE=""
+PROPERTY_NAME=""
+PROPERTY_TYPE=""
+MANDATORY="false"
+PARENT=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -22,110 +28,122 @@ while [[ $# -gt 0 ]]; do
       MANDATORY="$2"
       shift 2
       ;;
+    --parent)
+      PARENT="$2"
+      shift 2
+      ;;
     *)
       echo "❌ Unknown parameter: $1"
+      echo "Usage: ./add-property.sh --feature department --name code --type String --mandatory true [--parent administration]"
       exit 1
       ;;
   esac
 done
 
-# -------------------------------
-# Validate
-# -------------------------------
 if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" || -z "$PROPERTY_TYPE" ]]; then
-  echo "❌ Usage:"
-  echo "./add-property.sh --feature department --name code --type String --mandatory true"
+  echo "❌ Missing required parameters"
+  echo "Usage: ./add-property.sh --feature department --name code --type String --mandatory true [--parent administration]"
   exit 1
 fi
 
 FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+PROP_CAP="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
 
-MANDATORY="${MANDATORY:-false}"
+# Support parent folder
+if [ -n "$PARENT" ]; then
+  PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
+  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+else
+  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+fi
 
-BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
 ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
-DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
+CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
+RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
 SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
 HTTP_FILE="http-client.http"
 
-# -------------------------------
 # Validate files
-# -------------------------------
-for f in "$ENTITY_FILE" "$DTO_FILE" "$SERVICE_FILE"; do
-  [ ! -f "$f" ] && echo "❌ Missing file: $f" && exit 1
+for f in "$ENTITY_FILE" "$CREATE_DTO_FILE" "$RESPONSE_DTO_FILE" "$SERVICE_FILE"; do
+  if [ ! -f "$f" ]; then
+    echo "❌ Missing file: $f"
+    exit 1
+  fi
 done
 
-# -------------------------------
-# Column nullable
-# -------------------------------
 [ "$MANDATORY" = "true" ] && NULLABLE="false" || NULLABLE="true"
 
+echo "🚀 Adding property '$PROPERTY_NAME' ($PROPERTY_TYPE) to '$FEATURE_UPPER'"
+
 # -------------------------------
-# Entity
+# 1. Entity
 # -------------------------------
 if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"; then
-  sed -i "/^}/i\\
-    @Column(nullable = $NULLABLE)\n\
-    private $PROPERTY_TYPE $PROPERTY_NAME;\n" "$ENTITY_FILE"
+  sed -i "/private String description;/a\\
+    @Column(nullable = $NULLABLE)\n    private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"
   echo "✅ Entity updated"
 else
   echo "⚠️ Entity already has '$PROPERTY_NAME'"
 fi
 
 # -------------------------------
-# DTO
+# 2. Create DTO
 # -------------------------------
-if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$DTO_FILE"; then
-  sed -i "/^}/i\\
-    private $PROPERTY_TYPE $PROPERTY_NAME;\n" "$DTO_FILE"
-  echo "✅ DTO updated"
+if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$CREATE_DTO_FILE"; then
+  sed -i "/private String description;/a\\
+    private $PROPERTY_TYPE $PROPERTY_NAME;" "$CREATE_DTO_FILE"
+  echo "✅ CreateDTO updated"
 else
-  echo "⚠️ DTO already has '$PROPERTY_NAME'"
+  echo "⚠️ CreateDTO already has '$PROPERTY_NAME'"
 fi
 
 # -------------------------------
-# Service search
+# 3. Response DTO  ← FIXED & IMPROVED
 # -------------------------------
-SEARCH_LINE="cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), \"%\" + search.toLowerCase() + \"%\")"
+if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"; then
+  # Add field after description
+  sed -i "/private String description;/a\\
+    private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"
 
-if ! grep -q "root.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
-  sed -i "/cb.like(cb.lower(root.get(\"description\"))/a\\
-                          ,$SEARCH_LINE" "$SERVICE_FILE"
+  # Add mapping in fromEntity() - more reliable pattern
+  sed -i "/dto\.setDescription(${FEATURE_LOWER}\.getDescription());/a\\
+            dto.set${PROP_CAP}(${FEATURE_LOWER}.get${PROP_CAP}());" "$RESPONSE_DTO_FILE"
 
-  echo "✅ Search spec extended with '$PROPERTY_NAME'"
+  echo "✅ ResponseDTO updated"
+else
+  echo "⚠️ ResponseDTO already has '$PROPERTY_NAME'"
+fi
+
+# -------------------------------
+# 4. Service Search
+# -------------------------------
+if ! grep -q "root\.get(\"$PROPERTY_NAME\")" "$SERVICE_FILE"; then
+  sed -i "/likePattern.*description.*likePattern/a\\
+                        , cb.like(cb.lower(root.get(\"$PROPERTY_NAME\")), likePattern)" "$SERVICE_FILE"
+  echo "✅ Search specification updated"
 else
   echo "⚠️ Search already contains '$PROPERTY_NAME'"
 fi
 
 # -------------------------------
-# Service create/update
+# 5. Service Create/Update
 # -------------------------------
-PROP_CAP="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
-
-SETTER="entity.set${PROP_CAP}(request.get${PROP_CAP}());"
-
-if ! grep -q "$SETTER" "$SERVICE_FILE"; then
-  sed -i "/entity.setDescription/a\\
-        $SETTER" "$SERVICE_FILE"
-  echo "✅ Service create/update updated"
+if ! grep -q "entity\.set${PROP_CAP}" "$SERVICE_FILE"; then
+  sed -i "/entity\.setDescription(request\.getDescription());/a\\
+        entity.set${PROP_CAP}(request.get${PROP_CAP}());" "$SERVICE_FILE"
+  echo "✅ Service mapping updated"
 else
   echo "⚠️ Service already maps '$PROPERTY_NAME'"
 fi
 
 # -------------------------------
-# HTTP client
+# 6. HTTP Client
 # -------------------------------
-HTTP_MARKER="### FEATURE:"
-
-if grep -q "$HTTP_MARKER" "$HTTP_FILE"; then
-  if ! grep -q "\"$PROPERTY_NAME\":" "$HTTP_FILE"; then
-    sed -i "/\"description\"/a\\
+if [ -f "$HTTP_FILE" ] && ! grep -q "\"$PROPERTY_NAME\":" "$HTTP_FILE"; then
+  sed -i "/\"description\":/a\\
   ,\"$PROPERTY_NAME\": \"Sample ${PROPERTY_NAME^}\"" "$HTTP_FILE"
-    echo "✅ HTTP client updated"
-  else
-    echo "⚠️ HTTP already contains '$PROPERTY_NAME'"
-  fi
+  echo "✅ HTTP client updated"
 fi
 
-echo "🎉 Property '$PROPERTY_NAME' added to feature '$FEATURE_UPPER'"
+echo "🎉 Property '$PROPERTY_NAME' added successfully!"

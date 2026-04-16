@@ -21,10 +21,10 @@ to add feature in the project run command
     forexample
     ./scripts-to-run/add-feature.sh --name department --plural s 
     so far we have handled s es ies so far
-    
+  
+
+to add property echo "./add-property.sh --feature department --name code --type String --mandatory true"  
 
 ./add-property.sh department status String true
 
-
-import org.springframework.transaction.annotation.Transactional; no need for save
 
