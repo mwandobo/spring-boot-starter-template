@@ -81,7 +81,9 @@ echo "🚀 Adding property '$PROPERTY_NAME' ($PROPERTY_TYPE) to '$FEATURE_UPPER'
 # -------------------------------
 if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"; then
   sed -i "/private String description;/a\\
-    @Column(nullable = $NULLABLE)\n    private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"
+\\
+    @Column(nullable = $NULLABLE)\\
+    private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"
   echo "✅ Entity updated"
 else
   echo "⚠️ Entity already has '$PROPERTY_NAME'"
@@ -99,14 +101,14 @@ else
 fi
 
 # -------------------------------
-# 3. Response DTO  ← FIXED & IMPROVED
+# 3. Response DTO
 # -------------------------------
 if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"; then
-  # Add field after description
+  # Add field
   sed -i "/private String description;/a\\
     private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"
 
-  # Add mapping in fromEntity() - more reliable pattern
+  # Add mapping in fromEntity()
   sed -i "/dto\.setDescription(${FEATURE_LOWER}\.getDescription());/a\\
             dto.set${PROP_CAP}(${FEATURE_LOWER}.get${PROP_CAP}());" "$RESPONSE_DTO_FILE"
 
