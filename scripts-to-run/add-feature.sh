@@ -8,29 +8,6 @@ FEATURE_NAME=""
 PLURAL_SUFFIX=""
 PARENT=""
 
-#while [[ "$#" -gt 0 ]]; do
-#  case $1 in
-#    --name)
-#      FEATURE_NAME="$2"
-#      shift 2
-#      ;;
-#    --plural)
-#      PLURAL_SUFFIX="$2"
-#      shift 2
-#      ;;
-#    --parent)
-#      PARENT="$2"
-#      shift 2
-#      ;;
-#    *)
-#      echo "❌ Unknown parameter: $1"
-#      echo "Usage: ./generate-feature.sh --name department --plural s"
-#      exit 1
-#      ;;
-#  esac
-#done
-
-
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --name)
@@ -271,14 +248,8 @@ public class ${FEATURE_UPPER}Service {
             return spec;
         }
 
-
-
-
-
-
-
     @Transactional
-    public ${FEATURE_UPPER}Entity create(Create${FEATURE_UPPER}DTO request) {
+    public ${FEATURE_UPPER}ResponseDTO create(Create${FEATURE_UPPER}DTO request) {
         repository.findByName(request.getName())
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
@@ -289,8 +260,9 @@ public class ${FEATURE_UPPER}Service {
         ${FEATURE_UPPER}Entity entity = new ${FEATURE_UPPER}Entity();
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
+        ${FEATURE_UPPER}Entity savedEntity = repository.save(entity);
 
-        return repository.save(entity);
+        return  ${FEATURE_UPPER}ResponseDTO.fromEntity(savedEntity);
     }
 
       public ${FEATURE_UPPER}ResponseDTO findOne  (Long  ${FEATURE_LOWER}Id) {
@@ -300,7 +272,7 @@ public class ${FEATURE_UPPER}Service {
        }
 
     @Transactional
-    public ${FEATURE_UPPER}Entity update(Long id, Create${FEATURE_UPPER}DTO request) {
+    public ${FEATURE_UPPER}ResponseDTO update(Long id, Create${FEATURE_UPPER}DTO request) {
         ${FEATURE_UPPER}Entity entity = repository.findById(id)
                 .orElseThrow(() ->
                         new IllegalStateException(
@@ -319,7 +291,9 @@ public class ${FEATURE_UPPER}Service {
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
 
-        return repository.save(entity);
+        ${FEATURE_UPPER}Entity updatedEntity = repository.save(entity);
+
+        return  ${FEATURE_UPPER}ResponseDTO.fromEntity(updatedEntity);
     }
 
     @Transactional
@@ -372,12 +346,10 @@ public class ${FEATURE_UPPER}Controller {
     }
 
     @PostMapping
-    public ApiResponse<${FEATURE_UPPER}Entity> create(
+    public ${FEATURE_UPPER}ResponseDTO  create(
             @RequestBody Create${FEATURE_UPPER}DTO request
     ) {
-        return ApiResponse.success(
-                service.create(request)
-        );
+        return service.create(request);
     }
 
      @GetMapping("/{id}")
@@ -388,13 +360,11 @@ public class ${FEATURE_UPPER}Controller {
         }
 
     @PutMapping("/{id}")
-    public ApiResponse<${FEATURE_UPPER}Entity> update(
+    public ${FEATURE_UPPER}ResponseDTO update(
             @PathVariable Long id,
             @RequestBody Create${FEATURE_UPPER}DTO request
     ) {
-        return ApiResponse.success(
-                service.update(id, request)
-        );
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
@@ -407,8 +377,6 @@ public class ${FEATURE_UPPER}Controller {
     }
 }
 EOF
-
-
 
 
 # -------------------------------
@@ -439,6 +407,10 @@ Content-Type: application/json
   "name": "Sample Name",
   "description": "Sample Description"
 }
+
+###
+GET {{base_url}}/${FEATURE_PLURAL}/1
+Authorization: Bearer {{token}}
 
 ###
 PUT {{base_url}}/${FEATURE_PLURAL}/1
