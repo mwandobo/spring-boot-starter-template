@@ -84,7 +84,7 @@ import jakarta.persistence.*;" "$ENTITY_FILE"
         print $0
         print ""
         print "    @ManyToOne(fetch = FetchType.LAZY)"
-        print "    @JoinColumn(name = \"'"${PROPERTY_NAME}"'\", nullable = '"$NULLABLE"')"
+        print "    @JoinColumn(name = \"'"${PROPERTY_NAME}"'\")"
         print "    private '"${REF_UPPER}Entity ${REF_LOWER}"';"
         print ""
         next
