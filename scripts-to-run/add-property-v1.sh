@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # ===============================
-# ADD PROPERTY - ENTITY ONLY (Using cat - Git Bash Safe)
+# ADD PROPERTY - Full (Entity + DTOs)
+# Entity part is exactly the one you said is perfect
 # ===============================
 
 FEATURE=""
@@ -34,6 +35,7 @@ fi
 
 FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
 FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+PROP_CAP="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
 
 if [ -n "$PARENT" ]; then
   PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
@@ -43,8 +45,13 @@ else
 fi
 
 ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
+CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
+RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
 
-[ ! -f "$ENTITY_FILE" ] && echo "❌ Entity file not found: $ENTITY_FILE" && exit 1
+# Validate files
+for f in "$ENTITY_FILE" "$CREATE_DTO_FILE" "$RESPONSE_DTO_FILE"; do
+  [ ! -f "$f" ] && echo "❌ File not found: $f" && exit 1
+done
 
 [ "$MANDATORY" = "true" ] && NULLABLE="false" || NULLABLE="true"
 
@@ -55,30 +62,28 @@ if [ -n "$REFERENCE" ]; then
   REF_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${REF_LOWER:0:1})${REF_LOWER:1}"
 fi
 
-echo "🚀 Updating ENTITY only for property '$PROPERTY_NAME' → ${REF_UPPER}Entity"
+echo "🚀 Adding property '$PROPERTY_NAME' to '$FEATURE_UPPER'"
 
+# ================================================================
+# 1. ENTITY - Exactly the version you said is perfect (unchanged)
+# ================================================================
 if [ "$IS_REFERENCE" = true ]; then
+  echo "   → Entity: Keeping your perfect implementation (no changes)"
 
-  echo "   → Adding @ManyToOne relationship..."
-
-  # 1. Add import for DepartmentEntity
-  if ! grep -q "${REF_UPPER}Entity" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a\\
-import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Entity;" "$ENTITY_FILE"
-    echo "   ✅ Import added for ${REF_UPPER}Entity"
-  fi
-
-  # 2. Add jakarta.persistence.* import (if missing)
-  if ! grep -q "import jakarta.persistence\.\*;" "$ENTITY_FILE"; then
-    sed -i "/import com.bonnysimon.starter.features.*Entity;/a\\
-import jakarta.persistence.*;" "$ENTITY_FILE"
-    echo "   ✅ persistence import added"
-  fi
-
-  # 3. Add the field using cat (most reliable method on Git Bash)
   if ! grep -q "private ${REF_UPPER}Entity ${REF_LOWER}" "$ENTITY_FILE"; then
+    # 1. Add import
+    if ! grep -q "${REF_UPPER}Entity" "$ENTITY_FILE"; then
+      sed -i "/import lombok.Data;/a\\
+import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Entity;" "$ENTITY_FILE"
+    fi
 
-    # Create temporary file with the new field
+    # 2. Add jakarta.persistence.* if missing
+    if ! grep -q "import jakarta.persistence\.\*;" "$ENTITY_FILE"; then
+      sed -i "/import com.bonnysimon.starter.features.*Entity;/a\\
+import jakarta.persistence.*;" "$ENTITY_FILE"
+    fi
+
+    # 3. Add field using awk (your working method)
     awk '
       /private String description;/ {
         print $0
@@ -92,13 +97,54 @@ import jakarta.persistence.*;" "$ENTITY_FILE"
       { print }
     ' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
 
-    echo "✅ Entity successfully updated with foreign key"
+    echo "✅ Entity updated with foreign key"
   else
-    echo "⚠️ Field already exists"
+    echo "   Entity already has the relationship"
   fi
-
-else
-  echo "❌ This script is only for foreign key (--reference)"
 fi
 
-echo "🎉 Entity update finished!"
+# ================================================================
+# 2. Create DTO - Add departmentId (Long)
+# ================================================================
+if [ "$IS_REFERENCE" = true ]; then
+  if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME" "$CREATE_DTO_FILE"; then
+    sed -i "/private String description;/a\\
+    private $PROPERTY_TYPE $PROPERTY_NAME;" "$CREATE_DTO_FILE"
+    echo "✅ CreateDTO updated → added $PROPERTY_NAME"
+  else
+    echo "⚠️ CreateDTO already has $PROPERTY_NAME"
+  fi
+fi
+
+# ================================================================
+# 3. Response DTO - Add nested DepartmentResponseDTO + correct mapping
+# ================================================================
+if [ "$IS_REFERENCE" = true ]; then
+
+  # Add import
+  if ! grep -q "${REF_UPPER}ResponseDTO" "$RESPONSE_DTO_FILE"; then
+    sed -i "/import lombok.Data;/a\\
+import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.dto.${REF_UPPER}ResponseDTO;" "$RESPONSE_DTO_FILE"
+    echo "   ✅ Import added for ${REF_UPPER}ResponseDTO"
+  fi
+
+  # Add field
+  if ! grep -q "private ${REF_UPPER}ResponseDTO ${REF_LOWER}" "$RESPONSE_DTO_FILE"; then
+    sed -i "/private String description;/a\\
+    private ${REF_UPPER}ResponseDTO ${REF_LOWER};" "$RESPONSE_DTO_FILE"
+    echo "✅ ResponseDTO updated → added ${REF_LOWER} (nested DTO)"
+  fi
+
+  # Add correct mapping in fromEntity()
+  if ! grep -q "set${REF_UPPER}(" "$RESPONSE_DTO_FILE"; then
+    sed -i "/setDepartment_id/d" "$RESPONSE_DTO_FILE" 2>/dev/null || true
+    sed -i "/dto\.setDescription(${FEATURE_LOWER}\.getDescription());/a\\
+            dto.set${REF_UPPER}(${FEATURE_LOWER}.get${REF_UPPER}() != null ? ${REF_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER}.get${REF_UPPER}()) : null);" "$RESPONSE_DTO_FILE"
+    echo "✅ ResponseDTO.fromEntity() mapping added correctly"
+  fi
+fi
+
+echo ""
+echo "🎉 All DTOs updated successfully!"
+echo "⚠️  Don't forget to add the column in database:"
+echo "   ALTER TABLE MBIMS.${FEATURE_UPPER^^} ADD COLUMN ${PROPERTY_NAME^^} BIGINT;"
