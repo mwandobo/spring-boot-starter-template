@@ -19,11 +19,16 @@ then log as below
 to add feature in the project run command
     ./scripts-to-run/add-feature.sh --name <feature-name> --plural <prural-indicator>
     forexample
-    ./scripts-to-run/add-feature.sh --name department --plural s 
-    so far we have handled s es ies so far
+    ./scripts-to-run/add-feature.sh --name department --plural s
+    ./scripts-to-run/add-feature.sh --name position --plural s --parent administration
+
+so far we have handled s es ies so far
   
 
-to add property echo "./add-property.sh --feature department --name code --type String --mandatory true"  
+to add property (normal)
+        ./scripts-to-run/add-property.sh --feature department --name code --type String --mandatory true
+to add property (foreign key)
+        ./scripts-to-run/add-property-v2.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration
 
 ./add-property.sh department status String true
 

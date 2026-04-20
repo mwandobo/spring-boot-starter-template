@@ -145,6 +145,76 @@ import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.dto.${REF_
 fi
 
 
+
+
+
+
+# ================================================================
+# 4. SERVICE IMPLEMENTATION - Returns Entity
+# ================================================================
+if [ "$IS_REFERENCE" = true ]; then
+
+  echo "   → Updating Service..."
+
+  SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+
+  # Add import
+  if ! grep -q "${REF_UPPER}Repository" "$SERVICE_FILE"; then
+    sed -i "/import .*${FEATURE_UPPER}Entity;/a\\
+import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+    echo "✅ Imported ${REF_UPPER}Repository"
+  fi
+
+  # Add repository field
+  if ! grep -q "${REF_UPPER}Repository ${REF_LOWER}Repository" "$SERVICE_FILE"; then
+    sed -i "/private final ${FEATURE_UPPER}Repository repository;/a\\
+    private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"
+    echo "✅ Injected ${REF_UPPER}Repository"
+  fi
+
+  # Add validation method that RETURNS the entity
+  if ! grep -q "validate${REF_UPPER}Exists" "$SERVICE_FILE"; then
+    sed -i '$i\
+\
+    private '"${REF_UPPER}"'Entity validate'"${REF_UPPER}"'Exists(Long id) {\
+        if (id == null) {\
+            if ("'"$NULLABLE"'" == "false") {\
+                throw new IllegalArgumentException("'"${REF_UPPER}"' ID is required");\
+            }\
+            return null;\
+        }\
+        return '"${REF_LOWER}"'Repository.findById(id)\
+                .orElseThrow(() -> new IllegalStateException("'"${REF_UPPER}"' not found with id: " + id));\
+    }\
+' "$SERVICE_FILE"
+    echo "✅ Added validate${REF_UPPER}Exists() method (returns entity)"
+  fi
+
+  # Fix getter name and update validation calls to use the returned entity
+  sed -i "s/getDepartment_id/get${PROP_CAP}/g" "$SERVICE_FILE"
+
+  # Replace the old validation call with entity assignment + setDepartment
+  sed -i "/entity\.setDescription(request\.getDescription());/a\\
+        ${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());" "$SERVICE_FILE"
+
+  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());/a\\
+        entity.set${REF_UPPER}(${REF_LOWER});" "$SERVICE_FILE"
+
+  echo "✅ Added foreign key validation + entity assignment in create() and update()"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ================================================================
 ## 4. SERVICE IMPLEMENTATION
 ## ================================================================
@@ -259,10 +329,209 @@ fi
 
 
 
+#
+#
+## ================================================================
+## 4. SERVICE IMPLEMENTATION (Smart Insertion)
+## ================================================================
+#if [ "$IS_REFERENCE" = true ]; then
+#
+#  echo "   → Updating Service..."
+#
+#  SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+#
+#  # Add import
+#  if ! grep -q "${REF_UPPER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/import .*${FEATURE_UPPER}Entity;/a\\
+#import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Repository"
+#  fi
+#
+#  # Add repository field
+#  if ! grep -q "${REF_UPPER}Repository ${REF_LOWER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/private final ${FEATURE_UPPER}Repository repository;/a\\
+#    private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Injected ${REF_UPPER}Repository"
+#  fi
+#
+#  # Add validation method just before the last } of the class
+#  if ! grep -q "validate${REF_UPPER}Exists" "$SERVICE_FILE"; then
+#    # Insert before the final closing brace of the class
+#    sed -i '$i\
+#\
+#    private void validate'"${REF_UPPER}"'Exists(Long id) {\
+#        if (id == null) {\
+#            if ("'"$NULLABLE"'" == "false") {\
+#                throw new IllegalArgumentException("'"${REF_UPPER}"' ID is required");\
+#            }\
+#            return;\
+#        }\
+#        '"${REF_LOWER}"'Repository.findById(id)\
+#                .orElseThrow(() -> new IllegalStateException("'"${REF_UPPER}"' not found with id: " + id));\
+#    }\
+#
+#' "$SERVICE_FILE"
+#    echo "✅ Added validate${REF_UPPER}Exists() method inside class"
+#  fi
+#
+#  # Fix getter name and ensure validation call
+#  sed -i "s/getDepartment_id/get${PROP_CAP}/g" "$SERVICE_FILE"
+#  sed -i "/entity\.setDescription(request\.getDescription());/a\\
+#        validate${REF_UPPER}Exists(request.get${PROP_CAP}());" "$SERVICE_FILE"
+#  sed -i "/validate${REF_UPPER}Exists(request.get${PROP_CAP}());/a\\
+#          entity.set${REF_UPPER}(request.get${PROP_CAP}() != null ? ${REF_LOWER}Repository.getReferenceById(request.get${PROP_CAP}()) : null);" "$SERVICE_FILE"
+#
+#
+#  echo "✅ Added foreign key validation in create() and update()"
+#fi
+#
+
+
+
+
+
+#
+## ================================================================
+## 4. SERVICE IMPLEMENTATION - Returns Entity (Clean Version)
+## ================================================================
+#if [ "$IS_REFERENCE" = true ]; then
+#
+#  echo "   → Updating Service..."
+#
+#  SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+#
+#  # 1. Add import for Repository
+#  if ! grep -q "${REF_UPPER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/import .*${FEATURE_UPPER}Entity;/a\\
+#import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Repository"
+#  fi
+#
+#  # 2. Add import for the referenced Entity (DepartmentEntity)
+#  if ! grep -q "${REF_UPPER}Entity" "$SERVICE_FILE"; then
+#    sed -i "/import .*${FEATURE_UPPER}Entity;/a\\
+#import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Entity;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Entity"
+#  fi
+#
+#  # 3. Add repository field
+#  if ! grep -q "${REF_UPPER}Repository ${REF_LOWER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/private final ${FEATURE_UPPER}Repository repository;/a\\
+#    private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Injected ${REF_UPPER}Repository"
+#  fi
+#
+#  # 4. Add validation method that RETURNS the entity (placed before last })
+#  if ! grep -q "validate${REF_UPPER}Exists" "$SERVICE_FILE"; then
+#    awk '
+#      /    public void delete\(Long id, boolean soft\)/ {
+#        print $0
+#        print ""
+#        print "    private '"${REF_UPPER}"'Entity validate'"${REF_UPPER}"'Exists(Long id) {"
+#        print "        if (id == null) {"
+#        print "            if (\"'"$NULLABLE"'\" == \"false\") {"
+#        print "                throw new IllegalArgumentException(\""'"${REF_UPPER}"' ID is required\");"
+#        print "            }"
+#        print "            return null;"
+#        print "        }"
+#        print "        return '"${REF_LOWER}"'Repository.findById(id)"
+#        print "                .orElseThrow(() -> new IllegalStateException(\""'"${REF_UPPER}"' not found with id: \" + id));"
+#        print "    }"
+#        print ""
+#        next
+#      }
+#      { print }
+#    ' "$SERVICE_FILE" > "$SERVICE_FILE.tmp" && mv "$SERVICE_FILE.tmp" "$SERVICE_FILE"
+#    echo "✅ Added validate${REF_UPPER}Exists() method (returns entity)"
+#  fi
+#
+#  # 5. Fix getter and add proper usage in create() and update()
+#  sed -i "s/getDepartment_id/get${PROP_CAP}/g" "$SERVICE_FILE"
+#
+#  # Replace old validation calls with proper entity assignment
+#  sed -i "/entity\.setDescription(request\.getDescription());/a\\
+#        ${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());" "$SERVICE_FILE"
+#
+#  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());/a\\
+#        entity.set${REF_UPPER}(${REF_LOWER});" "$SERVICE_FILE"
+#
+#  echo "✅ Added foreign key validation + entity assignment in create() and update()"
+#fi
+
+
+
+## ================================================================
+## 4. SERVICE IMPLEMENTATION - Fixed Import + Clean Logic
+## ================================================================
+#if [ "$IS_REFERENCE" = true ]; then
+#
+#  echo "   → Updating Service..."
+#
+#  SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+#
+#  # Add import for Repository
+#  if ! grep -q "${REF_UPPER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/import .*Repository;/a\\
+#import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Repository"
+#  fi
+#
+#  # Add import for Entity (DepartmentEntity) - More reliable pattern
+#  if ! grep -q "${REF_UPPER}Entity" "$SERVICE_FILE"; then
+#    sed -i "/import .*PositionEntity;/a\\
+#import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Entity;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Entity"
+#  fi
+#
+#  # Add repository field
+#  if ! grep -q "${REF_UPPER}Repository ${REF_LOWER}Repository" "$SERVICE_FILE"; then
+#    sed -i "/private final ${FEATURE_UPPER}Repository repository;/a\\
+#    private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Injected ${REF_UPPER}Repository"
+#  fi
+#
+#  # Add validation method (returns entity) - placed before last }
+#  if ! grep -q "validate${REF_UPPER}Exists" "$SERVICE_FILE"; then
+#    awk '
+#      /    public void delete\(Long id, boolean soft\)/ {
+#        print $0
+#        print ""
+#        print "    private '"${REF_UPPER}"'Entity validate'"${REF_UPPER}"'Exists(Long id) {"
+#        print "        if (id == null) {"
+#        print "            if (\"'"$NULLABLE"'\" == \"false\") {"
+#        print "                throw new IllegalArgumentException(\""'"${REF_UPPER}"' ID is required\");"
+#        print "            }"
+#        print "            return null;"
+#        print "        }"
+#        print "        return '"${REF_LOWER}"'Repository.findById(id)"
+#        print "                .orElseThrow(() -> new IllegalStateException(\""'"${REF_UPPER}"' not found with id: \" + id));"
+#        print "    }"
+#        print ""
+#        next
+#      }
+#      { print }
+#    ' "$SERVICE_FILE" > "$SERVICE_FILE.tmp" && mv "$SERVICE_FILE.tmp" "$SERVICE_FILE"
+#    echo "✅ Added validate${REF_UPPER}Exists() method"
+#  fi
+#
+#  # Clean up any duplicate or wrong lines
+#  sed -i '/departmentEntity department =/d' "$SERVICE_FILE"
+#  sed -i "s/getDepartment_id/get${PROP_CAP}/g" "$SERVICE_FILE"
+#
+#  # Add clean entity assignment
+#  sed -i "/entity\.setDescription(request\.getDescription());/a\\
+#        ${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());" "$SERVICE_FILE"
+#
+#  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());/a\\
+#        entity.set${REF_UPPER}(${REF_LOWER});" "$SERVICE_FILE"
+#
+#  echo "✅ Added foreign key validation + entity assignment"
+#fi
+
 
 
 # ================================================================
-# 4. SERVICE IMPLEMENTATION (Smart Insertion)
+# 4. SERVICE IMPLEMENTATION - CLEAN + SAFE + NO DUPLICATES
 # ================================================================
 if [ "$IS_REFERENCE" = true ]; then
 
@@ -270,57 +539,112 @@ if [ "$IS_REFERENCE" = true ]; then
 
   SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
 
-  # Add import
-  if ! grep -q "${REF_UPPER}Repository" "$SERVICE_FILE"; then
-    sed -i "/import .*${FEATURE_UPPER}Entity;/a\\
-import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPER}Repository;" "$SERVICE_FILE"
-    echo "✅ Imported ${REF_UPPER}Repository"
-  fi
+  PACKAGE_PATH="com.bonnysimon.starter.features.${PARENT_LOWER:+$PARENT_LOWER.}${REF_LOWER}"
 
-  # Add repository field
-  if ! grep -q "${REF_UPPER}Repository ${REF_LOWER}Repository" "$SERVICE_FILE"; then
+  # ============================================================
+  # 1. IMPORTS (SAFE)
+  # ============================================================
+
+#  # Import Repository
+#  if ! grep -q "import .*${REF_UPPER}Repository;" "$SERVICE_FILE"; then
+#    sed -i "/^import /a\\
+#import ${PACKAGE_PATH}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Repository"
+#  fi
+#
+#  # Import Entity
+#  if ! grep -q "import .*${REF_UPPER}Entity;" "$SERVICE_FILE"; then
+#    sed -i "/^import /a\\
+#import ${PACKAGE_PATH}.${REF_UPPER}Entity;" "$SERVICE_FILE"
+#    echo "✅ Imported ${REF_UPPER}Entity"
+#  fi
+
+
+# ============================================================
+# IMPORTS (INSERT ONLY ONCE, CLEAN)
+# ============================================================
+
+PACKAGE_PATH="com.bonnysimon.starter.features.${PARENT_LOWER:+$PARENT_LOWER.}${REF_LOWER}"
+
+# Remove duplicate imports first (cleanup existing mess)
+sed -i "/import ${PACKAGE_PATH//\//\\/}\.${REF_UPPER}Entity;/d" "$SERVICE_FILE"
+
+# Add Entity import once (after package line)
+if ! grep -q "import ${PACKAGE_PATH}.${REF_UPPER}Entity;" "$SERVICE_FILE"; then
+  sed -i "/^package /a\\
+import ${PACKAGE_PATH}.${REF_UPPER}Entity;" "$SERVICE_FILE"
+  echo "✅ Imported ${REF_UPPER}Entity"
+fi
+
+
+# Remove duplicate repository imports
+sed -i "/import ${PACKAGE_PATH//\//\\/}\.${REF_UPPER}Repository;/d" "$SERVICE_FILE"
+
+# Add Repository import once
+if ! grep -q "import ${PACKAGE_PATH}.${REF_UPPER}Repository;" "$SERVICE_FILE"; then
+  sed -i "/^package /a\\
+import ${PACKAGE_PATH}.${REF_UPPER}Repository;" "$SERVICE_FILE"
+  echo "✅ Imported ${REF_UPPER}Repository"
+fi
+
+  # ============================================================
+  # 2. INJECT REPOSITORY
+  # ============================================================
+
+  if ! grep -q "private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"; then
     sed -i "/private final ${FEATURE_UPPER}Repository repository;/a\\
     private final ${REF_UPPER}Repository ${REF_LOWER}Repository;" "$SERVICE_FILE"
     echo "✅ Injected ${REF_UPPER}Repository"
   fi
 
-  # Add validation method just before the last } of the class
+  # ============================================================
+  # 3. CLEAN OLD / BROKEN INSERTIONS
+  # ============================================================
+
+  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate/d" "$SERVICE_FILE"
+  sed -i "/entity\.set${REF_UPPER}(/d" "$SERVICE_FILE"
+
+  # ============================================================
+  # 4. VALIDATION METHOD (RETURNS ENTITY)
+  # ============================================================
+
   if ! grep -q "validate${REF_UPPER}Exists" "$SERVICE_FILE"; then
-    # Insert before the final closing brace of the class
     sed -i '$i\
 \
-    private void validate'"${REF_UPPER}"'Exists(Long id) {\
+    private '"${REF_UPPER}"'Entity validate'"${REF_UPPER}"'Exists(Long id) {\
         if (id == null) {\
-            if ("'"$NULLABLE"'" == "false") {\
-                throw new IllegalArgumentException("'"${REF_UPPER}"' ID is required");\
-            }\
-            return;\
+            throw new IllegalArgumentException("'"${REF_UPPER}"' ID is required");\
         }\
-        '"${REF_LOWER}"'Repository.findById(id)\
+        return '"${REF_LOWER}"'Repository.findById(id)\
                 .orElseThrow(() -> new IllegalStateException("'"${REF_UPPER}"' not found with id: " + id));\
     }\
-    
 ' "$SERVICE_FILE"
-    echo "✅ Added validate${REF_UPPER}Exists() method inside class"
+
+    echo "✅ Added validate${REF_UPPER}Exists() method"
   fi
 
-  # Fix getter name and ensure validation call
-  sed -i "s/getDepartment_id/get${PROP_CAP}/g" "$SERVICE_FILE"
-  sed -i "/entity\.setDescription(request\.getDescription());/a\\
-        validate${REF_UPPER}Exists(request.get${PROP_CAP}());" "$SERVICE_FILE"
-  sed -i "/validate${REF_UPPER}Exists(request.get${PROP_CAP}());/a\\
-          entity.set${REF_UPPER}(request.get${PROP_CAP}() != null ? ${REF_LOWER}Repository.getReferenceById(request.get${PROP_CAP}()) : null);" "$SERVICE_FILE"
+  # ============================================================
+  # 5. FIX GETTER NAME
+  # ============================================================
 
+  sed -i "s/get${REF_UPPER}_id/get${PROP_CAP}/g" "$SERVICE_FILE"
 
-  echo "✅ Added foreign key validation in create() and update()"
+  # ============================================================
+  # 6. ADD FK LOGIC (ONLY IF NOT EXISTS)
+  # ============================================================
+
+  if ! grep -q "validate${REF_UPPER}Exists(request.get${PROP_CAP}())" "$SERVICE_FILE"; then
+
+    sed -i "/entity\.setDescription(request\.getDescription());/a\\
+        ${REF_UPPER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists(request.get${PROP_CAP}());\\
+        entity.set${REF_UPPER}(${REF_LOWER});" "$SERVICE_FILE"
+
+    echo "✅ Added FK validation + assignment"
+  else
+    echo "⚠️ FK logic already exists, skipping"
+  fi
+
 fi
-
-
-
-
-
-
-
 
 
 
