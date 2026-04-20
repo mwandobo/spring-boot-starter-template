@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
     --reference) REFERENCE="$2";    shift 2 ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./add-property.sh --feature position --name departmentId --type Long --mandatory true --reference department --parent administration"
+      echo "Usage: ./add-property.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration"
       exit 1
       ;;
   esac
@@ -299,6 +299,7 @@ import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.${REF_UPPE
         '"${REF_LOWER}"'Repository.findById(id)\
                 .orElseThrow(() -> new IllegalStateException("'"${REF_UPPER}"' not found with id: " + id));\
     }\
+    
 ' "$SERVICE_FILE"
     echo "✅ Added validate${REF_UPPER}Exists() method inside class"
   fi
