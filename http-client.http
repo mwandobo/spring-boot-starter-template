@@ -250,41 +250,6 @@ GET {{base_url}}/notifications/194/read
 Authorization: Bearer {{token}}
 
 
-
-
-### FEATURE: department
-
-###
-GET {{base_url}}/department
-Authorization: Bearer {{token}}
-
-###
-POST {{base_url}}/department
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "Sample Name",
-  "description": "Sample Description"
-  ,"status": "Sample Status"
-}
-
-###
-PUT {{base_url}}/department/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "Sample Name Edited",
-  "description": "Sample Description Edited"
-  ,"status": "Sample Status"
-}
-
-###
-DELETE {{base_url}}/department/1
-Authorization: Bearer {{token}}
-
-
 ### FEATURE: departments
 
 ###
@@ -293,7 +258,8 @@ Authorization: Bearer {{token}}
 
 ###
 POST {{base_url}}/departments
-Authorization: Bearer {{token}}
+  "department_id": null
+}
 Content-Type: application/json
 
 {
@@ -302,8 +268,13 @@ Content-Type: application/json
 }
 
 ###
-PUT {{base_url}}/departments/1
+GET {{base_url}}/departments/1
 Authorization: Bearer {{token}}
+
+###
+PUT {{base_url}}/departments/1
+  "department_id": null
+}
 Content-Type: application/json
 
 {
@@ -316,14 +287,15 @@ DELETE {{base_url}}/departments/1
 Authorization: Bearer {{token}}
 
 
-### FEATURE: departmentes
+
+### FEATURE: positions
 
 ###
-GET {{base_url}}/departmentes
+GET {{base_url}}/positions
 Authorization: Bearer {{token}}
 
 ###
-POST {{base_url}}/departmentes
+POST {{base_url}}/positions
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -333,7 +305,11 @@ Content-Type: application/json
 }
 
 ###
-PUT {{base_url}}/departmentes/1
+GET {{base_url}}/positions/1
+Authorization: Bearer {{token}}
+
+###
+PUT {{base_url}}/positions/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -343,6 +319,6 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{base_url}}/departmentes/1
+DELETE {{base_url}}/positions/1
 Authorization: Bearer {{token}}
 

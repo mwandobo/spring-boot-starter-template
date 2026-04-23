@@ -28,7 +28,7 @@ so far we have handled s es ies so far
 to add property (normal)
         ./scripts-to-run/add-property.sh --feature department --name code --type String --mandatory true
 to add property (foreign key)
-        ./scripts-to-run/add-property-v2.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration
+        ./scripts-to-run/add-property.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration
 
 ./add-property.sh department status String true
 
