@@ -15,4 +15,6 @@ public interface ApprovalActionRepository extends JpaRepository<ApprovalAction, 
     Page<ApprovalAction> findAll(Specification<ApprovalAction> spec, Pageable pageable);
     List<ApprovalAction> findByApprovalLevelId(Long approvalLevelId);
     Optional<ApprovalAction> findByApprovalLevelIdAndEntityId(Long approvalLevelId, Long entityId);
+    List<ApprovalAction> findByEntityIdAndApprovalLevelIdIn(Long entityId, List<Long> levelIds);
+    List<ApprovalAction> findByEntityNameAndEntityIdIn(String entityName, List<Long> entityIds);
 }

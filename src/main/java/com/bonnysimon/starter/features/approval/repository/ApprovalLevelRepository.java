@@ -26,4 +26,6 @@ public interface ApprovalLevelRepository extends JpaRepository<ApprovalLevel, Lo
             Long userApprovalId,
             Integer level
     );
+    List<ApprovalLevel> findByUserApprovalId(Long userApprovalId);
+
 }
