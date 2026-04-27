@@ -62,7 +62,7 @@ public class ApprovalLevelService {
 
 
     @Transactional
-    public ApprovalLevel create(ApprovalLevelRequestDTO request) throws MessagingException {
+    public ApprovalLevel create(ApprovalLevelRequestDTO request) {
         // 1️⃣ Validate UserApproval
         UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
                 .orElseThrow(() -> new IllegalStateException("User Approval Not Found"));
@@ -129,7 +129,13 @@ public class ApprovalLevelService {
         }
 
         // 11️⃣ Send notification (optional)
-        sendCreateLevelNotification(saved, role);
+//        sendCreateLevelNotification(saved, role);
+
+        try {
+            sendCreateLevelNotification(saved, role);
+        } catch (MessagingException e) {
+            log.error("Failed to send approval level notification for level id={}", saved.getId(), e);
+        }
         return saved;
     }
 

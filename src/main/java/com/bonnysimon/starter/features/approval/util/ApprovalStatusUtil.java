@@ -30,18 +30,53 @@ public class ApprovalStatusUtil {
     /**
      * Check if approval mode is enabled
      */
+//    public boolean hasApprovalMode(String entityName) {
+//        Optional<SysApproval> sys = sysApprovalRepository.findByEntityName(entityName);
+//        if (sys.isEmpty()) return false;
+//
+//        Optional<UserApproval> userApproval =
+//                userApprovalRepository.findBySysApprovalId(sys.get().getId());
+//        if (userApproval.isEmpty()) return false;
+//
+//        List<ApprovalLevel> levels =
+//                approvalLevelRepository.findByUserApprovalId(userApproval.get().getId());
+//
+//        return !levels.isEmpty();
+//    }
+
     public boolean hasApprovalMode(String entityName) {
+        log.debug("Checking approval mode for entity: {}", entityName);
+
         Optional<SysApproval> sys = sysApprovalRepository.findByEntityName(entityName);
-        if (sys.isEmpty()) return false;
+        if (sys.isEmpty()) {
+            log.debug("No SysApproval found for entity: {}", entityName);
+            return false;
+        }
+
+        log.debug("Found SysApproval with id: {}", sys.get().getId());
 
         Optional<UserApproval> userApproval =
                 userApprovalRepository.findBySysApprovalId(sys.get().getId());
-        if (userApproval.isEmpty()) return false;
+
+        if (userApproval.isEmpty()) {
+            log.debug("No UserApproval found for sysApprovalId: {}", sys.get().getId());
+            return false;
+        }
+
+        log.debug("Found UserApproval with id: {}", userApproval.get().getId());
 
         List<ApprovalLevel> levels =
                 approvalLevelRepository.findByUserApprovalId(userApproval.get().getId());
 
-        return !levels.isEmpty();
+        if (levels.isEmpty()) {
+            log.debug("No ApprovalLevels found for userApprovalId: {}", userApproval.get().getId());
+            return false;
+        }
+
+        log.debug("Approval mode ACTIVE for entity: {} with {} levels",
+                entityName, levels.size());
+
+        return true;
     }
 
     /**

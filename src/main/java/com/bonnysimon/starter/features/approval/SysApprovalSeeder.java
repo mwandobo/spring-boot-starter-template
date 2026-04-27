@@ -23,8 +23,9 @@ public class SysApprovalSeeder implements CommandLineRunner {
 
     private void seedApprovals() {
         List<SysApprovalRequestDTO> approvals = List.of(
-                createDto("User", "Approvals For User", "User", StatusEnum.PENDING),
-                createDto("Role", "Approvals For  for Role", "Role", StatusEnum.PENDING)
+                createDto("User Approval", "Approvals For User", "User", StatusEnum.PENDING),
+                createDto("Role Approval", "Approvals For  for Role", "Role", StatusEnum.PENDING),
+                createDto("Department Approval", "Approvals For  for Department", "DepartmentEntity", StatusEnum.PENDING)
         );
 
         for (SysApprovalRequestDTO dto : approvals) {
