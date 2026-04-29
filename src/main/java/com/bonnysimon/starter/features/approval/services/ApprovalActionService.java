@@ -224,8 +224,7 @@ public class ApprovalActionService {
         // -----------------------------------------------
         if (nextLevel.isEmpty()) {
 
-            log.info("checking extradata {}", dto.getExtraData1().toString());
-
+            log.info("checking extradata {}", dto.getExtraData1());
 
             Map<String, Object> context = new HashMap<>();
             context.put("userName", entityCreator.getName());

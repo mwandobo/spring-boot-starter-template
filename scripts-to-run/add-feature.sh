@@ -164,6 +164,7 @@ public class ${FEATURE_UPPER}ResponseDTO {
     private Long id;
     private String name;
     private String description;
+    private String approvalStatus;
     private String createdAt;
     private String updatedAt;
 
@@ -198,37 +199,59 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationDto;
-import java.util.List;
+import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class ${FEATURE_UPPER}Service {
-
     private final ${FEATURE_UPPER}Repository repository;
+    private final ApprovalStatusUtil approvalStatusUtil;
 
     public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
             PaginationRequest pagination,
             String search
     ) {
+    String approvalName = "${FEATURE_UPPER}Entity";
         Specification<${FEATURE_UPPER}Entity> spec = getEntitySpecification(search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(approvalName);
 
         Page<${FEATURE_UPPER}Entity> page =
                 repository.findAll(spec, pagination.toPageable());
 
-        List<${FEATURE_UPPER}ResponseDTO> dtoList = page.getContent()
-                        .stream()
-                        .map(${FEATURE_UPPER}ResponseDTO::fromEntity)
+        List<${FEATURE_UPPER}Entity> entities = page.getContent();
+
+        List<Long> ids = entities.stream()
+                        .map(${FEATURE_UPPER}Entity::getId)
                         .toList();
+        Map<Long, String> statusMap = hasApprovalMode
+                        ? approvalStatusUtil.getBulkApprovalStatuses(approvalName, ids)
+                        : Collections.emptyMap();
+
+
+      List<${FEATURE_UPPER}ResponseDTO> result = entities.stream()
+                      .map(entity -> {
+                          ${FEATURE_UPPER}ResponseDTO dto = ${FEATURE_UPPER}ResponseDTO.fromEntity(entity);
+
+                          if (hasApprovalMode) {
+                              dto.setApprovalStatus(
+                                      statusMap.get(entity.getId())
+                              );
+                          }
+
+                          return dto;
+                      })
+                      .toList();
 
         return new PagedResponse<>(
-                        dtoList,
+                        result,
                         new PaginationDto(
                                 page.getTotalElements(),
                                 page.getNumber() + 1,
                                 page.getSize(),
                                 page.getTotalPages()
                         ),
-                        false // or dynamic logic
+                        hasApprovalMode // or dynamic logic
                 );
     }
 

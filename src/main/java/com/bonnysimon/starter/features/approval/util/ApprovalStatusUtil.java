@@ -134,20 +134,98 @@ public class ApprovalStatusUtil {
     /**
      * Bulk status
      */
+//    public Map<Long, String> getBulkApprovalStatuses(String entityName, List<Long> entityIds) {
+//
+//        Map<Long, String> statuses = new HashMap<>();
+//
+//        UserApproval userApproval = getUserApproval(entityName);
+//        if (userApproval == null) {
+//            entityIds.forEach(id -> statuses.put(id, "PENDING"));
+//            return statuses;
+//        }
+//
+//        List<ApprovalLevel> levels =
+//                approvalLevelRepository.findByUserApprovalId(userApproval.getId());
+//
+//        if (levels.isEmpty()) {
+//            entityIds.forEach(id -> statuses.put(id, "PENDING"));
+//            return statuses;
+//        }
+//
+//        List<ApprovalAction> actions =
+//                approvalActionRepository.findByEntityNameAndEntityIdIn(entityName, entityIds);
+//
+//        // Group by entityId
+//        Map<Long, List<ApprovalAction>> actionsByEntity =
+//                actions.stream().collect(Collectors.groupingBy(ApprovalAction::getEntityId));
+//
+//        for (Long entityId : entityIds) {
+//
+//            List<ApprovalAction> entityActions =
+//                    actionsByEntity.getOrDefault(entityId, new ArrayList<>());
+//
+//            if (entityActions.isEmpty()) {
+//                statuses.put(entityId, "PENDING");
+//                continue;
+//            }
+//
+//            boolean rejected = false;
+//            boolean pending = false;
+//
+//            for (ApprovalLevel level : levels) {
+//
+//                List<ApprovalAction> levelActions = entityActions.stream()
+//                        .filter(a -> a.getApprovalLevel().getId().equals(level.getId()))
+//                        .toList();
+//
+//                if (levelActions.stream()
+//                        .anyMatch(a -> a.getAction() == ApprovalActionEnum.REJECTED)) {
+//                    rejected = true;
+//                    break;
+//                }
+//
+//                boolean approved = levelActions.stream()
+//                        .anyMatch(a -> a.getAction() == ApprovalActionEnum.APPROVED);
+//
+//                if (!approved) pending = true;
+//            }
+//
+//            if (rejected) statuses.put(entityId, "REJECTED");
+//            else if (pending) statuses.put(entityId, "PENDING");
+//            else statuses.put(entityId, "APPROVED");
+//        }
+//
+//        return statuses;
+//    }
+
+
     public Map<Long, String> getBulkApprovalStatuses(String entityName, List<Long> entityIds) {
+
+        log.debug("==== BULK APPROVAL STATUS START ====");
+        log.debug("Entity: {}", entityName);
+        log.debug("Entity IDs: {}", entityIds);
 
         Map<Long, String> statuses = new HashMap<>();
 
         UserApproval userApproval = getUserApproval(entityName);
         if (userApproval == null) {
+            log.debug("No UserApproval found → defaulting all to PENDING");
             entityIds.forEach(id -> statuses.put(id, "PENDING"));
             return statuses;
         }
 
+        log.debug("UserApproval ID: {}", userApproval.getId());
+
         List<ApprovalLevel> levels =
                 approvalLevelRepository.findByUserApprovalId(userApproval.getId());
 
+        log.debug("Approval Levels count: {}", levels.size());
+        log.debug("Approval Levels: {}", levels.stream()
+                .map(ApprovalLevel::getId)
+                .toList());
+
         if (levels.isEmpty()) {
+            log.debug("No levels found → defaulting all to PENDING");
             entityIds.forEach(id -> statuses.put(id, "PENDING"));
             return statuses;
         }
@@ -155,16 +233,30 @@ public class ApprovalStatusUtil {
         List<ApprovalAction> actions =
                 approvalActionRepository.findByEntityNameAndEntityIdIn(entityName, entityIds);
 
+        log.debug("Total actions fetched: {}", actions.size());
+
+        actions.forEach(a -> log.debug(
+                "Action → entityId: {}, levelId: {}, action: {}",
+                a.getEntityId(),
+                a.getApprovalLevel().getId(),
+                a.getAction()
+        ));
+
         // Group by entityId
         Map<Long, List<ApprovalAction>> actionsByEntity =
                 actions.stream().collect(Collectors.groupingBy(ApprovalAction::getEntityId));
 
         for (Long entityId : entityIds) {
 
+            log.debug("---- Evaluating entityId: {} ----", entityId);
+
             List<ApprovalAction> entityActions =
                     actionsByEntity.getOrDefault(entityId, new ArrayList<>());
 
+            log.debug("Total actions for entity {}: {}", entityId, entityActions.size());
+
             if (entityActions.isEmpty()) {
+                log.debug("No actions found → PENDING");
                 statuses.put(entityId, "PENDING");
                 continue;
             }
@@ -178,23 +270,45 @@ public class ApprovalStatusUtil {
                         .filter(a -> a.getApprovalLevel().getId().equals(level.getId()))
                         .toList();
 
+                log.debug("Level {} → {} actions", level.getId(), levelActions.size());
+
+                levelActions.forEach(a -> log.debug(
+                        "   ↳ action: {}",
+                        a.getAction()
+                ));
+
+                // 🚨 REJECTION CHECK
                 if (levelActions.stream()
                         .anyMatch(a -> a.getAction() == ApprovalActionEnum.REJECTED)) {
+
+                    log.debug("Entity {} REJECTED at level {}", entityId, level.getId());
                     rejected = true;
                     break;
                 }
 
+                // 🚨 APPROVAL CHECK
                 boolean approved = levelActions.stream()
                         .anyMatch(a -> a.getAction() == ApprovalActionEnum.APPROVED);
 
-                if (!approved) pending = true;
+                log.debug("Level {} approved? {}", level.getId(), approved);
+
+                if (!approved) {
+                    log.debug("Entity {} is still PENDING at level {}", entityId, level.getId());
+                    pending = true;
+                }
             }
 
-            if (rejected) statuses.put(entityId, "REJECTED");
-            else if (pending) statuses.put(entityId, "PENDING");
-            else statuses.put(entityId, "APPROVED");
+            String finalStatus;
+            if (rejected) finalStatus = "REJECTED";
+            else if (pending) finalStatus = "PENDING";
+            else finalStatus = "APPROVED";
+
+            log.debug("Final status for entity {} → {}", entityId, finalStatus);
+
+            statuses.put(entityId, finalStatus);
         }
 
+        log.debug("==== BULK APPROVAL STATUS END ====");
         return statuses;
     }
 
