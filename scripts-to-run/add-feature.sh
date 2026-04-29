@@ -200,6 +200,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
+import com.bonnysimon.starter.core.services.CurrentUserService;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import java.util.*;
 
 @Service
@@ -207,14 +209,14 @@ import java.util.*;
 public class ${FEATURE_UPPER}Service {
     private final ${FEATURE_UPPER}Repository repository;
     private final ApprovalStatusUtil approvalStatusUtil;
+    private final CurrentUserService currentUserService;
 
     public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
             PaginationRequest pagination,
             String search
     ) {
-    String approvalName = "${FEATURE_UPPER}Entity";
         Specification<${FEATURE_UPPER}Entity> spec = getEntitySpecification(search);
-        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(approvalName);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(${FEATURE_UPPER}Entity.class.getSimpleName());
 
         Page<${FEATURE_UPPER}Entity> page =
                 repository.findAll(spec, pagination.toPageable());
@@ -225,9 +227,8 @@ public class ${FEATURE_UPPER}Service {
                         .map(${FEATURE_UPPER}Entity::getId)
                         .toList();
         Map<Long, String> statusMap = hasApprovalMode
-                        ? approvalStatusUtil.getBulkApprovalStatuses(approvalName, ids)
+                        ? approvalStatusUtil.getBulkApprovalStatuses(${FEATURE_UPPER}Entity.class.getSimpleName(), ids)
                         : Collections.emptyMap();
-
 
       List<${FEATURE_UPPER}ResponseDTO> result = entities.stream()
                       .map(entity -> {
@@ -255,21 +256,21 @@ public class ${FEATURE_UPPER}Service {
                 );
     }
 
-        private static Specification< ${FEATURE_UPPER}Entity> getEntitySpecification(String search) {
-            Specification< ${FEATURE_UPPER}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    private static Specification< ${FEATURE_UPPER}Entity> getEntitySpecification(String search) {
+        Specification< ${FEATURE_UPPER}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
 
-            // Optional search filter (case-insensitive)
-            if (search != null && !search.trim().isEmpty()) {
-                String likePattern = "%" + search.trim().toLowerCase() + "%";
-                spec = spec.and((root, query, cb) ->
-                        cb.or(
-                                cb.like(cb.lower(root.get("title")), likePattern),
-                                cb.like(cb.lower(root.get("description")), likePattern)
-                        )
-                );
-            }
-            return spec;
+        // Optional search filter (case-insensitive)
+        if (search != null && !search.trim().isEmpty()) {
+            String likePattern = "%" + search.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("title")), likePattern),
+                            cb.like(cb.lower(root.get("description")), likePattern)
+                    )
+            );
         }
+        return spec;
+    }
 
     @Transactional
     public ${FEATURE_UPPER}ResponseDTO create(Create${FEATURE_UPPER}DTO request) {
@@ -288,11 +289,19 @@ public class ${FEATURE_UPPER}Service {
         return  ${FEATURE_UPPER}ResponseDTO.fromEntity(savedEntity);
     }
 
-      public ${FEATURE_UPPER}ResponseDTO findOne  (Long  ${FEATURE_LOWER}Id) {
-            ${FEATURE_UPPER}Entity   ${FEATURE_LOWER} = repository.findById( ${FEATURE_LOWER}Id)
-                   .orElseThrow(() -> new IllegalStateException(" ${FEATURE_UPPER} not found"));
-           return  ${FEATURE_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER});
-       }
+    public  ApprovalAwareDTO<${FEATURE_UPPER}ResponseDTO> findOne  (Long  ${FEATURE_LOWER}Id) {
+          ${FEATURE_UPPER}Entity   ${FEATURE_LOWER} = repository.findById( ${FEATURE_LOWER}Id)
+                 .orElseThrow(() -> new IllegalStateException(" ${FEATURE_UPPER} not found"));
+
+          ${FEATURE_UPPER}ResponseDTO dto = ${FEATURE_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER});
+
+           return approvalStatusUtil.attachApprovalInfo(
+                    dto,
+                    ${FEATURE_LOWER}.getId(),
+                    ${FEATURE_UPPER}Entity.class.getSimpleName(),
+                    currentUserService.getCurrentUserRoleId()
+                );
+     }
 
     @Transactional
     public ${FEATURE_UPPER}ResponseDTO update(Long id, Create${FEATURE_UPPER}DTO request) {
@@ -350,6 +359,7 @@ import com.bonnysimon.starter.core.dto.PaginationResponse;
 import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
 import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
 import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -376,7 +386,7 @@ public class ${FEATURE_UPPER}Controller {
     }
 
      @GetMapping("/{id}")
-        public ${FEATURE_UPPER}ResponseDTO findOne(
+        public ApprovalAwareDTO<${FEATURE_UPPER}ResponseDTO> findOne(
                 @PathVariable Long id
         ) {
             return service.findOne(id);
