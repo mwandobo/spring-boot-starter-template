@@ -44,32 +44,120 @@ if [ -z "$FEATURE_NAME" ]; then
   exit 1
 fi
 
+FEATURE_ORIGINAL="$FEATURE_NAME"
 FEATURE_LOWER=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]')
-FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_ORIGINAL:0:1})${FEATURE_ORIGINAL:1}"
 PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
 
-# -------------------------------
-# Plural handling (explicit)
-# -------------------------------
+## -------------------------------
+## Plural handling (explicit)
+## -------------------------------
+#if [ -z "$PLURAL_SUFFIX" ]; then
+#  FEATURE_PLURAL="$FEATURE_LOWER"
+#else
+#  case "$PLURAL_SUFFIX" in
+#    s)
+#      FEATURE_PLURAL="${FEATURE_LOWER}s"
+#      ;;
+#    es)
+#      FEATURE_PLURAL="${FEATURE_LOWER}es"
+#      ;;
+#    ies)
+#      FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
+#      ;;
+#    *)
+#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
+#      exit 1
+#      ;;
+#  esac
+#fi
+
+
+
+#if [ -z "$PLURAL_SUFFIX" ]; then
+#  FEATURE_PLURAL="$FEATURE_LOWER"
+#else
+#  case "$PLURAL_SUFFIX" in
+#    s)
+#      FEATURE_PLURAL="${FEATURE_LOWER}s"
+#      ;;
+#    es)
+#      FEATURE_PLURAL="${FEATURE_LOWER}es"
+#      ;;
+#    ies)
+#      if [[ "$FEATURE_LOWER" == *y ]]; then
+#        FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
+#      else
+#        FEATURE_PLURAL="${FEATURE_LOWER}ies"
+#      fi
+#      ;;
+#    *)
+#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
+#      exit 1
+#      ;;
+#  esac
+#fi
+
+#if [ -z "$PLURAL_SUFFIX" ]; then
+#  FEATURE_PLURAL="$FEATURE_LOWER"
+#else
+#  case "$PLURAL_SUFFIX" in
+#    s)
+#      FEATURE_PLURAL="${FEATURE_LOWER}s"
+#      ;;
+#    es)
+#      FEATURE_PLURAL="${FEATURE_LOWER}es"
+#      ;;
+#    ies)
+#      if [[ "$FEATURE_LOWER" == *y ]]; then
+#        FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
+#      else
+#        FEATURE_PLURAL="${FEATURE_LOWER}ies"
+#      fi
+#      ;;
+#    *)
+#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
+#      exit 1
+#      ;;
+#  esac
+#fi
+
+
 if [ -z "$PLURAL_SUFFIX" ]; then
-  FEATURE_PLURAL="$FEATURE_LOWER"
+  FEATURE_PLURAL="$FEATURE_ORIGINAL"
 else
   case "$PLURAL_SUFFIX" in
     s)
-      FEATURE_PLURAL="${FEATURE_LOWER}s"
+      FEATURE_PLURAL="${FEATURE_ORIGINAL}s"
       ;;
     es)
-      FEATURE_PLURAL="${FEATURE_LOWER}es"
+      FEATURE_PLURAL="${FEATURE_ORIGINAL}es"
       ;;
     ies)
-      FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
+      if [[ "$FEATURE_ORIGINAL" == *y ]]; then
+        FEATURE_PLURAL="${FEATURE_ORIGINAL%y}ies"
+      else
+        FEATURE_PLURAL="${FEATURE_ORIGINAL}s"
+      fi
       ;;
     *)
-      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
+      echo "❌ Invalid plural suffix"
       exit 1
       ;;
   esac
 fi
+
+
+
+
+echo "DEBUG → FINAL FEATURE_PLURAL=$FEATURE_PLURAL"
+echo "DEBUG → FINAL FEATURE_UPPER=$FEATURE_UPPER"
+
+FEATURE_PLURAL_KEBAB=$(echo "$FEATURE_PLURAL" \
+  | sed -E 's/([a-z])([A-Z])/\1-\2/g' \
+  | tr '[:upper:]' '[:lower:]')
+
+echo "DEBUG → FEATURE_PLURAL_KEBAB=$FEATURE_PLURAL_KEBAB"
 
 
 BASE_PACKAGE="com.bonnysimon.starter.features"
@@ -364,7 +452,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/${FEATURE_PLURAL}")
+@RequestMapping("/api/v1/${FEATURE_PLURAL_KEBAB}")
 @RequiredArgsConstructor
 public class ${FEATURE_UPPER}Controller {
 
@@ -428,11 +516,11 @@ cat <<EOF >> "$HTTP_FILE"
 $HTTP_MARKER
 
 ###
-GET {{base_url}}/${FEATURE_PLURAL}
+GET {{base_url}}/${FEATURE_PLURAL_KEBAB}
 Authorization: Bearer {{token}}
 
 ###
-POST {{base_url}}/${FEATURE_PLURAL}
+POST {{base_url}}/${FEATURE_PLURAL_KEBAB}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -442,11 +530,11 @@ Content-Type: application/json
 }
 
 ###
-GET {{base_url}}/${FEATURE_PLURAL}/1
+GET {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
 Authorization: Bearer {{token}}
 
 ###
-PUT {{base_url}}/${FEATURE_PLURAL}/1
+PUT {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -456,7 +544,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{base_url}}/${FEATURE_PLURAL}/1
+DELETE {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
 Authorization: Bearer {{token}}
 
 EOF
