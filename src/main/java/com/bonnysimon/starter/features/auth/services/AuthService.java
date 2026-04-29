@@ -110,7 +110,7 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
+            String jwt = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole().getId());
 
             // Role + permissions
             String roleName = user.getRole() != null ? user.getRole().getName() : null;

@@ -32,4 +32,14 @@ to add property (foreign key)
 
 ./add-property.sh department status String true
 
+import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
+import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
+import com.bonnysimon.starter.features.approval.entity.SysApproval;
+import com.bonnysimon.starter.features.approval.entity.UserApproval;
+import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
+import com.bonnysimon.starter.features.approval.repository.ApprovalActionRepository;
+import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
+import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
+import com.bonnysimon.starter.features.approval.repository.UserApprovalRepository;
+
 

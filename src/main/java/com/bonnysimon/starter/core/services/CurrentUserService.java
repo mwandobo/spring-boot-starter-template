@@ -24,6 +24,14 @@ public class CurrentUserService {
         throw new IllegalStateException("User not authenticated or invalid token");
     }
 
+    public Long getCurrentUserRoleId() {
+        String token = extractTokenFromRequest();
+        if (token != null && jwtUtil.validateToken(token)) {
+            return jwtUtil.extractUserRoleId(token);
+        }
+        throw new IllegalStateException("User not authenticated or invalid token");
+    }
+
     public String getCurrentUserEmail() {
         String token = extractTokenFromRequest();
         if (token != null && jwtUtil.validateToken(token)) {

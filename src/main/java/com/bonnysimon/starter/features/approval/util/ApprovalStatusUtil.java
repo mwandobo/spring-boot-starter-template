@@ -1,5 +1,6 @@
 package com.bonnysimon.starter.features.approval.util;
 
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
@@ -246,6 +247,137 @@ public class ApprovalStatusUtil {
                 .findBySysApprovalId(sys.get().getId())
                 .orElse(null);
     }
+
+
+    public <T> ApprovalAwareDTO<T> attachApprovalInfo(
+            T entity,
+            Long entityId,
+            String entityName,
+            Long userRoleId
+    ) {
+
+        log.debug("==== ATTACH APPROVAL INFO START ====");
+        log.debug("Entity: {}, ID: {}, UserRoleId: {}", entityName, entityId, userRoleId);
+
+        boolean hasApprovalMode = hasApprovalMode(entityName);
+        String approvalStatus = getApprovalStatus(entityName, entityId);
+
+        log.debug("hasApprovalMode: {}, approvalStatus: {}", hasApprovalMode, approvalStatus);
+
+        if (!hasApprovalMode || "REJECTED".equals(approvalStatus)) {
+            log.debug("Skipping approval logic (mode off or rejected)");
+            return buildBasic(entity, hasApprovalMode, approvalStatus);
+        }
+
+        UserApproval userApproval = getUserApproval(entityName);
+
+        if (userApproval == null) {
+            log.debug("No UserApproval found → fallback");
+            return buildBasic(entity, hasApprovalMode, approvalStatus);
+        }
+
+        log.debug("UserApproval ID: {}", userApproval.getId());
+
+        List<ApprovalLevel> levels = getLevelsByUserApproval(userApproval.getId());
+
+        log.debug("Levels count: {}", levels.size());
+        log.debug("Levels: {}", levels.stream()
+                .map(l -> "ID=" + l.getId() + ", role=" + l.getRole().getId())
+                .toList());
+
+        List<Long> levelIds = levels.stream()
+                .map(ApprovalLevel::getId)
+                .toList();
+
+        List<ApprovalAction> actions = getActions(entityId, levelIds);
+
+        log.debug("Total actions fetched: {}", actions.size());
+        actions.forEach(a -> log.debug(
+                "Action → levelId: {}, action: {}",
+                a.getApprovalLevel().getId(),
+                a.getAction()
+        ));
+
+        boolean isMyLevelApproved = false;
+        boolean shouldApprove = false;
+
+        ApprovalLevel myLevel = levels.stream()
+                .filter(level -> level.getRole().getId().equals(userRoleId))
+                .findFirst()
+                .orElse(null);
+
+        if (myLevel == null) {
+            log.debug("No matching level found for userRoleId: {}", userRoleId);
+        } else {
+            log.debug("My level found → ID: {}, createdAt: {}",
+                    myLevel.getId(), myLevel.getCreatedAt());
+
+            List<ApprovalAction> myActions = actions.stream()
+                    .filter(a -> a.getApprovalLevel().getId().equals(myLevel.getId()))
+                    .toList();
+
+            log.debug("My level actions count: {}", myActions.size());
+
+            isMyLevelApproved = myActions.stream()
+                    .anyMatch(a -> a.getAction() == ApprovalActionEnum.APPROVED);
+
+            log.debug("isMyLevelApproved: {}", isMyLevelApproved);
+        }
+
+        if ("PENDING".equals(approvalStatus) && myLevel != null && !isMyLevelApproved) {
+
+            List<ApprovalLevel> previousLevels = levels.stream()
+                    .filter(lvl ->
+                            lvl.getCreatedAt() != null &&
+                                    myLevel.getCreatedAt() != null &&
+                                    lvl.getCreatedAt().isBefore(myLevel.getCreatedAt())
+                    )
+                    .toList();
+
+            log.debug("Previous levels: {}", previousLevels.stream()
+                    .map(ApprovalLevel::getId)
+                    .toList());
+
+            boolean allPrevApproved = previousLevels.stream().allMatch(lvl -> {
+                boolean approved = actions.stream().anyMatch(a ->
+                        a.getApprovalLevel().getId().equals(lvl.getId()) &&
+                                a.getAction() == ApprovalActionEnum.APPROVED
+                );
+
+                log.debug("Level {} approved? {}", lvl.getId(), approved);
+                return approved;
+            });
+
+            shouldApprove = allPrevApproved;
+
+            log.debug("shouldApprove: {}", shouldApprove);
+        }
+
+        log.debug("==== ATTACH APPROVAL INFO END ====");
+
+        return new ApprovalAwareDTO<>(
+                entity,
+                hasApprovalMode,
+                approvalStatus,
+                isMyLevelApproved,
+                shouldApprove,
+                myLevel != null ? myLevel.getId() : null
+        );
+    }
+
+
+    private <T> ApprovalAwareDTO<T> buildDefault(T entity) {
+        return new ApprovalAwareDTO<>(entity, false, "N/A", false, false, null);
+    }
+
+    private <T> ApprovalAwareDTO<T> buildBasic(T entity, boolean hasApprovalMode, String status) {
+        return new ApprovalAwareDTO<>(entity, hasApprovalMode, status, false, false, null);
+    }
+
+
+
+
+
 
     public List<ApprovalLevel> getLevelsByUserApproval(Long userApprovalId) {
         return approvalLevelRepository.findByUserApprovalId(userApprovalId);
