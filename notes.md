@@ -37,6 +37,6 @@ to add property (foreign key)
 
     ./scripts-to-run/add-foreign-property.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration
 
-./add-property.sh department status String true
-use camelCase for naming
-check authentication
+to remove a feature
+
+    ./scripts-to-run/remove-feature.sh --feature position --parent administration
