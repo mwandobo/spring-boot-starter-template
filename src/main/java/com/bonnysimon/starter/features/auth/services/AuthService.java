@@ -112,14 +112,6 @@ public class AuthService {
 
             String jwt = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole().getId());
 
-            // Role + permissions
-            String roleName = user.getRole() != null ? user.getRole().getName() : null;
-            Set<String> permissions = user.getRole() != null
-                    ? user.getRole().getPermissions().stream()
-                    .map(Permission::getName)
-                    .collect(Collectors.toSet())
-                    : Set.of();
-
             // 🔥 Fetch notifications (like NestJS)
             List<NotificationResponseDto> notifications = notificationService.findByUserId(user.getId());
 

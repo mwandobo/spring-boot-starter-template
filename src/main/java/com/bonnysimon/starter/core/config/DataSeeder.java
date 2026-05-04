@@ -43,6 +43,13 @@ public class DataSeeder {
                     new PermissionDef("department_delete", "Delete departments")
             )),
 
+            new PermissionGroup("position", List.of(
+                    new PermissionDef("position_create", "Create positions"),
+                    new PermissionDef("position_read", "View positions"),
+                    new PermissionDef("position_update", "Edit positions"),
+                    new PermissionDef("position_delete", "Delete positions")
+            )),
+
             new PermissionGroup("role", List.of(
                     new PermissionDef("role_create", "Create roles"),
                     new PermissionDef("role_read", "View roles"),
@@ -127,34 +134,6 @@ public class DataSeeder {
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
-            // 1. Default permissions
-//            List<String> defaultPermissions = List.of(
-//                    "VIEW_USERS",
-//                    "CREATE_USER",
-//                    "UPDATE_USER",
-//                    "DELETE_USER",
-//                    "VIEW_ROLE"
-//            );
-
-
-//
-//            Set<Permission> permissions = new HashSet<>();
-//            for (String permName : defaultPermissions) {
-//                Permission perm = permissionRepository.findByName(permName);
-//                if (perm == null) {
-//                    perm = new Permission();
-//                    perm.setName(permName);
-//                    permissionRepository.save(perm);
-//                }
-//                permissions.add(perm);
-//            }
-//
-//            Role adminRole = roleRepository.findByName("ADMIN")
-//                    .orElseGet(() -> {
-//                        Role newRole = new Role();
-//                        newRole.setName("ADMIN");
-//                        return roleRepository.save(newRole); // ✅ Save it here
-
             Set<Permission> allPermissions = new HashSet<>();
 
             for (PermissionGroup group : permissionGroups) {
@@ -200,21 +179,9 @@ public class DataSeeder {
                     .toList();
 
             existingPermissions.addAll(newPermissions);
+            adminRole.setPermissions(existingPermissions);
+            roleRepository.save(adminRole);
 
-
-// Add only missing (same as NestJS)
-//            if (!newPermissions.isEmpty()) {
-//                existingPermissions.addAll(newPermissions);
-//                adminRole.setPermissions(existingPermissions);
-//                roleRepository.save(adminRole);
-//            }
-
-
-// ✅ Assign permissions to role
-//            adminRole.setPermissions(permissions);
-
-// ✅ Save again to persist relationship
-//            roleRepository.save(adminRole);
 
             // 3. Default user (admin@starter.com / password: admin123)
             if (userRepository.findByEmail("breezojr@gmail.com").isEmpty()) {

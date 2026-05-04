@@ -132,7 +132,16 @@ import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.dto.${REF_
   if ! grep -q "private ${REF_UPPER}ResponseDTO ${REF_LOWER}" "$RESPONSE_DTO_FILE"; then
     sed -i "/private String description;/a\\
     private ${REF_UPPER}ResponseDTO ${REF_LOWER};" "$RESPONSE_DTO_FILE"
+
     echo "✅ ResponseDTO updated → added ${REF_LOWER} (nested DTO)"
+  fi
+
+  # Add flat name field (e.g. departmentName)
+  if ! grep -q "private String ${REF_LOWER}Name" "$RESPONSE_DTO_FILE"; then
+    sed -i "/private ${REF_UPPER}ResponseDTO ${REF_LOWER};/a\\
+    private String ${REF_LOWER}Name;" "$RESPONSE_DTO_FILE"
+
+    echo "✅ ResponseDTO updated → added ${REF_LOWER}Name"
   fi
 
   # Add correct mapping in fromEntity()
@@ -142,6 +151,13 @@ import com.bonnysimon.starter.features.${PARENT_LOWER:-}.${REF_LOWER}.dto.${REF_
             dto.set${REF_UPPER}(${FEATURE_LOWER}.get${REF_UPPER}() != null ? ${REF_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER}.get${REF_UPPER}()) : null);" "$RESPONSE_DTO_FILE"
     echo "✅ ResponseDTO.fromEntity() mapping added correctly"
   fi
+
+    if ! grep -q "set${REF_UPPER}Name(" "$RESPONSE_DTO_FILE"; then
+      sed -i "/dto\.set${REF_UPPER}(/a\\
+              dto.set${REF_UPPER}Name(${FEATURE_LOWER}.get${REF_UPPER}() != null ? ${FEATURE_LOWER}.get${REF_UPPER}().getName() : null);" "$RESPONSE_DTO_FILE"
+
+      echo "✅ ${REF_UPPER}Name mapping added"
+    fi
 fi
 
 

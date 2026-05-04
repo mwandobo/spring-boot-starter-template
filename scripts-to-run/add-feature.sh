@@ -480,7 +480,7 @@ public class ${FEATURE_UPPER}Controller {
             return service.findOne(id);
         }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ${FEATURE_UPPER}ResponseDTO update(
             @PathVariable Long id,
             @RequestBody Create${FEATURE_UPPER}DTO request
@@ -534,7 +534,7 @@ GET {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
 Authorization: Bearer {{token}}
 
 ###
-PUT {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
+PATCH {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
