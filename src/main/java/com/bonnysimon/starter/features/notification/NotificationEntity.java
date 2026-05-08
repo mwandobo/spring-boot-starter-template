@@ -1,7 +1,7 @@
 package com.bonnysimon.starter.features.notification;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
-import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.user.UserEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,13 +39,13 @@ public class NotificationEntity extends BaseEntity {
     @JoinColumn(name = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
-    private User user;
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notified_personnel_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
-    private User notifiedPersonnel;
+    private UserEntity notifiedPersonnel;
 
     @Column(name = "redirect_url", length = 255)
     private String redirectUrl;

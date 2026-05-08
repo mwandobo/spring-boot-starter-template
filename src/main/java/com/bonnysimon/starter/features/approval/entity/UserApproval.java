@@ -2,7 +2,6 @@ package com.bonnysimon.starter.features.approval.entity;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
 import com.bonnysimon.starter.features.approval.enums.StatusEnum;
-import com.bonnysimon.starter.features.role.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 

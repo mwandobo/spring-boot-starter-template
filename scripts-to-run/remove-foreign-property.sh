@@ -120,6 +120,51 @@ fi
 sed -i '/^$/N;/^\n$/D' "$ENTITY_FILE"
 
 
+## ================================================================
+## 4. SERVICE - Remove repository, validation method & logic
+## ================================================================
+#SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+#
+#if [ -f "$SERVICE_FILE" ]; then
+#  echo " → Processing ${FEATURE_UPPER}Service..."
+#
+#  # ------------------- Remove Imports -------------------
+#  sed -i "/${REF_UPPER}Entity/d" "$SERVICE_FILE"
+#  sed -i "/${REF_UPPER}Repository/d" "$SERVICE_FILE"
+#
+#  # ------------------- Remove Injected Repository -------------------
+#  sed -i "/private final ${REF_UPPER}Repository ${REF_LOWER}Repository;/d" "$SERVICE_FILE"
+#
+#  # ------------------- Remove validateXXXExists Method (Robust) -------------------
+#  echo "   → Removing validate${REF_UPPER}Exists method..."
+#
+#  # Multiple patterns to catch broken or normal validation methods
+#  sed -i "/private ${REF_UPPER}Entity validate${REF_UPPER}Exists/,/^[[:space:]]*}/d" "$SERVICE_FILE"
+#  sed -i "/validate${REF_UPPER}Exists(Long id)/,/^[[:space:]]*}/d" "$SERVICE_FILE"
+#  sed -i "/if (id == null)/,/orElseThrow.*${REF_UPPER}/d" "$SERVICE_FILE"
+#
+#  # Extra safety passes
+#  sed -i "/validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
+#
+#  # ------------------- Remove Usage in create/update -------------------
+#  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
+#  sed -i "/entity\.set${REF_UPPER}(${REF_LOWER});/d" "$SERVICE_FILE"
+#
+#  # ------------------- Remove the ONE extra trailing closing brace -------------------
+#  echo "   → Removing extra trailing closing brace..."
+#
+#  # This safely removes only the very last } in the file if it's on its own line (extra class closing)
+#  sed -i '$s/^[[:space:]]*}[[:space:]]*$//' "$SERVICE_FILE"
+#
+#  # ------------------- Final Cleanup -------------------
+#  sed -i '/^$/N;/^\n$/D' "$SERVICE_FILE"
+#
+#  echo "✅ Service cleaned successfully"
+#else
+#  echo "⚠️  Service file not found (skipped)"
+#fi
+
+
 # ================================================================
 # 4. SERVICE - Remove repository, validation method & logic
 # ================================================================
@@ -152,11 +197,18 @@ if [ -f "$SERVICE_FILE" ]; then
 
   # ------------------- Remove the ONE extra trailing closing brace -------------------
   echo "   → Removing extra trailing closing brace..."
-
-  # This safely removes only the very last } in the file if it's on its own line (extra class closing)
   sed -i '$s/^[[:space:]]*}[[:space:]]*$//' "$SERVICE_FILE"
 
-  # ------------------- Final Cleanup -------------------
+  # ------------------- Final Cleanup: Remove extra empty lines + trim last } -------------------
+  echo "   → Cleaning trailing empty lines and spaces..."
+
+  # Remove all trailing empty lines
+  sed -i -e :a -e '/^\n*$/{$d;N;ba}' "$SERVICE_FILE"
+
+  # Trim spaces before the final class closing }
+  sed -i '$s/^[[:space:]]*\(}\)[[:space:]]*$/\1/' "$SERVICE_FILE"
+
+  # One final blank line cleanup
   sed -i '/^$/N;/^\n$/D' "$SERVICE_FILE"
 
   echo "✅ Service cleaned successfully"

@@ -4,15 +4,13 @@ import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
 import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +19,8 @@ public class RoleService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
-    public PaginationResponse<Role> findAll(PaginationRequest pagination, String search) {
-        Specification<Role> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    public PaginationResponse<RoleEntity> findAll(PaginationRequest pagination, String search) {
+        Specification<RoleEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
 
         if (search != null && !search.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->
@@ -32,17 +30,17 @@ public class RoleService {
             );
         }
 
-        Page<Role> roleDtos = roleRepository.findAll(spec, pagination.toPageable());
+        Page<RoleEntity> roleDtos = roleRepository.findAll(spec, pagination.toPageable());
 
         return PaginationResponse.of(roleDtos);
     }
 
     @Transactional
-    public User assignRolesToUser(AssignRoleRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public UserEntity assignRolesToUser(AssignRoleRequest request) {
+        UserEntity user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
-        Role role = roleRepository.findById(request.getRoleId())
+        RoleEntity role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         user.setRole(role);
 
@@ -50,31 +48,15 @@ public class RoleService {
     }
 
 
-    public Role findOne(Long id) {
-        Role role = roleRepository.findWithPermissionsById(id)
+    public RoleEntity findOne(Long id) {
+        RoleEntity role = roleRepository.findWithPermissionsById(id)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
        return role;
     }
 
-
-
-
-//    @Transactional
-//    public Role create(CreateRoleRequest request) {
-//        Role role = roleRepository.findByName(request.getName())
-//                .orElseThrow(() -> new IllegalStateException("Role not found"));
-//
-//
-//
-//
-//
-//        return roleRepository.save(request);
-//    }
-
-
     @Transactional
-    public Role create(CreateRoleRequest request) {
+    public RoleEntity create(CreateRoleRequest request) {
         // Check if role already exists
         roleRepository.findByName(request.getName())
                 .ifPresent(r -> {
@@ -82,15 +64,15 @@ public class RoleService {
                 });
 
         // Map DTO -> Entity
-        Role role = new Role();
+        RoleEntity role = new RoleEntity();
         role.setName(request.getName());
 
         return roleRepository.save(role);
     }
 
     @Transactional
-    public Role update(Long id, CreateRoleRequest request) {
-        Role role = roleRepository.findById(id)
+    public RoleEntity update(Long id, CreateRoleRequest request) {
+        RoleEntity role = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
 
         // Check if another role with the same name exists
@@ -107,7 +89,7 @@ public class RoleService {
     }
 
     public void delete(Long id, boolean soft) {
-        Role role = roleRepository.findById(id)
+        RoleEntity role = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
 
         if (soft) {

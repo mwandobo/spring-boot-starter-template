@@ -1,11 +1,11 @@
 package com.bonnysimon.starter.core.config;
 
-import com.bonnysimon.starter.features.permission.Permission;
+import com.bonnysimon.starter.features.permission.PermissionEntity;
 import com.bonnysimon.starter.features.permission.PermissionRepository;
-import com.bonnysimon.starter.features.role.Role;
+import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -134,15 +134,15 @@ public class DataSeeder {
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
-            Set<Permission> allPermissions = new HashSet<>();
+            Set<PermissionEntity> allPermissions = new HashSet<>();
 
             for (PermissionGroup group : permissionGroups) {
                 for (PermissionDef def : group.permissions()) {
 
-                    Permission existing = permissionRepository.findByName(def.name());
+                    PermissionEntity existing = permissionRepository.findByName(def.name());
 
                     if (existing == null) {
-                        Permission newPerm = new Permission();
+                        PermissionEntity newPerm = new PermissionEntity();
                         newPerm.setName(def.name());
                         newPerm.setDescription(def.description());
                         newPerm.setGroup(group.group());
@@ -155,26 +155,26 @@ public class DataSeeder {
             }
 //                    });
 
-            Role adminRole = roleRepository.findByName("ADMIN")
+            RoleEntity adminRole = roleRepository.findByName("ADMIN")
                     .orElseGet(() -> {
-                        Role role = new Role();
+                        RoleEntity role = new RoleEntity();
                         role.setName("ADMIN");
                         role.setPermissions(new HashSet<>());
                         return roleRepository.save(role);
                     });
 
 // Load existing permissions
-            Set<Permission> existingPermissions = adminRole.getPermissions();
+            Set<PermissionEntity> existingPermissions = adminRole.getPermissions();
             if (existingPermissions == null) {
                 existingPermissions = new HashSet<>();
             }
 
 // Find missing permissions
             Set<Long> existingIds = existingPermissions.stream()
-                    .map(Permission::getId)
+                    .map(PermissionEntity::getId)
                     .collect(Collectors.toSet());
 
-            List<Permission> newPermissions = allPermissions.stream()
+            List<PermissionEntity> newPermissions = allPermissions.stream()
                     .filter(p -> !existingIds.contains(p.getId()))
                     .toList();
 
@@ -185,7 +185,7 @@ public class DataSeeder {
 
             // 3. Default user (admin@starter.com / password: admin123)
             if (userRepository.findByEmail("breezojr@gmail.com").isEmpty()) {
-                User adminUser = new User();
+                UserEntity adminUser = new UserEntity();
                 adminUser.setName("Super Admin"); // if you have username field
                 adminUser.setEmail("breezojr@gmail.com"); // if you use email
                 adminUser.setPhone("0764010158"); // if you use email

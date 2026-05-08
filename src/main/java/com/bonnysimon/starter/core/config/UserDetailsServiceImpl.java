@@ -1,7 +1,7 @@
 package com.bonnysimon.starter.core.config;
 
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,7 +18,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found with email: " + email));
 
         return org.springframework.security.core.userdetails.User

@@ -5,3 +5,8 @@ as the response in the notification we need to create the responseDtos for the r
 remove 500 error
 
 in the generate-feature script i will have to check for those that dont pruraled by adding s only
+
+in generate property
+ the referenced entity should be a path
+ the mandatory and the default values in normal and in foreign keys
+

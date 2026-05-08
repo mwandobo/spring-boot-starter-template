@@ -7,7 +7,7 @@ import lombok.*;
 @Data
 @Entity
 @Table(name = "permissions")
-public class Permission extends BaseEntity {
+public class PermissionEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

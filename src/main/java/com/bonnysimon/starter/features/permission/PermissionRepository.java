@@ -5,8 +5,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PermissionRepository extends JpaRepository<Permission, Long> {
-    Permission findByName(String name);
+public interface PermissionRepository extends JpaRepository<PermissionEntity, Long> {
+    PermissionEntity findByName(String name);
 
-    Page<Permission> findAll(Specification<Permission> spec, Pageable pageable);
+    Page<PermissionEntity> findAll(Specification<PermissionEntity> spec, Pageable pageable);
 }

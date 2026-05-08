@@ -7,7 +7,6 @@ import com.bonnysimon.starter.features.approval.entity.SysApproval;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
 import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
 import com.bonnysimon.starter.features.approval.repository.UserApprovalRepository;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;

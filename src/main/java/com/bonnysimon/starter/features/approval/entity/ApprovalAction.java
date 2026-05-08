@@ -4,8 +4,8 @@ import com.bonnysimon.starter.core.entity.BaseEntity;
 import com.bonnysimon.starter.features.approval.enums.ApprovalActionCreationTypeEnum;
 import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
 import com.bonnysimon.starter.features.approval.enums.StatusEnum;
-import com.bonnysimon.starter.features.role.Role;
-import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.role.RoleEntity;
+import com.bonnysimon.starter.features.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -53,11 +53,11 @@ public class ApprovalAction extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
-    private Role role;
+    private RoleEntity role;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
     @Enumerated(EnumType.STRING) // Store enum as text in DB (better readability than ORDINAL)
     @Column(nullable = false)

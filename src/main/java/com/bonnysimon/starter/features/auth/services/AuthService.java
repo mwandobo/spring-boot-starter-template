@@ -6,14 +6,13 @@ import com.bonnysimon.starter.features.auth.dtos.LoginRequest;
 import com.bonnysimon.starter.features.auth.dtos.LoginResponse;
 import com.bonnysimon.starter.features.auth.dtos.RegisterRequest;
 import com.bonnysimon.starter.features.auth.dtos.RegisterResponse;
-import com.bonnysimon.starter.features.notification.NotificationEntity;
 import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
-import com.bonnysimon.starter.features.permission.Permission;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
+import com.bonnysimon.starter.features.user.dto.UserResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -46,55 +45,12 @@ public class AuthService {
     @Value("${spring.front.end.url}")
     private String frontEndUrl;
 
-//    public LoginResponse login(LoginRequest loginRequest) {
-//        try {
-//            logger.info("Attempting login for user: {}", loginRequest.getEmail());
-//
-//            // Get user from DB
-//            User user = userRepository.findByEmail(loginRequest.getEmail())
-//                    .orElseThrow(() -> new IllegalStateException("User not found"));
-//
-//            Authentication authentication = authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            loginRequest.getEmail(),
-//                            loginRequest.getPassword()
-//                    )
-//            );
-//
-//            if (!Boolean.TRUE.equals(user.getIsOtpVerified())) {
-//                throw new IllegalStateException("User OTP is not verified yet");
-//            }
-//
-//
-//            logger.info("Authentication successful for user: {}", loginRequest.getEmail());
-//
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            String jwt = jwtUtil.generateToken(user.getEmail(), user.getId());
-//            logger.info("JWT generated for user: {}", loginRequest.getEmail());
-//
-//            String roleName = user.getRole() != null ? user.getRole().getName() : null;
-//            Set<String> permissions = user.getRole() != null
-//                    ? user.getRole().getPermissions().stream()
-//                    .map(Permission::getName)
-//                    .collect(Collectors.toSet())
-//                    : Set.of();
-//
-//            return new LoginResponse(jwt, user.getEmail(), roleName, permissions);
-//
-//        } catch (Exception ex) {
-//            logger.error("Login failed for user: {}", loginRequest.getEmail(), ex);
-//            throw new IllegalStateException(ex.getMessage()); // or throw a custom AuthenticationException
-//        }
-//    }
-
-
     public LoginResponse login(LoginRequest loginRequest) {
         try {
             logger.info("Attempting login for user: {}", loginRequest.getEmail());
 
             // Get user from DB
-            User user = userRepository.findByEmail(loginRequest.getEmail())
+            UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
                     .orElseThrow(() -> new IllegalStateException("User not found"));
 
             Authentication authentication = authenticationManager.authenticate(
@@ -118,7 +74,7 @@ public class AuthService {
             // 🔥 Return structured response
             return new LoginResponse(
                     jwt,
-                    user,
+                    UserResponseDTO.fromEntity(user) ,
                     notifications
             );
 
@@ -132,7 +88,7 @@ public class AuthService {
             throw new IllegalStateException("Email is already taken!");
         }
 
-        User user = new User();
+        UserEntity user = new UserEntity();
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
@@ -152,7 +108,7 @@ public class AuthService {
 
     // --------- VERIFY OTP ---------
     public boolean verifyOtp(String email, String otpCode) {
-        User user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
         boolean valid = otpService.verifyOtp(user.getId(), otpCode);
@@ -169,7 +125,7 @@ public class AuthService {
 
     // --------- PASSWORD RECOVERY REQUEST ---------
     public void passwordRecoveryRequest(String email) {
-        User user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         String otp = otpService.generateOtp(user.getId());
 
@@ -184,7 +140,7 @@ public class AuthService {
 
     // --------- CHANGE PASSWORD ---------
     public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
         if (!user.getIsRecoveryRequested()) {
@@ -202,7 +158,7 @@ public class AuthService {
         logger.info("Password changed successfully for user: {}", email);
     }
 
-    public void sendAuthNotification(User user, String otp, String template, String subject) {
+    public void sendAuthNotification(UserEntity user, String otp, String template, String subject) {
         try {
             log.info("Auth notification for user={}", toJson(user));
 

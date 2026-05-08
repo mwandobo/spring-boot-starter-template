@@ -1,9 +1,9 @@
 package com.bonnysimon.starter.core.filters;
 
 import com.bonnysimon.starter.core.config.CustomUserDetails;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
 import com.bonnysimon.starter.core.utils.JwtUtil;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,18 +37,13 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             if (jwtUtil.validateToken(token)) {
                 String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
+                UserEntity user = userRepository.findByEmailWithAuthorities(email).orElse(null);
 
                 if (user != null) {
-//                    UsernamePasswordAuthenticationToken auth =
-//                            new UsernamePasswordAuthenticationToken(user, null, List.of());
+
                     CustomUserDetails userDetails = new CustomUserDetails(user);
 
-                    UsernamePasswordAuthenticationToken auth =
-
-
-
-                            new UsernamePasswordAuthenticationToken(
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                                     userDetails,
                                     null,
                                     userDetails.getAuthorities()

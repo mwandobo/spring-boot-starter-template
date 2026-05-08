@@ -1,7 +1,7 @@
 package com.bonnysimon.starter.features.role;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
-import com.bonnysimon.starter.features.permission.Permission;
+import com.bonnysimon.starter.features.permission.PermissionEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +10,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "roles")
-public class Role extends BaseEntity {
+public class RoleEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,5 +24,5 @@ public class Role extends BaseEntity {
             joinColumns = @JoinColumn(name="role_id"),
             inverseJoinColumns = @JoinColumn(name="permission_id")
     )
-    private Set<Permission> permissions;
+    private Set<PermissionEntity> permissions;
 }

@@ -11,8 +11,8 @@ import com.bonnysimon.starter.features.notification.dto.CreateNotificationDto;
 import com.bonnysimon.starter.features.notification.dto.NotificationResponseDto;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,9 +84,9 @@ public class NotificationService {
 
     public NotificationEntity create(CreateNotificationDto dto) {
         // Fetch user if userId provided
-        User user = null;
+        UserEntity user = null;
         if (dto.getUserId() != null) {
-            Optional<User> userOpt = userRepository.findById(dto.getUserId());
+            Optional<UserEntity> userOpt = userRepository.findById(dto.getUserId());
             if (userOpt.isPresent()) {
                 user = userOpt.get();
             } else {
@@ -95,9 +95,9 @@ public class NotificationService {
         }
 
         // Fetch notifiedPersonnel if recipientId provided
-        User notifiedPersonnel = null;
+        UserEntity notifiedPersonnel = null;
         if (dto.getRecipientId() != null) {
-            Optional<User> notifiedOpt = userRepository.findById(dto.getRecipientId());
+            Optional<UserEntity> notifiedOpt = userRepository.findById(dto.getRecipientId());
             if (notifiedOpt.isPresent()) {
                 notifiedPersonnel = notifiedOpt.get();
             } else {
@@ -137,7 +137,7 @@ public class NotificationService {
 
         CustomUserDetails customUser = (CustomUserDetails) auth.getPrincipal();
 
-        User user = customUser.getUser(); // ✅ REAL entity
+        UserEntity user = customUser.getUser(); // ✅ REAL entity
 
 
                 context.put("user", user);

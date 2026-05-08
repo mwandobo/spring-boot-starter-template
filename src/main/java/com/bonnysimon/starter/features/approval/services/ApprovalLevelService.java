@@ -15,10 +15,10 @@ import com.bonnysimon.starter.features.approval.repository.UserApprovalRepositor
 import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
-import com.bonnysimon.starter.features.role.Role;
+import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +68,7 @@ public class ApprovalLevelService {
                 .orElseThrow(() -> new IllegalStateException("User Approval Not Found"));
 
         // 2️⃣ Validate Role
-        Role role = roleRepository.findById(request.getRoleId())
+        RoleEntity role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new IllegalStateException("Role Not Found"));
 
         // 3️⃣ Check existing ApprovalLevel
@@ -157,14 +157,14 @@ public class ApprovalLevelService {
         }
 
         if (request.getRoleId() != null) {
-            Role role = roleRepository.findById(request.getRoleId())
+            RoleEntity role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new IllegalStateException("Role not found"));
             level.setRole(role);
             level.setUser(null); // clear user if role is set
         }
 
         if (request.getUserId() != null) {
-            User user = userRepository.findById(request.getUserId())
+            UserEntity user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new IllegalStateException("User not found"));
             level.setUser(user);
             level.setRole(null); // clear role if user is set
@@ -222,7 +222,7 @@ public class ApprovalLevelService {
 
 
     @Transactional
-    public void sendCreateLevelNotification(ApprovalLevel level, Role role) throws MessagingException {
+    public void sendCreateLevelNotification(ApprovalLevel level, RoleEntity role) throws MessagingException {
 
         log.info("Approval level passed level={}", toJson(level));
 
@@ -241,9 +241,9 @@ public class ApprovalLevelService {
 
         // 🟡 If role provided → get all users with that role
         if (role != null) {
-            List<User> users = userRepository.findByRoleId(role.getId());
+            List<UserEntity> users = userRepository.findByRoleId(role.getId());
             recipients = users.stream()
-                    .map(User::getEmail)
+                    .map(UserEntity::getEmail)
                     .filter(Objects::nonNull)
                     .toList();
         }

@@ -5,7 +5,7 @@ import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
 import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
-import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.user.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class RoleController {
     private final RoleService service;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<Role>> getAllUsers(
+    public ApiResponse<PaginationResponse<RoleEntity>> getAllUsers(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
@@ -27,12 +27,12 @@ public class RoleController {
     }
 
     @PostMapping()
-    public Role create(@RequestBody CreateRoleRequest request) {
+    public RoleEntity create(@RequestBody CreateRoleRequest request) {
         return service.create(request);
     }
 
     @GetMapping("/{id}")
-    public Role getOne(
+    public RoleEntity getOne(
             @PathVariable Long id
     ) {
         return  service.findOne(id);
@@ -40,7 +40,7 @@ public class RoleController {
 
     // ✅ Update role
     @PutMapping("/{id}")
-    public ApiResponse<Role> update(@PathVariable Long id, @RequestBody CreateRoleRequest request) {
+    public ApiResponse<RoleEntity> update(@PathVariable Long id, @RequestBody CreateRoleRequest request) {
         return ApiResponse.success(service.update(id, request));
     }
 
@@ -50,7 +50,7 @@ public class RoleController {
 
 
     @PostMapping("/assign")
-    public User assignRoles(@RequestBody AssignRoleRequest request) {
+    public UserEntity assignRoles(@RequestBody AssignRoleRequest request) {
         return service.assignRolesToUser(request);
     }
 

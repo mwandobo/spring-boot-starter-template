@@ -12,18 +12,15 @@ import com.bonnysimon.starter.features.approval.repository.ApprovalLevelReposito
 import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
-import com.bonnysimon.starter.features.role.Role;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.role.RoleEntity;
+import com.bonnysimon.starter.features.user.UserEntity;
+import com.bonnysimon.starter.features.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -74,10 +71,10 @@ public class ApprovalActionService {
         }
 
         Long userId = currentUserService.getCurrentUserId();
-        User user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User Not found"));
 
-        User entityCreator = userRepository.findById(request.getEntityCreatorId())
+        UserEntity entityCreator = userRepository.findById(request.getEntityCreatorId())
                 .orElseThrow(() -> new IllegalStateException("User Not found"));
 
 
@@ -112,7 +109,7 @@ public class ApprovalActionService {
 
         Long userId = currentUserService.getCurrentUserId();
 
-        User user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User Not found"));
 
         action.setApprovalLevel(approvalLevel);
@@ -143,8 +140,8 @@ public class ApprovalActionService {
     public void handleApprovalNotifications(
             ApprovalActionRequestDTO dto,
             ApprovalLevel approvalLevel,
-            User entityCreator,
-            User performedByUser
+            UserEntity entityCreator,
+            UserEntity performedByUser
     ) {
 
         // 🟥 CASE 1: Request Rejected
@@ -161,13 +158,13 @@ public class ApprovalActionService {
                     .map(l -> l.getRole().getId())
                     .toList();
 
-            List<User> previousApprovers = userRepository.findByRoleIdIn(roleIds);
+            List<UserEntity> previousApprovers = userRepository.findByRoleIdIn(roleIds);
 
             List<String> recipients = new ArrayList<>();
             recipients.add(entityCreator.getEmail());
             recipients.addAll(
                     previousApprovers.stream()
-                            .map(User::getEmail)
+                            .map(UserEntity::getEmail)
                             .filter(Objects::nonNull)
                             .toList()
             );
@@ -274,14 +271,14 @@ public class ApprovalActionService {
                 _nextLevel.getName(),
                 _nextLevel.getRole() != null ? _nextLevel.getRole().getName() : "N/A");
 
-        Role role = _nextLevel.getRole();
+        RoleEntity role = _nextLevel.getRole();
 
         List<String> recipients = new ArrayList<>();
 
         if (role != null) {
-            List<User> users = userRepository.findByRoleId(role.getId());
+            List<UserEntity> users = userRepository.findByRoleId(role.getId());
             recipients = users.stream()
-                    .map(User::getEmail)
+                    .map(UserEntity::getEmail)
                     .filter(Objects::nonNull)
                     .toList();
 

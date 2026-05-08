@@ -5,7 +5,6 @@ import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
 import com.bonnysimon.starter.features.approval.services.SysApprovalService;
-import com.bonnysimon.starter.features.permission.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

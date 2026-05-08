@@ -1,6 +1,6 @@
 package com.bonnysimon.starter.core.config;
 
-import com.bonnysimon.starter.features.user.model.User;
+import com.bonnysimon.starter.features.user.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,11 +9,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CustomUserDetails implements UserDetails {
-    private final User user;
+    private final UserEntity user;
 
-    public CustomUserDetails(User user) { this.user = user; }
+    public CustomUserDetails(UserEntity user) { this.user = user; }
 
-    public User getUser() {
+    public UserEntity getUser() {
         return user;
     }
 

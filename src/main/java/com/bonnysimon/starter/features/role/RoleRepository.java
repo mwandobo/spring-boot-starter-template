@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface RoleRepository extends JpaRepository<Role, Long> {
-    Optional<Role> findByName(String name);
+public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
+    Optional<RoleEntity> findByName(String name);
 
 
-    Page<Role> findAll(Specification<Role> spec, Pageable pageable);
+    Page<RoleEntity> findAll(Specification<RoleEntity> spec, Pageable pageable);
 
     @EntityGraph(attributePaths = {"permissions"})
-    Optional<Role> findWithPermissionsById(Long id);
+    Optional<RoleEntity> findWithPermissionsById(Long id);
 }
