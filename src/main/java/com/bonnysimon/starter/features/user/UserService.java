@@ -1,40 +1,190 @@
 package com.bonnysimon.starter.features.user;
+import com.bonnysimon.starter.features.role.RoleRepository;
+import com.bonnysimon.starter.features.role.RoleEntity;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.features.user.model.User;
-import com.bonnysimon.starter.features.user.repository.UserRepository;
+import com.bonnysimon.starter.features.user.dto.CreateUserDTO;
+import com.bonnysimon.starter.features.user.dto.UserResponseDTO;
+import com.bonnysimon.starter.features.user.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.core.dto.PaginationDto;
+import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
+import com.bonnysimon.starter.core.services.CurrentUserService;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    private final UserRepository repo;
+    private final UserRepository repository;
+    private final RoleRepository roleRepository;
+    private final ApprovalStatusUtil approvalStatusUtil;
+    private final CurrentUserService currentUserService;
 
-    public UserService(UserRepository repo) {
-        this.repo = repo;
+    public PagedResponse<UserResponseDTO> findAll(
+            PaginationRequest pagination,
+            String search
+    ) {
+        Specification<UserEntity> spec = getEntitySpecification(search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(UserEntity.class.getSimpleName());
+
+        Page<UserEntity> page =
+                repository.findAll(spec, pagination.toPageable());
+
+        List<UserEntity> entities = page.getContent();
+
+        List<Long> ids = entities.stream()
+                        .map(UserEntity::getId)
+                        .toList();
+        Map<Long, String> statusMap = hasApprovalMode
+                        ? approvalStatusUtil.getBulkApprovalStatuses(UserEntity.class.getSimpleName(), ids)
+                        : Collections.emptyMap();
+
+      List<UserResponseDTO> result = entities.stream()
+                      .map(entity -> {
+                          UserResponseDTO dto = UserResponseDTO.fromEntity(entity);
+
+                          if (hasApprovalMode) {
+                              dto.setApprovalStatus(
+                                      statusMap.get(entity.getId())
+                              );
+                          }
+
+                          return dto;
+                      })
+                      .toList();
+
+        return new PagedResponse<>(
+                        result,
+                        new PaginationDto(
+                                page.getTotalElements(),
+                                page.getNumber() + 1,
+                                page.getSize(),
+                                page.getTotalPages()
+                        ),
+                        hasApprovalMode // or dynamic logic
+                );
     }
 
+    private static Specification< UserEntity> getEntitySpecification(String search) {
+        Specification< UserEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
 
-    public PaginationResponse<User> findAll(PaginationRequest pagination, String search) {
-        Specification<User> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-
+        // Optional search filter (case-insensitive)
         if (search != null && !search.trim().isEmpty()) {
+            String likePattern = "%" + search.trim().toLowerCase() + "%";
             spec = spec.and((root, query, cb) ->
                     cb.or(
-                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("email")), "%" + search.toLowerCase() + "%")
+                            cb.like(cb.lower(root.get("title")), likePattern),
+                            cb.like(cb.lower(root.get("description")), likePattern)
                     )
             );
         }
-
-        Page<User> users = repo.findAll(spec, pagination.toPageable());
-
-        Page<User> userDtos = users;
-
-        return PaginationResponse.of(userDtos);
+        return spec;
     }
+
+    @Transactional
+    public UserResponseDTO create(CreateUserDTO request) {
+        repository.findByName(request.getName())
+                .ifPresent(existing -> {
+                    throw new IllegalStateException(
+                            "User with name '" + request.getName() + "' already exists"
+                    );
+                });
+
+        UserEntity entity = new UserEntity();
+        entity.setName(request.getName());
+        entity.setDescription(request.getDescription());
+        entity.setEmail(request.getEmail());
+        RoleEntity role = validateRoleExists(request.getRole_id());
+        entity.setRole(role);
+        entity.setIsRecoveryRequested(request.getIsRecoveryRequested());
+        entity.setIsOtpVerified(request.getIsOtpVerified());
+        entity.setPhone(request.getPhone());
+        entity.setOtp(request.getOtp());
+        entity.setPassword(request.getPassword());
+        UserEntity savedEntity = repository.save(entity);
+
+        return  UserResponseDTO.fromEntity(savedEntity);
+    }
+
+    public  ApprovalAwareDTO<UserResponseDTO> findOne  (Long  userId) {
+          UserEntity   user = repository.findById( userId)
+                 .orElseThrow(() -> new IllegalStateException(" User not found"));
+
+          UserResponseDTO dto = UserResponseDTO.fromEntity(user);
+
+           return approvalStatusUtil.attachApprovalInfo(
+                    dto,
+                    user.getId(),
+                    UserEntity.class.getSimpleName(),
+                    currentUserService.getCurrentUserRoleId()
+                );
+     }
+
+    @Transactional
+    public UserResponseDTO update(Long id, CreateUserDTO request) {
+        UserEntity entity = repository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "User not found with id: " + id
+                        )
+                );
+
+        repository.findByName(request.getName())
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalStateException(
+                            "User with name '" + request.getName() + "' already exists"
+                    );
+                });
+
+        entity.setName(request.getName());
+        entity.setDescription(request.getDescription());
+        entity.setEmail(request.getEmail());
+        RoleEntity role = validateRoleExists(request.getRole_id());
+        entity.setRole(role);
+        entity.setIsRecoveryRequested(request.getIsRecoveryRequested());
+        entity.setIsOtpVerified(request.getIsOtpVerified());
+        entity.setPhone(request.getPhone());
+        entity.setOtp(request.getOtp());
+        entity.setPassword(request.getPassword());
+
+        UserEntity updatedEntity = repository.save(entity);
+
+        return  UserResponseDTO.fromEntity(updatedEntity);
+    }
+
+    @Transactional
+    public void delete(Long id, boolean soft) {
+        UserEntity entity = repository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "User not found with id: " + id
+                        )
+                );
+
+        if (soft) {
+            entity.setDeleted(true);
+            repository.save(entity);
+        } else {
+            repository.delete(entity);
+        }
+    }
+
+    private RoleEntity validateRoleExists(Long id) {
+        if (id == null) {
+            if ("false" == "false") {
+                throw new IllegalArgumentException("Role ID is required");
+            }
+            return null;
+        }
+        return roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
+    }
+
 }
