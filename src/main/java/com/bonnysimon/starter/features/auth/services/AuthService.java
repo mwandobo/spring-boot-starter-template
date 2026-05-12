@@ -60,6 +60,10 @@ public class AuthService {
                     )
             );
 
+            log.info("User : {}", user.getIsOtpVerified());
+
+
+
             if (!Boolean.TRUE.equals(user.getIsOtpVerified())) {
                 throw new IllegalStateException("User OTP is not verified yet");
             }

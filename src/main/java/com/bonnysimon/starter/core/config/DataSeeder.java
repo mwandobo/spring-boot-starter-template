@@ -184,16 +184,18 @@ public class DataSeeder {
 
 
             // 3. Default user (admin@starter.com / password: admin123)
-            if (userRepository.findByEmail("breezojr@gmail.com").isEmpty()) {
-                UserEntity adminUser = new UserEntity();
-                adminUser.setName("Super Admin"); // if you have username field
-                adminUser.setEmail("breezojr@gmail.com"); // if you use email
-                adminUser.setPhone("0764010158"); // if you use email
-                adminUser.setIsOtpVerified(true); // if you use email
-                adminUser.setPassword(passwordEncoder.encode("admin123"));
-                adminUser.setRole(adminRole);
-                userRepository.save(adminUser);
-            }
+            UserEntity adminUser = userRepository
+                    .findByEmail("breezojr@gmail.com")
+                    .orElse(new UserEntity());
+
+            adminUser.setName("Super Admin");
+            adminUser.setEmail("breezojr@gmail.com");
+            adminUser.setPhone("0764010158");
+            adminUser.setIsOtpVerified(true);
+            adminUser.setPassword(passwordEncoder.encode("admin123"));
+            adminUser.setRole(adminRole);
+
+            userRepository.save(adminUser);
         };
     }
 }

@@ -1,13 +1,14 @@
 package com.bonnysimon.starter.features.user;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
+import com.bonnysimon.starter.features.administration.department.DepartmentEntity;
 import com.bonnysimon.starter.features.role.RoleEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class UserEntity extends BaseEntity {
 
     @Id
@@ -19,6 +20,11 @@ public class UserEntity extends BaseEntity {
 
     @Column
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private DepartmentEntity department;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
@@ -37,11 +43,11 @@ public class UserEntity extends BaseEntity {
     private String phone;
 
 
-    @Column(name = "isotpverified", nullable = true)
+    @Column(name = "is_otp_verified", nullable = true)
     private Boolean isOtpVerified = false;
 
 
-    @Column(name = "isrecoveryrequested", nullable = true)
+    @Column(name = "is_recovery_requested", nullable = true)
     private Boolean isRecoveryRequested;
 
 

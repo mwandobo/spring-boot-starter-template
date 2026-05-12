@@ -11,6 +11,7 @@ import java.util.List;
 public class RoleResponseDTO {
     private Long id;
     private String name;
+    private String approvalStatus;
     private List<PermissionResponseDTO> permissions;
 
     public static RoleResponseDTO fromEntity(RoleEntity role) {

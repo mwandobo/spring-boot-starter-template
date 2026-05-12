@@ -1,14 +1,18 @@
 package com.bonnysimon.starter.features.user.dto;
 
+import com.bonnysimon.starter.features.administration.department.dto.DepartmentResponseDTO;
 import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
 import com.bonnysimon.starter.features.user.UserEntity;
 import java.time.format.DateTimeFormatter;
 import lombok.Data;
+
 @Data
 public class UserResponseDTO {
     private Long id;
     private String name;
     private String description;
+    private DepartmentResponseDTO department;
+    private String departmentName;
     private String email;
     private RoleResponseDTO role;
     private String roleName;
@@ -28,6 +32,8 @@ public class UserResponseDTO {
             dto.setId(user.getId());
             dto.setName(user.getName());
             dto.setDescription(user.getDescription());
+            dto.setDepartment(user.getDepartment() != null ? DepartmentResponseDTO.fromEntity(user.getDepartment()) : null);
+              dto.setDepartmentName(user.getDepartment() != null ? user.getDepartment().getName() : null);
             dto.setEmail(user.getEmail());
             dto.setRole(user.getRole() != null ? RoleResponseDTO.fromEntity(user.getRole()) : null);
               dto.setRoleName(user.getRole() != null ? user.getRole().getName() : null);

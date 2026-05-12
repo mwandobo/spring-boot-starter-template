@@ -1,4 +1,6 @@
 package com.bonnysimon.starter.features.user;
+import com.bonnysimon.starter.features.administration.department.DepartmentEntity;
+import com.bonnysimon.starter.features.administration.department.DepartmentRepository;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.role.RoleEntity;
 
@@ -22,6 +24,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
     private final ApprovalStatusUtil approvalStatusUtil;
     private final CurrentUserService currentUserService;
@@ -98,15 +101,12 @@ public class UserService {
 
         UserEntity entity = new UserEntity();
         entity.setName(request.getName());
-        entity.setDescription(request.getDescription());
+        DepartmentEntity department = validateDepartmentExists(request.getDepartment_id());
+        entity.setDepartment(department);
         entity.setEmail(request.getEmail());
         RoleEntity role = validateRoleExists(request.getRole_id());
         entity.setRole(role);
-        entity.setIsRecoveryRequested(request.getIsRecoveryRequested());
-        entity.setIsOtpVerified(request.getIsOtpVerified());
-        entity.setPhone(request.getPhone());
-        entity.setOtp(request.getOtp());
-        entity.setPassword(request.getPassword());
+        entity.setPassword("TEMP0000");
         UserEntity savedEntity = repository.save(entity);
 
         return  UserResponseDTO.fromEntity(savedEntity);
@@ -144,15 +144,10 @@ public class UserService {
                 });
 
         entity.setName(request.getName());
-        entity.setDescription(request.getDescription());
-        entity.setEmail(request.getEmail());
+        DepartmentEntity department = validateDepartmentExists(request.getDepartment_id());
+        entity.setDepartment(department);
         RoleEntity role = validateRoleExists(request.getRole_id());
         entity.setRole(role);
-        entity.setIsRecoveryRequested(request.getIsRecoveryRequested());
-        entity.setIsOtpVerified(request.getIsOtpVerified());
-        entity.setPhone(request.getPhone());
-        entity.setOtp(request.getOtp());
-        entity.setPassword(request.getPassword());
 
         UserEntity updatedEntity = repository.save(entity);
 
@@ -185,6 +180,18 @@ public class UserService {
         }
         return roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Role not found with id: " + id));
+    }
+
+
+    private DepartmentEntity validateDepartmentExists(Long id) {
+        if (id == null) {
+            if ("false" == "false") {
+                throw new IllegalArgumentException("Department ID is required");
+            }
+            return null;
+        }
+        return departmentRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Department not found with id: " + id));
     }
 
 }

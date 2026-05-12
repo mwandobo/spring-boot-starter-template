@@ -1,6 +1,7 @@
 package com.bonnysimon.starter.features.fetch_data;
 
 import com.bonnysimon.starter.features.administration.department.dto.DepartmentResponseDTO;
+import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,5 +20,10 @@ public class FetchDataController {
     @GetMapping("departments")
     public List<DepartmentResponseDTO> fetchDepartments(   ) {
         return service.fetchDepartments();
+    }
+
+    @GetMapping("roles")
+    public List<RoleResponseDTO> fetchRoles(   ) {
+        return service.fetchRoles();
     }
 }
