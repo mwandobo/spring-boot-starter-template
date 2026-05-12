@@ -3,7 +3,7 @@ package com.bonnysimon.starter.features.approval.controller;
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import com.bonnysimon.starter.features.approval.dto.UserApprovalRequestDTO;
 import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
@@ -31,6 +31,13 @@ public class UserApprovalController {
     @PostMapping
     public ApiResponse<UserApproval> create(@RequestBody UserApprovalRequestDTO request) {
         return ApiResponse.success(service.create(request));
+    }
+
+    @GetMapping("/{id}")
+    public ApprovalAwareDTO<UserApprovalResponseDTO> findOne(
+            @PathVariable Long id
+    ) {
+        return service.findOne(id);
     }
 
     // ✅ Update UserApproval

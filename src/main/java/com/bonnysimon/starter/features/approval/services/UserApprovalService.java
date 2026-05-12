@@ -3,8 +3,8 @@ package com.bonnysimon.starter.features.approval.services;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.core.services.CurrentUserService;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import com.bonnysimon.starter.features.approval.dto.UserApprovalRequestDTO;
 import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
@@ -30,19 +30,6 @@ public class UserApprovalService {
     private final UserApprovalRepository repository;
     private final ApprovalStatusUtil approvalStatusUtil;
     private final CurrentUserService currentUserService;
-
-//    public PaginationResponse<UserApproval> findAll(PaginationRequest pagination, String search) {
-//        Specification<UserApproval> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-//
-//        if (search != null && !search.trim().isEmpty()) {
-//            spec = spec.and((root, query, cb) ->
-//                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
-//            );
-//        }
-//
-//        Page<UserApproval> userApprovals = repository.findAll(spec, pagination.toPageable());
-//        return PaginationResponse.of(userApprovals);
-//    }
 
     public PagedResponse<UserApprovalResponseDTO> findAll(
             PaginationRequest pagination,
@@ -116,6 +103,20 @@ public class UserApprovalService {
         userApproval.setSysApproval(sysApproval);
 
         return repository.save(userApproval);
+    }
+
+    public ApprovalAwareDTO<UserApprovalResponseDTO> findOne  (Long  userId) {
+        UserApproval   entity = repository.findById( userId)
+                .orElseThrow(() -> new IllegalStateException(" User not found"));
+
+        UserApprovalResponseDTO dto = UserApprovalResponseDTO.fromEntity(entity);
+
+        return approvalStatusUtil.attachApprovalInfo(
+                dto,
+                entity.getId(),
+                UserEntity.class.getSimpleName(),
+                currentUserService.getCurrentUserRoleId()
+        );
     }
 
     @Transactional
