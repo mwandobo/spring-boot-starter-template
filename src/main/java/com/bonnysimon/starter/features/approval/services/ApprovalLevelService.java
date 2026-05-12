@@ -1,9 +1,13 @@
 package com.bonnysimon.starter.features.approval.services;
 
 import com.bonnysimon.starter.core.constants.FrontEndRouteConstants;
+import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
+import com.bonnysimon.starter.core.services.CurrentUserService;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import com.bonnysimon.starter.features.approval.dto.ApprovalLevelRequestDTO;
+import com.bonnysimon.starter.features.approval.dto.ApprovalLevelResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
@@ -12,6 +16,7 @@ import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
 import com.bonnysimon.starter.features.approval.repository.ApprovalActionRepository;
 import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
 import com.bonnysimon.starter.features.approval.repository.UserApprovalRepository;
+import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
@@ -19,6 +24,7 @@ import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.user.UserEntity;
 import com.bonnysimon.starter.features.user.UserRepository;
+import com.bonnysimon.starter.features.user.dto.UserResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -43,21 +49,73 @@ public class ApprovalLevelService {
     private final UserRepository userRepository;
     private final ApprovalActionRepository approvalActionRepository;
     private final NotificationService notificationService;
+    private final ApprovalStatusUtil approvalStatusUtil;
+    private final CurrentUserService currentUserService;
+
+
 
     @Value("${spring.front.end.url}")
     private String frontEndUrl;
 
-    public PaginationResponse<ApprovalLevel> findAll(PaginationRequest pagination, String search) {
-        Specification<ApprovalLevel> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    public PagedResponse<ApprovalLevelResponseDTO> findAll(
+            PaginationRequest pagination,
+            String search
+    ) {
+        Specification<ApprovalLevel> spec = getEntitySpecification(search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(ApprovalLevel.class.getSimpleName());
 
+        Page<ApprovalLevel> page =
+                repository.findAll(spec, pagination.toPageable());
+
+        List<ApprovalLevel> entities = page.getContent();
+
+        List<Long> ids = entities.stream()
+                .map(ApprovalLevel::getId)
+                .toList();
+        Map<Long, String> statusMap = hasApprovalMode
+                ? approvalStatusUtil.getBulkApprovalStatuses(UserEntity.class.getSimpleName(), ids)
+                : Collections.emptyMap();
+
+        List<ApprovalLevelResponseDTO> result = entities.stream()
+                .map(entity -> {
+                    ApprovalLevelResponseDTO dto = ApprovalLevelResponseDTO.fromEntity(entity);
+
+                    if (hasApprovalMode) {
+                        dto.setApprovalStatus(
+                                statusMap.get(entity.getId())
+                        );
+                    }
+
+                    return dto;
+                })
+                .toList();
+
+        return new PagedResponse<>(
+                result,
+                new PaginationDto(
+                        page.getTotalElements(),
+                        page.getNumber() + 1,
+                        page.getSize(),
+                        page.getTotalPages()
+                ),
+                hasApprovalMode // or dynamic logic
+        );
+    }
+
+    private static Specification< ApprovalLevel> getEntitySpecification(String search) {
+        Specification< ApprovalLevel> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+
+        // Optional search filter (case-insensitive)
         if (search != null && !search.trim().isEmpty()) {
+            String likePattern = "%" + search.trim().toLowerCase() + "%";
             spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
+                    cb.or(
+                            cb.like(cb.lower(root.get("title")), likePattern),
+                            cb.like(cb.lower(root.get("description")), likePattern)
+                    )
             );
         }
-
-        Page<ApprovalLevel> approvalLevels = repository.findAll(spec, pagination.toPageable());
-        return PaginationResponse.of(approvalLevels);
+        return spec;
     }
 
 
@@ -137,6 +195,21 @@ public class ApprovalLevelService {
             log.error("Failed to send approval level notification for level id={}", saved.getId(), e);
         }
         return saved;
+    }
+
+
+    public ApprovalAwareDTO<ApprovalLevelResponseDTO> findOne  (Long  userId) {
+        ApprovalLevel   entity = repository.findById( userId)
+                .orElseThrow(() -> new IllegalStateException(" User not found"));
+
+        ApprovalLevelResponseDTO dto = ApprovalLevelResponseDTO.fromEntity(entity);
+
+        return approvalStatusUtil.attachApprovalInfo(
+                dto,
+                entity.getId(),
+                ApprovalLevel.class.getSimpleName(),
+                currentUserService.getCurrentUserRoleId()
+        );
     }
 
     @Transactional

@@ -29,7 +29,6 @@ public class RoleService {
     private final UserRepository userRepository;
     private final RoleRepository repository;
     private final ApprovalStatusUtil approvalStatusUtil;
-    private final CurrentUserService currentUserService;
 
     public PagedResponse<RoleResponseDTO> findAll(
             PaginationRequest pagination,
