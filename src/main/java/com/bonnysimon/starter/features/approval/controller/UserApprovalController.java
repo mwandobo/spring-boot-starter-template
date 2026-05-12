@@ -1,9 +1,11 @@
 package com.bonnysimon.starter.features.approval.controller;
 
 import com.bonnysimon.starter.core.dto.ApiResponse;
+import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.approval.dto.UserApprovalRequestDTO;
+import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.UserApproval;
 import com.bonnysimon.starter.features.approval.services.UserApprovalService;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +20,11 @@ public class UserApprovalController {
 
     // ✅ Get all UserApprovals (with search + pagination)
     @GetMapping
-    public ApiResponse<PaginationResponse<UserApproval>> getAll(
+    public PagedResponse<UserApprovalResponseDTO> getAll(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
-        return ApiResponse.success(
-                service.findAll(pagination, search)
-        );
+        return  service.findAll(pagination, search);
     }
 
     // ✅ Create new UserApproval

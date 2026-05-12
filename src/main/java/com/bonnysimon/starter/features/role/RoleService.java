@@ -31,26 +31,6 @@ public class RoleService {
     private final ApprovalStatusUtil approvalStatusUtil;
     private final CurrentUserService currentUserService;
 
-//    public PaginationResponse<RoleEntity> findAll(PaginationRequest pagination, String search) {
-//        Specification<RoleEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-//
-//        if (search != null && !search.trim().isEmpty()) {
-//            spec = spec.and((root, query, cb) ->
-//                    cb.or(
-//                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
-//                    )
-//            );
-//        }
-//
-//
-//
-//
-//        Page<RoleEntity> roleDtos = roleRepository.findAll(spec, pagination.toPageable());
-//
-//        return PaginationResponse.of(roleDtos);
-//    }
-//
-
     public PagedResponse<RoleResponseDTO> findAll(
             PaginationRequest pagination,
             String search

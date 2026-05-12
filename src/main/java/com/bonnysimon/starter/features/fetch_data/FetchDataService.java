@@ -3,6 +3,10 @@ package com.bonnysimon.starter.features.fetch_data;
 import com.bonnysimon.starter.features.administration.department.DepartmentEntity;
 import com.bonnysimon.starter.features.administration.department.DepartmentRepository;
 import com.bonnysimon.starter.features.administration.department.dto.DepartmentResponseDTO;
+import com.bonnysimon.starter.features.approval.dto.SysApprovalResponseDTO;
+import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
+import com.bonnysimon.starter.features.approval.entity.SysApproval;
+import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
 import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
@@ -24,6 +28,7 @@ public class FetchDataService {
     private final ApprovalStatusUtil approvalStatusUtil;
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
+    private final SysApprovalRepository sysApprovalRepository;
 
 
     private <E, D> List<D> fetchData(
@@ -80,6 +85,17 @@ public class FetchDataService {
                 RoleEntity::getId,
                 RoleResponseDTO::fromEntity,
                 RoleResponseDTO::setApprovalStatus
+        );
+    }
+
+    public List<SysApprovalResponseDTO> fetchSysApprovals() {
+
+        return fetchData(
+                sysApprovalRepository.findAll(),
+                SysApproval.class.getSimpleName(),
+                SysApproval::getId,
+                SysApprovalResponseDTO::fromEntity,
+                SysApprovalResponseDTO::setApprovalStatus
         );
     }
 
