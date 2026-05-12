@@ -1,10 +1,11 @@
 package com.bonnysimon.starter.features.role;
 
 import com.bonnysimon.starter.core.dto.ApiResponse;
+import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.features.role.dto.AssignRoleRequest;
 import com.bonnysimon.starter.features.role.dto.CreateRoleRequest;
+import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
 import com.bonnysimon.starter.features.user.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,11 @@ public class RoleController {
     private final RoleService service;
 
     @GetMapping
-    public ApiResponse<PaginationResponse<RoleEntity>> getAllUsers(
+    public PagedResponse<RoleResponseDTO> getAllUsers(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
-        return ApiResponse.success(
-                service.findAll(pagination, search)
-        );
+        return   service.findAll(pagination, search);
     }
 
     @PostMapping()

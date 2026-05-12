@@ -86,7 +86,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{base_url}}/roles/1
+GET {{base_url}}/roles
 Authorization: Bearer {{token}}
 
 ###
