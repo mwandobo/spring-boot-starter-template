@@ -1,14 +1,20 @@
 package com.bonnysimon.starter.features.approval.services;
 
+import com.bonnysimon.starter.core.dto.PagedResponse;
+import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
 import com.bonnysimon.starter.core.dto.PaginationResponse;
 import com.bonnysimon.starter.core.services.CurrentUserService;
 import com.bonnysimon.starter.features.approval.dto.ApprovalActionRequestDTO;
+import com.bonnysimon.starter.features.approval.dto.ApprovalActionResponseDTO;
+import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
+import com.bonnysimon.starter.features.approval.dto.ApprovalLevelResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.ApprovalAction;
 import com.bonnysimon.starter.features.approval.entity.ApprovalLevel;
 import com.bonnysimon.starter.features.approval.enums.ApprovalActionEnum;
 import com.bonnysimon.starter.features.approval.repository.ApprovalActionRepository;
 import com.bonnysimon.starter.features.approval.repository.ApprovalLevelRepository;
+import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.notification.NotificationService;
 import com.bonnysimon.starter.features.notification.dto.SendNotificationDto;
 import com.bonnysimon.starter.features.notification.enums.NotificationChannelsEnum;
@@ -35,19 +41,69 @@ public class ApprovalActionService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final NotificationService notificationService;
+    private final ApprovalStatusUtil approvalStatusUtil;
 
-    public PaginationResponse<ApprovalAction> findAll(PaginationRequest pagination, String search) {
-        Specification<ApprovalAction> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    public PagedResponse<ApprovalActionResponseDTO> findAll(
+            PaginationRequest pagination,
+            String search
+    ) {
+        Specification<ApprovalAction> spec = getEntitySpecification(search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(ApprovalAction.class.getSimpleName());
 
+        Page<ApprovalAction> page =
+                repository.findAll(spec, pagination.toPageable());
+
+        List<ApprovalAction> entities = page.getContent();
+
+        List<Long> ids = entities.stream()
+                .map(ApprovalAction::getId)
+                .toList();
+        Map<Long, String> statusMap = hasApprovalMode
+                ? approvalStatusUtil.getBulkApprovalStatuses(UserEntity.class.getSimpleName(), ids)
+                : Collections.emptyMap();
+
+        List<ApprovalActionResponseDTO> result = entities.stream()
+                .map(entity -> {
+                    ApprovalActionResponseDTO dto = ApprovalActionResponseDTO.fromEntity(entity);
+
+                    if (hasApprovalMode) {
+                        dto.setApprovalStatus(
+                                statusMap.get(entity.getId())
+                        );
+                    }
+
+                    return dto;
+                })
+                .toList();
+
+        return new PagedResponse<>(
+                result,
+                new PaginationDto(
+                        page.getTotalElements(),
+                        page.getNumber() + 1,
+                        page.getSize(),
+                        page.getTotalPages()
+                ),
+                hasApprovalMode // or dynamic logic
+        );
+    }
+
+    private static Specification< ApprovalAction> getEntitySpecification(String search) {
+        Specification< ApprovalAction> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+
+        // Optional search filter (case-insensitive)
         if (search != null && !search.trim().isEmpty()) {
+            String likePattern = "%" + search.trim().toLowerCase() + "%";
             spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
+                    cb.or(
+                            cb.like(cb.lower(root.get("title")), likePattern),
+                            cb.like(cb.lower(root.get("description")), likePattern)
+                    )
             );
         }
-
-        Page<ApprovalAction> approvalLevels = repository.findAll(spec, pagination.toPageable());
-        return PaginationResponse.of(approvalLevels);
+        return spec;
     }
+
 
     @Transactional
     public ApprovalAction create(ApprovalActionRequestDTO request) {
@@ -97,6 +153,20 @@ public class ApprovalActionService {
 
         return saved;
 
+    }
+
+    public ApprovalAwareDTO<ApprovalActionResponseDTO> findOne  (Long  userId) {
+        ApprovalAction   entity = repository.findById( userId)
+                .orElseThrow(() -> new IllegalStateException(" User not found"));
+
+        ApprovalActionResponseDTO dto = ApprovalActionResponseDTO.fromEntity(entity);
+
+        return approvalStatusUtil.attachApprovalInfo(
+                dto,
+                entity.getId(),
+                ApprovalLevel.class.getSimpleName(),
+                currentUserService.getCurrentUserRoleId()
+        );
     }
 
     @Transactional

@@ -47,6 +47,10 @@ to log just import @Slf4j
     log.info("Payload: {}", new ObjectMapper().writeValueAsString(payload));
 
 
+    to run a gradle project 
+    ./gradlew bootRun
+
+
 
 
 
