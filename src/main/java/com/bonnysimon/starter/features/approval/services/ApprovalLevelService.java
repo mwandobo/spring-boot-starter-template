@@ -120,9 +120,9 @@ public class ApprovalLevelService {
 
 
     @Transactional
-    public ApprovalLevel create(ApprovalLevelRequestDTO request) {
+    public ApprovalLevelResponseDTO create(Long userApprovalId , ApprovalLevelRequestDTO request) {
         // 1️⃣ Validate UserApproval
-        UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
+        UserApproval userApproval = userApprovalRepository.findById(userApprovalId)
                 .orElseThrow(() -> new IllegalStateException("User Approval Not Found"));
 
         // 2️⃣ Validate Role
@@ -130,13 +130,13 @@ public class ApprovalLevelService {
                 .orElseThrow(() -> new IllegalStateException("Role Not Found"));
 
         // 3️⃣ Check existing ApprovalLevel
-        repository.findByRoleIdAndUserApprovalId(request.getRoleId(), request.getUserApprovalId())
+        repository.findByRoleIdAndUserApprovalId(request.getRoleId(), userApprovalId)
                 .ifPresent(l -> {
                     throw new IllegalStateException("Approval Level already exists for this role and userApproval");
                 });
 
         // 4️⃣ Calculate next level
-        int nextLevel = updateApprovalLevelOrder(request.getUserApprovalId(), "CREATE", null);
+        int nextLevel = updateApprovalLevelOrder(userApprovalId, "CREATE", null);
 
         // 5️⃣ Create new ApprovalLevel
         ApprovalLevel level = new ApprovalLevel();
@@ -186,15 +186,12 @@ public class ApprovalLevelService {
             }
         }
 
-        // 11️⃣ Send notification (optional)
-//        sendCreateLevelNotification(saved, role);
-
         try {
             sendCreateLevelNotification(saved, role);
         } catch (MessagingException e) {
             log.error("Failed to send approval level notification for level id={}", saved.getId(), e);
         }
-        return saved;
+        return ApprovalLevelResponseDTO.fromEntity(saved);
     }
 
 
@@ -221,12 +218,6 @@ public class ApprovalLevelService {
         level.setDescription(request.getDescription());
         if (request.getStatus() != null) {
             level.setStatus(request.getStatus());
-        }
-
-        if (request.getUserApprovalId() != null) {
-            UserApproval userApproval = userApprovalRepository.findById(request.getUserApprovalId())
-                    .orElseThrow(() -> new IllegalStateException("UserApproval not found"));
-            level.setUserApproval(userApproval);
         }
 
         if (request.getRoleId() != null) {

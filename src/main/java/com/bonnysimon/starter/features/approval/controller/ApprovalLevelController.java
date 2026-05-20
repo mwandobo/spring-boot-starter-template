@@ -28,8 +28,10 @@ public class ApprovalLevelController {
     }
 
     @PostMapping
-    public ApiResponse<ApprovalLevel> create(@RequestBody ApprovalLevelRequestDTO request) throws MessagingException {
-        return ApiResponse.success(service.create(request));
+    public ApprovalLevelResponseDTO create(
+                    @RequestParam(required = false) Long userApprovalId,
+        @RequestBody ApprovalLevelRequestDTO request) throws MessagingException {
+        return service.create(userApprovalId,request);
     }
 
     @GetMapping("/{id}")
