@@ -3,8 +3,6 @@ package com.bonnysimon.starter.features.role;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.core.dto.PaginationDto;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.core.services.CurrentUserService;
 import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
 import com.bonnysimon.starter.features.permission.PermissionEntity;
 import com.bonnysimon.starter.features.permission.PermissionRepository;
@@ -15,14 +13,12 @@ import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
 import com.bonnysimon.starter.features.role.dto.RoleWithPermissionsDTO;
 import com.bonnysimon.starter.features.user.UserEntity;
 import com.bonnysimon.starter.features.user.UserRepository;
-import com.bonnysimon.starter.features.user.dto.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Permission;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -103,19 +99,6 @@ public class RoleService {
                 return userRepository.save(user);
         }
 
-        // @Transactional
-        // public RoleResponseDTO assignPermissions(Long roleId,
-        // AssignPermissionsRequestDTO request) {
-        // RoleEntity role = repository.findById(roleId)
-        // .orElseThrow(() -> new IllegalStateException("Role not found"));
-
-        // // UserEntity user = userRepository.findById(request.getUserId())
-        // // .orElseThrow(() -> new IllegalStateException("User not found"));
-
-        // user.setRole(role);
-
-        // return userRepository.save(user);
-        // }
 
         @Transactional
         public RoleResponseDTO assignPermissions(Long roleId, AssignPermissionsRequestDTO request) {
@@ -198,26 +181,6 @@ public class RoleService {
                 }
         }
 
-        // public Map<String, Object> getRoleWithPermissions(Long roleId) {
-
-        // // Fetch all permissions
-        // List<PermissionEntity> allPermissions = permissionRepository.findAll();
-
-        // // Fetch role with permissions
-        // RoleEntity role = roleRepository.findById(roleId)
-        // .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        // return Map.of(
-        // "roleId", role.getId(),
-        // "roleName", role.getName(),
-        // "rolePermissions", role.getPermissions(),
-        // "allPermissions", allPermissions
-        // );
-        // }
-
-        /**
-         * Get a role with its permissions + all available permissions in the system
-         */
         public RoleWithPermissionsDTO getRoleWithPermissions(Long roleId) {
 
                 // Fetch all permissions
