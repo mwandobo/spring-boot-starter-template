@@ -8,6 +8,7 @@ Installation
     .\setup.sh <<package_name eg com.mycompany.myapp>> <<MainClassName ag MyApp>>
 
 to add feature 
+Remember to use camelCase incase of naming eg assetCategory
 
     ./scripts-to-run/add-feature.sh --name department --plural s
     ./scripts-to-run/add-feature.sh --name position --plural s --parent administration

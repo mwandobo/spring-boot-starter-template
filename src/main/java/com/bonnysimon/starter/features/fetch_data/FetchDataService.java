@@ -8,6 +8,9 @@ import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
 import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
 import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
+import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryEntity;
+import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryRepository;
+import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
 import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
@@ -29,6 +32,7 @@ public class FetchDataService {
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
     private final SysApprovalRepository sysApprovalRepository;
+    private final AssetCategoryRepository assetCategoryRepository;
 
 
     private <E, D> List<D> fetchData(
@@ -99,33 +103,21 @@ public class FetchDataService {
         );
     }
 
+    public List<AssetCategoryResponseDTO> fetchAssetCategories() {
+
+        return fetchData(
+                assetCategoryRepository.findAll(),
+                AssetCategoryEntity.class.getSimpleName(),
+                AssetCategoryEntity::getId,
+                AssetCategoryResponseDTO::fromEntity,
+                AssetCategoryResponseDTO::setApprovalStatus
+        );
+    }
 
 
 
 
-//    public List<DepartmentResponseDTO> fetchDepartments() {
-//
-//        List<DepartmentEntity> list = departmentRepository.findAll();
-//        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(DepartmentEntity.class.getSimpleName());
-//        List<Long> ids = list.stream()
-//                .map(DepartmentEntity::getId)
-//                .toList();
-//        Map<Long, String> statusMap = hasApprovalMode
-//                ? approvalStatusUtil.getBulkApprovalStatuses(DepartmentEntity.class.getSimpleName(), ids)
-//                : Collections.emptyMap();
-//
-//        return list.stream()
-//                .map(entity -> {
-//                    DepartmentResponseDTO dto = DepartmentResponseDTO.fromEntity(entity);
-//
-//                    if (hasApprovalMode) {
-//                        dto.setApprovalStatus(
-//                                statusMap.get(entity.getId())
-//                        );
-//                    }
-//
-//                    return dto;
-//                })
-//                .toList();
-//    }
+
+
+
 }
