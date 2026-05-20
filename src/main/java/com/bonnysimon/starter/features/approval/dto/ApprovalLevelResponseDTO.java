@@ -15,6 +15,7 @@ public class ApprovalLevelResponseDTO {
     private String approvalStatus;
     private String entityName;
     private Long sysApprovalId;
+    private Long roleId;
     private Integer level;
     private UserApprovalResponseDTO userApproval;
     private String userApprovalName;
@@ -30,6 +31,7 @@ public class ApprovalLevelResponseDTO {
         dto.setDescription(entity.getDescription());
         dto.setStatus(entity.getStatus());
         dto.setUserApproval(entity.getUserApproval() != null ? UserApprovalResponseDTO.fromEntity(entity.getUserApproval()) : null);
+        dto.setRoleId(entity.getRole() != null ? entity.getRole().getId() : null);
         dto.setUserApprovalName(entity.getUserApproval() != null ? entity.getUserApproval().getName() : null);
         dto.setRole(entity.getRole() != null ? RoleResponseDTO.fromEntity(entity.getRole()) : null);
         dto.setRoleName(entity.getRole() != null ? entity.getRole().getName() : null);

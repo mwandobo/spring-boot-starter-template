@@ -210,7 +210,12 @@ public class ApprovalLevelService {
     }
 
     @Transactional
-    public ApprovalLevel update(Long id, ApprovalLevelRequestDTO request) {
+    public ApprovalLevel update(Long id, Long userApprovalId, ApprovalLevelRequestDTO request) {
+            repository.findByRoleIdAndUserApprovalId(request.getRoleId(), userApprovalId)
+                .ifPresent(l -> {
+                    throw new IllegalStateException("Approval Level already exists for this role and userApproval");
+                });
+
         ApprovalLevel level = repository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("ApprovalLevel not found"));
 

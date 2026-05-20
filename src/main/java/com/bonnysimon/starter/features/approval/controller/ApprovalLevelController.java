@@ -41,12 +41,13 @@ public class ApprovalLevelController {
         return service.findOne(id);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ApiResponse<ApprovalLevel> update(
+                            @RequestParam(required = false) Long userApprovalId,
             @PathVariable Long id,
             @RequestBody ApprovalLevelRequestDTO request
     ) {
-        return ApiResponse.success(service.update(id, request));
+        return ApiResponse.success(service.update(id,userApprovalId, request));
     }
 
     @DeleteMapping("/{id}")
