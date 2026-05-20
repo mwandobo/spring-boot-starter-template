@@ -1,9 +1,9 @@
-package com.bonnysimon.starter.features.assetmanagement.asset.dto;
+package com.bonnysimon.starter.features.asset_management.asset.dto;
 
-import com.bonnysimon.starter.features.assetmanagement.asset.AssetEntity;
+import com.bonnysimon.starter.features.asset_management.asset.AssetEntity;
 import java.time.format.DateTimeFormatter;
 
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
+import com.bonnysimon.starter.features.asset_management.assetcategory.dto.AssetCategoryResponseDTO;
 import lombok.Data;
 
 @Data

@@ -1,7 +1,7 @@
-package com.bonnysimon.starter.features.assetmanagement.asset;
+package com.bonnysimon.starter.features.asset_management.asset;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryEntity;
+import com.bonnysimon.starter.features.asset_management.assetcategory.AssetCategoryEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 

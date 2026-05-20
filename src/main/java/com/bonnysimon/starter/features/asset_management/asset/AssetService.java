@@ -1,9 +1,10 @@
-package com.bonnysimon.starter.features.assetmanagement.assetcategory;
+package com.bonnysimon.starter.features.asset_management.asset;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.CreateAssetCategoryDTO;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryEntity;
+import com.bonnysimon.starter.features.asset_management.asset.dto.CreateAssetDTO;
+import com.bonnysimon.starter.features.asset_management.asset.dto.AssetResponseDTO;
+import com.bonnysimon.starter.features.asset_management.assetcategory.AssetCategoryEntity;
+import com.bonnysimon.starter.features.asset_management.assetcategory.AssetCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,33 +19,34 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class AssetCategoryService {
-    private final AssetCategoryRepository repository;
+public class AssetService {
+    private final AssetRepository repository;
+    private final AssetCategoryRepository assetcategoryRepository;
     private final ApprovalStatusUtil approvalStatusUtil;
     private final CurrentUserService currentUserService;
 
-    public PagedResponse<AssetCategoryResponseDTO> findAll(
+    public PagedResponse<AssetResponseDTO> findAll(
             PaginationRequest pagination,
             String search
     ) {
-        Specification<AssetCategoryEntity> spec = getEntitySpecification(search);
-        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(AssetCategoryEntity.class.getSimpleName());
+        Specification<AssetEntity> spec = getEntitySpecification(search);
+        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(AssetEntity.class.getSimpleName());
 
-        Page<AssetCategoryEntity> page =
+        Page<AssetEntity> page =
                 repository.findAll(spec, pagination.toPageable());
 
-        List<AssetCategoryEntity> entities = page.getContent();
+        List<AssetEntity> entities = page.getContent();
 
         List<Long> ids = entities.stream()
-                        .map(AssetCategoryEntity::getId)
+                        .map(AssetEntity::getId)
                         .toList();
         Map<Long, String> statusMap = hasApprovalMode
-                        ? approvalStatusUtil.getBulkApprovalStatuses(AssetCategoryEntity.class.getSimpleName(), ids)
+                        ? approvalStatusUtil.getBulkApprovalStatuses(AssetEntity.class.getSimpleName(), ids)
                         : Collections.emptyMap();
 
-      List<AssetCategoryResponseDTO> result = entities.stream()
+      List<AssetResponseDTO> result = entities.stream()
                       .map(entity -> {
-                          AssetCategoryResponseDTO dto = AssetCategoryResponseDTO.fromEntity(entity);
+                          AssetResponseDTO dto = AssetResponseDTO.fromEntity(entity);
 
                           if (hasApprovalMode) {
                               dto.setApprovalStatus(
@@ -68,8 +70,8 @@ public class AssetCategoryService {
                 );
     }
 
-    private static Specification< AssetCategoryEntity> getEntitySpecification(String search) {
-        Specification< AssetCategoryEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    private static Specification< AssetEntity> getEntitySpecification(String search) {
+        Specification< AssetEntity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
 
         // Optional search filter (case-insensitive)
         if (search != null && !search.trim().isEmpty()) {
@@ -85,42 +87,44 @@ public class AssetCategoryService {
     }
 
     @Transactional
-    public AssetCategoryResponseDTO create(CreateAssetCategoryDTO request) {
+    public AssetResponseDTO create(CreateAssetDTO request) {
         repository.findByName(request.getName())
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
-                            "AssetCategory with name '" + request.getName() + "' already exists"
+                            "Asset with name '" + request.getName() + "' already exists"
                     );
                 });
 
-        AssetCategoryEntity entity = new AssetCategoryEntity();
+        AssetEntity entity = new AssetEntity();
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
-        AssetCategoryEntity savedEntity = repository.save(entity);
+        AssetCategoryEntity assetcategory = validateAssetcategoryExists(request.getAsset_category_id());
+        entity.setAssetcategory(assetcategory);
+        AssetEntity savedEntity = repository.save(entity);
 
-        return  AssetCategoryResponseDTO.fromEntity(savedEntity);
+        return  AssetResponseDTO.fromEntity(savedEntity);
     }
 
-    public  ApprovalAwareDTO<AssetCategoryResponseDTO> findOne  (Long  assetcategoryId) {
-          AssetCategoryEntity   assetcategory = repository.findById( assetcategoryId)
-                 .orElseThrow(() -> new IllegalStateException(" AssetCategory not found"));
+    public  ApprovalAwareDTO<AssetResponseDTO> findOne  (Long  assetId) {
+          AssetEntity   asset = repository.findById( assetId)
+                 .orElseThrow(() -> new IllegalStateException(" Asset not found"));
 
-          AssetCategoryResponseDTO dto = AssetCategoryResponseDTO.fromEntity(assetcategory);
+          AssetResponseDTO dto = AssetResponseDTO.fromEntity(asset);
 
            return approvalStatusUtil.attachApprovalInfo(
                     dto,
-                    assetcategory.getId(),
-                    AssetCategoryEntity.class.getSimpleName(),
+                    asset.getId(),
+                    AssetEntity.class.getSimpleName(),
                     currentUserService.getCurrentUserRoleId()
                 );
      }
 
     @Transactional
-    public AssetCategoryResponseDTO update(Long id, CreateAssetCategoryDTO request) {
-        AssetCategoryEntity entity = repository.findById(id)
+    public AssetResponseDTO update(Long id, CreateAssetDTO request) {
+        AssetEntity entity = repository.findById(id)
                 .orElseThrow(() ->
                         new IllegalStateException(
-                                "AssetCategory not found with id: " + id
+                                "Asset not found with id: " + id
                         )
                 );
 
@@ -128,24 +132,26 @@ public class AssetCategoryService {
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
-                            "AssetCategory with name '" + request.getName() + "' already exists"
+                            "Asset with name '" + request.getName() + "' already exists"
                     );
                 });
 
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
+        AssetCategoryEntity assetcategory = validateAssetcategoryExists(request.getAsset_category_id());
+        entity.setAssetcategory(assetcategory);
 
-        AssetCategoryEntity updatedEntity = repository.save(entity);
+        AssetEntity updatedEntity = repository.save(entity);
 
-        return  AssetCategoryResponseDTO.fromEntity(updatedEntity);
+        return  AssetResponseDTO.fromEntity(updatedEntity);
     }
 
     @Transactional
     public void delete(Long id, boolean soft) {
-        AssetCategoryEntity entity = repository.findById(id)
+        AssetEntity entity = repository.findById(id)
                 .orElseThrow(() ->
                         new IllegalStateException(
-                                "AssetCategory not found with id: " + id
+                                "Asset not found with id: " + id
                         )
                 );
 
@@ -156,4 +162,16 @@ public class AssetCategoryService {
             repository.delete(entity);
         }
     }
+
+    private AssetCategoryEntity validateAssetcategoryExists(Long id) {
+        if (id == null) {
+            if ("false" == "false") {
+                throw new IllegalArgumentException("Assetcategory ID is required");
+            }
+            return null;
+        }
+        return assetcategoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Assetcategory not found with id: " + id));
+    }
+
 }

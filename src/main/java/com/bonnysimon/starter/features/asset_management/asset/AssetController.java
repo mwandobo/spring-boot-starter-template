@@ -1,24 +1,23 @@
-package com.bonnysimon.starter.features.assetmanagement.assetcategory;
+package com.bonnysimon.starter.features.asset_management.asset;
 
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.CreateAssetCategoryDTO;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
+import com.bonnysimon.starter.features.asset_management.asset.dto.CreateAssetDTO;
+import com.bonnysimon.starter.features.asset_management.asset.dto.AssetResponseDTO;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/asset-categories")
+@RequestMapping("/api/v1/assets")
 @RequiredArgsConstructor
-public class AssetCategoryController {
+public class AssetController {
 
-    private final AssetCategoryService service;
+    private final AssetService service;
 
     @GetMapping
-    public PagedResponse<AssetCategoryResponseDTO> findAll(
+    public PagedResponse<AssetResponseDTO> findAll(
             PaginationRequest pagination,
             @RequestParam(required = false) String search
     ) {
@@ -26,23 +25,23 @@ public class AssetCategoryController {
     }
 
     @PostMapping
-    public AssetCategoryResponseDTO  create(
-            @RequestBody CreateAssetCategoryDTO request
+    public AssetResponseDTO  create(
+            @RequestBody CreateAssetDTO request
     ) {
         return service.create(request);
     }
 
      @GetMapping("/{id}")
-        public ApprovalAwareDTO<AssetCategoryResponseDTO> findOne(
+        public ApprovalAwareDTO<AssetResponseDTO> findOne(
                 @PathVariable Long id
         ) {
             return service.findOne(id);
         }
 
     @PatchMapping("/{id}")
-    public AssetCategoryResponseDTO update(
+    public AssetResponseDTO update(
             @PathVariable Long id,
-            @RequestBody CreateAssetCategoryDTO request
+            @RequestBody CreateAssetDTO request
     ) {
         return service.update(id, request);
     }

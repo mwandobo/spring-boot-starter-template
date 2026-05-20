@@ -4,13 +4,12 @@ import com.bonnysimon.starter.features.administration.department.DepartmentEntit
 import com.bonnysimon.starter.features.administration.department.DepartmentRepository;
 import com.bonnysimon.starter.features.administration.department.dto.DepartmentResponseDTO;
 import com.bonnysimon.starter.features.approval.dto.SysApprovalResponseDTO;
-import com.bonnysimon.starter.features.approval.dto.UserApprovalResponseDTO;
 import com.bonnysimon.starter.features.approval.entity.SysApproval;
 import com.bonnysimon.starter.features.approval.repository.SysApprovalRepository;
 import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryEntity;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.AssetCategoryRepository;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
+import com.bonnysimon.starter.features.asset_management.assetcategory.AssetCategoryEntity;
+import com.bonnysimon.starter.features.asset_management.assetcategory.AssetCategoryRepository;
+import com.bonnysimon.starter.features.asset_management.assetcategory.dto.AssetCategoryResponseDTO;
 import com.bonnysimon.starter.features.role.RoleEntity;
 import com.bonnysimon.starter.features.role.RoleRepository;
 import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;

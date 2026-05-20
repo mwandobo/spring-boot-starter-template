@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.assetmanagement.assetcategory.dto;
+package com.bonnysimon.starter.features.asset_management.assetcategory.dto;
 
 import lombok.Data;
 

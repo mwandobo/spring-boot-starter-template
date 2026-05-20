@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.assetmanagement.asset;
+package com.bonnysimon.starter.features.asset_management.asset;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

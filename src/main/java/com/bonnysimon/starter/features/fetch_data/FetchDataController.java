@@ -2,7 +2,7 @@ package com.bonnysimon.starter.features.fetch_data;
 
 import com.bonnysimon.starter.features.administration.department.dto.DepartmentResponseDTO;
 import com.bonnysimon.starter.features.approval.dto.SysApprovalResponseDTO;
-import com.bonnysimon.starter.features.assetmanagement.assetcategory.dto.AssetCategoryResponseDTO;
+import com.bonnysimon.starter.features.asset_management.assetcategory.dto.AssetCategoryResponseDTO;
 import com.bonnysimon.starter.features.role.dto.RoleResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.bonnysimon.starter.features.assetmanagement.assetcategory;
+package com.bonnysimon.starter.features.asset_management.assetcategory;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
 import jakarta.persistence.*;
