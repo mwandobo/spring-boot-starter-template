@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# ===============================
-# Spring Boot Feature Generator
-# ===============================
+# ================================================
+# Spring Boot Feature Generator - Smart Naming
+# ================================================
 
 FEATURE_NAME=""
 PLURAL_SUFFIX=""
@@ -23,160 +23,83 @@ while [[ "$#" -gt 0 ]]; do
       shift 2
       ;;
     --help|-h)
-      echo "Usage: ./scripts-to-run/generate-feature.sh --name <FeatureName> [--plural <s|es|ies>] [--parent <parent>]"
-      echo "Example: ./scripts-to-run/add-feature.sh --name department --plural s --parent administration"
+      echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural s|es|ies] [--parent <parent>]"
+      echo "Example: ./generate-feature.sh --name newUser --plural s --parent administration"
       exit 0
       ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural <s|es|ies>] [--parent <parent>]"
       exit 1
       ;;
   esac
 done
 
-
-
-
 if [ -z "$FEATURE_NAME" ]; then
   echo "❌ Feature name is required"
-  echo "Usage: ./generate-feature.sh --name department --plural s"
   exit 1
 fi
 
-FEATURE_ORIGINAL="$FEATURE_NAME"
-FEATURE_LOWER=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]')
-FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_ORIGINAL:0:1})${FEATURE_ORIGINAL:1}"
-PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
+# ====================== SMART NAMING ======================
+to_pascal_case() {
+    echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
+}
 
-## -------------------------------
-## Plural handling (explicit)
-## -------------------------------
-#if [ -z "$PLURAL_SUFFIX" ]; then
-#  FEATURE_PLURAL="$FEATURE_LOWER"
-#else
-#  case "$PLURAL_SUFFIX" in
-#    s)
-#      FEATURE_PLURAL="${FEATURE_LOWER}s"
-#      ;;
-#    es)
-#      FEATURE_PLURAL="${FEATURE_LOWER}es"
-#      ;;
-#    ies)
-#      FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
-#      ;;
-#    *)
-#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
-#      exit 1
-#      ;;
-#  esac
-#fi
+to_snake_case() {
+    echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g' | sed 's/^_//;s/_$//'
+}
 
+to_kebab_case() {
+    echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed 's/^-//;s/-$//'
+}
 
+RAW_INPUT="$FEATURE_NAME"
+FEATURE_PASCAL=$(to_pascal_case "$RAW_INPUT")      # NewUser
+FEATURE_SNAKE=$(to_snake_case "$RAW_INPUT")        # new_user
+FEATURE_KEBAB=$(to_kebab_case "$RAW_INPUT")        # new-user
 
-#if [ -z "$PLURAL_SUFFIX" ]; then
-#  FEATURE_PLURAL="$FEATURE_LOWER"
-#else
-#  case "$PLURAL_SUFFIX" in
-#    s)
-#      FEATURE_PLURAL="${FEATURE_LOWER}s"
-#      ;;
-#    es)
-#      FEATURE_PLURAL="${FEATURE_LOWER}es"
-#      ;;
-#    ies)
-#      if [[ "$FEATURE_LOWER" == *y ]]; then
-#        FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
-#      else
-#        FEATURE_PLURAL="${FEATURE_LOWER}ies"
-#      fi
-#      ;;
-#    *)
-#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
-#      exit 1
-#      ;;
-#  esac
-#fi
-
-#if [ -z "$PLURAL_SUFFIX" ]; then
-#  FEATURE_PLURAL="$FEATURE_LOWER"
-#else
-#  case "$PLURAL_SUFFIX" in
-#    s)
-#      FEATURE_PLURAL="${FEATURE_LOWER}s"
-#      ;;
-#    es)
-#      FEATURE_PLURAL="${FEATURE_LOWER}es"
-#      ;;
-#    ies)
-#      if [[ "$FEATURE_LOWER" == *y ]]; then
-#        FEATURE_PLURAL="${FEATURE_LOWER%y}ies"
-#      else
-#        FEATURE_PLURAL="${FEATURE_LOWER}ies"
-#      fi
-#      ;;
-#    *)
-#      echo "❌ Invalid plural suffix: $PLURAL_SUFFIX (use: s | es | ies)"
-#      exit 1
-#      ;;
-#  esac
-#fi
-
-
-if [ -z "$PLURAL_SUFFIX" ]; then
-  FEATURE_PLURAL="$FEATURE_ORIGINAL"
+# Plural handling for API Route only
+if [ -n "$PLURAL_SUFFIX" ]; then
+    case "$PLURAL_SUFFIX" in
+        s)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
+        es)  FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es" ;;
+        ies)
+            if [[ "$FEATURE_KEBAB" == *y ]]; then
+                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB%y}ies"
+            else
+                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es"
+            fi ;;
+        *)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
+    esac
 else
-  case "$PLURAL_SUFFIX" in
-    s)
-      FEATURE_PLURAL="${FEATURE_ORIGINAL}s"
-      ;;
-    es)
-      FEATURE_PLURAL="${FEATURE_ORIGINAL}es"
-      ;;
-    ies)
-      if [[ "$FEATURE_ORIGINAL" == *y ]]; then
-        FEATURE_PLURAL="${FEATURE_ORIGINAL%y}ies"
-      else
-        FEATURE_PLURAL="${FEATURE_ORIGINAL}s"
-      fi
-      ;;
-    *)
-      echo "❌ Invalid plural suffix"
-      exit 1
-      ;;
-  esac
+    FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s"
 fi
 
+echo "=================================================="
+echo "Input            → $RAW_INPUT"
+echo "Class Name       → $FEATURE_PASCAL"
+echo "Folder Name      → $FEATURE_SNAKE"
+echo "API Route        → $FEATURE_PLURAL_KEBAB"
+echo "=================================================="
 
-
-
-echo "DEBUG → FINAL FEATURE_PLURAL=$FEATURE_PLURAL"
-echo "DEBUG → FINAL FEATURE_UPPER=$FEATURE_UPPER"
-
-FEATURE_PLURAL_KEBAB=$(echo "$FEATURE_PLURAL" \
-  | sed -E 's/([a-z])([A-Z])/\1-\2/g' \
-  | tr '[:upper:]' '[:lower:]')
-
-echo "DEBUG → FEATURE_PLURAL_KEBAB=$FEATURE_PLURAL_KEBAB"
-
-
+# ====================== SETUP PATHS ======================
 BASE_PACKAGE="com.bonnysimon.starter.features"
-if [ -n "$PARENT_LOWER" ]; then
-  BASE_PACKAGE="$BASE_PACKAGE.$PARENT_LOWER"
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+if [ -n "$PARENT" ]; then
+    PARENT_SNAKE=$(to_snake_case "$PARENT")
+    BASE_PACKAGE="$BASE_PACKAGE.$PARENT_SNAKE"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
 else
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
 fi
-
-echo "🚀 Creating feature: $FEATURE_UPPER"
 
 mkdir -p "$BASE_DIR/dto"
 
+echo "🚀 Creating feature: $FEATURE_PASCAL"
+
 # -------------------------------
-# Entity (Minimal)
+# Entity
 # -------------------------------
-cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Entity.java"
-package $BASE_PACKAGE.$FEATURE_LOWER;
+cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Entity.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE;
 
 import com.bonnysimon.starter.core.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -184,8 +107,8 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "${FEATURE_LOWER}")
-public class ${FEATURE_UPPER}Entity extends BaseEntity {
+@Table(name = "${FEATURE_SNAKE}")
+public class ${FEATURE_PASCAL}Entity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -194,7 +117,7 @@ public class ${FEATURE_UPPER}Entity extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String description;
 }
 EOF
@@ -202,8 +125,8 @@ EOF
 # -------------------------------
 # Repository
 # -------------------------------
-cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Repository.java"
-package $BASE_PACKAGE.$FEATURE_LOWER;
+cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Repository.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -211,44 +134,39 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
-public interface ${FEATURE_UPPER}Repository extends JpaRepository<${FEATURE_UPPER}Entity, Long> {
-    Optional<${FEATURE_UPPER}Entity> findByName(String name);
+public interface ${FEATURE_PASCAL}Repository extends JpaRepository<${FEATURE_PASCAL}Entity, Long> {
+    Optional<${FEATURE_PASCAL}Entity> findByName(String name);
 
-     Page<${FEATURE_UPPER}Entity> findAll(
-                Specification<${FEATURE_UPPER}Entity> spec,
-                Pageable pageable
-        );
+    Page<${FEATURE_PASCAL}Entity> findAll(Specification<${FEATURE_PASCAL}Entity> spec, Pageable pageable);
 }
 EOF
 
 # -------------------------------
-# DTO
+# DTO - Create
 # -------------------------------
-cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
-package $BASE_PACKAGE.$FEATURE_LOWER.dto;
+cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE.dto;
 
 import lombok.Data;
 
 @Data
-public class Create${FEATURE_UPPER}DTO {
+public class Create${FEATURE_PASCAL}DTO {
     private String name;
     private String description;
 }
 EOF
 
-
 # -------------------------------
-# RESPONSE DTO
+# DTO - Response
 # -------------------------------
-cat <<EOF > "$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
-package $BASE_PACKAGE.$FEATURE_LOWER.dto;
+cat <<EOF > "$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE.dto;
 
-import $BASE_PACKAGE.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
-import java.time.format.DateTimeFormatter;
+import $BASE_PACKAGE.$FEATURE_SNAKE.${FEATURE_PASCAL}Entity;
 import lombok.Data;
 
 @Data
-public class ${FEATURE_UPPER}ResponseDTO {
+public class ${FEATURE_PASCAL}ResponseDTO {
     private Long id;
     private String name;
     private String description;
@@ -256,30 +174,28 @@ public class ${FEATURE_UPPER}ResponseDTO {
     private String createdAt;
     private String updatedAt;
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    public static  ${FEATURE_UPPER}ResponseDTO fromEntity( ${FEATURE_UPPER}Entity ${FEATURE_LOWER}) {
-            ${FEATURE_UPPER}ResponseDTO dto = new ${FEATURE_UPPER}ResponseDTO();
-            dto.setId(${FEATURE_LOWER}.getId());
-            dto.setName(${FEATURE_LOWER}.getName());
-            dto.setDescription(${FEATURE_LOWER}.getDescription());
-            dto.setUpdatedAt(${FEATURE_LOWER}.getUpdatedAt() != null ? ${FEATURE_LOWER}.getUpdatedAt().toString() : null);
-            dto.setCreatedAt(${FEATURE_LOWER}.getCreatedAt() != null ? ${FEATURE_LOWER}.getCreatedAt().toString() : null);
-            return dto;
-        }
+    public static ${FEATURE_PASCAL}ResponseDTO fromEntity(${FEATURE_PASCAL}Entity entity) {
+        ${FEATURE_PASCAL}ResponseDTO dto = new ${FEATURE_PASCAL}ResponseDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
+        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null);
+        return dto;
+    }
 }
 EOF
 
 # -------------------------------
-# Service (CRUD)
+# Service
 # -------------------------------
-cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Service.java"
-package $BASE_PACKAGE.$FEATURE_LOWER;
+cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Service.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE;
 
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
-import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
-import $BASE_PACKAGE.$FEATURE_LOWER.${FEATURE_UPPER}Entity;
+import $BASE_PACKAGE.$FEATURE_SNAKE.dto.Create${FEATURE_PASCAL}DTO;
+import $BASE_PACKAGE.$FEATURE_SNAKE.dto.${FEATURE_PASCAL}ResponseDTO;
+import $BASE_PACKAGE.$FEATURE_SNAKE.${FEATURE_PASCAL}Entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -294,137 +210,64 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class ${FEATURE_UPPER}Service {
-    private final ${FEATURE_UPPER}Repository repository;
+public class ${FEATURE_PASCAL}Service {
+    private final ${FEATURE_PASCAL}Repository repository;
     private final ApprovalStatusUtil approvalStatusUtil;
     private final CurrentUserService currentUserService;
 
-    public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
-            PaginationRequest pagination,
-            String search
-    ) {
-        Specification<${FEATURE_UPPER}Entity> spec = getEntitySpecification(search);
-        boolean hasApprovalMode = approvalStatusUtil.hasApprovalMode(${FEATURE_UPPER}Entity.class.getSimpleName());
+    public PagedResponse<${FEATURE_PASCAL}ResponseDTO> findAll(PaginationRequest pagination, String search) {
+        Specification<${FEATURE_PASCAL}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+        // Add search logic here if needed
 
-        Page<${FEATURE_UPPER}Entity> page =
-                repository.findAll(spec, pagination.toPageable());
+        Page<${FEATURE_PASCAL}Entity> page = repository.findAll(spec, pagination.toPageable());
 
-        List<${FEATURE_UPPER}Entity> entities = page.getContent();
-
-        List<Long> ids = entities.stream()
-                        .map(${FEATURE_UPPER}Entity::getId)
-                        .toList();
-        Map<Long, String> statusMap = hasApprovalMode
-                        ? approvalStatusUtil.getBulkApprovalStatuses(${FEATURE_UPPER}Entity.class.getSimpleName(), ids)
-                        : Collections.emptyMap();
-
-      List<${FEATURE_UPPER}ResponseDTO> result = entities.stream()
-                      .map(entity -> {
-                          ${FEATURE_UPPER}ResponseDTO dto = ${FEATURE_UPPER}ResponseDTO.fromEntity(entity);
-
-                          if (hasApprovalMode) {
-                              dto.setApprovalStatus(
-                                      statusMap.get(entity.getId())
-                              );
-                          }
-
-                          return dto;
-                      })
-                      .toList();
+        List<${FEATURE_PASCAL}ResponseDTO> result = page.getContent().stream()
+                .map(${FEATURE_PASCAL}ResponseDTO::fromEntity)
+                .toList();
 
         return new PagedResponse<>(
-                        result,
-                        new PaginationDto(
-                                page.getTotalElements(),
-                                page.getNumber() + 1,
-                                page.getSize(),
-                                page.getTotalPages()
-                        ),
-                        hasApprovalMode // or dynamic logic
-                );
-    }
-
-    private static Specification< ${FEATURE_UPPER}Entity> getEntitySpecification(String search) {
-        Specification< ${FEATURE_UPPER}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-
-        // Optional search filter (case-insensitive)
-        if (search != null && !search.trim().isEmpty()) {
-            String likePattern = "%" + search.trim().toLowerCase() + "%";
-            spec = spec.and((root, query, cb) ->
-                    cb.or(
-                            cb.like(cb.lower(root.get("title")), likePattern),
-                            cb.like(cb.lower(root.get("description")), likePattern)
-                    )
-            );
-        }
-        return spec;
+                result,
+                new PaginationDto(page.getTotalElements(), page.getNumber() + 1, page.getSize(), page.getTotalPages()),
+                false
+        );
     }
 
     @Transactional
-    public ${FEATURE_UPPER}ResponseDTO create(Create${FEATURE_UPPER}DTO request) {
-        repository.findByName(request.getName())
-                .ifPresent(existing -> {
-                    throw new IllegalStateException(
-                            "${FEATURE_UPPER} with name '" + request.getName() + "' already exists"
-                    );
-                });
-
-        ${FEATURE_UPPER}Entity entity = new ${FEATURE_UPPER}Entity();
+    public ${FEATURE_PASCAL}ResponseDTO create(Create${FEATURE_PASCAL}DTO request) {
+        ${FEATURE_PASCAL}Entity entity = new ${FEATURE_PASCAL}Entity();
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
-        ${FEATURE_UPPER}Entity savedEntity = repository.save(entity);
-
-        return  ${FEATURE_UPPER}ResponseDTO.fromEntity(savedEntity);
+        ${FEATURE_PASCAL}Entity saved = repository.save(entity);
+        return ${FEATURE_PASCAL}ResponseDTO.fromEntity(saved);
     }
 
-    public  ApprovalAwareDTO<${FEATURE_UPPER}ResponseDTO> findOne  (Long  ${FEATURE_LOWER}Id) {
-          ${FEATURE_UPPER}Entity   ${FEATURE_LOWER} = repository.findById( ${FEATURE_LOWER}Id)
-                 .orElseThrow(() -> new IllegalStateException(" ${FEATURE_UPPER} not found"));
-
-          ${FEATURE_UPPER}ResponseDTO dto = ${FEATURE_UPPER}ResponseDTO.fromEntity(${FEATURE_LOWER});
-
-           return approvalStatusUtil.attachApprovalInfo(
-                    dto,
-                    ${FEATURE_LOWER}.getId(),
-                    ${FEATURE_UPPER}Entity.class.getSimpleName(),
-                    currentUserService.getCurrentUserRoleId()
-                );
-     }
+    public ApprovalAwareDTO<${FEATURE_PASCAL}ResponseDTO> findOne(Long id) {
+        ${FEATURE_PASCAL}Entity entity = repository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("${FEATURE_PASCAL} not found"));
+        return approvalStatusUtil.attachApprovalInfo(
+                ${FEATURE_PASCAL}ResponseDTO.fromEntity(entity),
+                entity.getId(),
+                ${FEATURE_PASCAL}Entity.class.getSimpleName(),
+                currentUserService.getCurrentUserRoleId()
+        );
+    }
 
     @Transactional
-    public ${FEATURE_UPPER}ResponseDTO update(Long id, Create${FEATURE_UPPER}DTO request) {
-        ${FEATURE_UPPER}Entity entity = repository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "${FEATURE_UPPER} not found with id: " + id
-                        )
-                );
-
-        repository.findByName(request.getName())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalStateException(
-                            "${FEATURE_UPPER} with name '" + request.getName() + "' already exists"
-                    );
-                });
+    public ${FEATURE_PASCAL}ResponseDTO update(Long id, Create${FEATURE_PASCAL}DTO request) {
+        ${FEATURE_PASCAL}Entity entity = repository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("${FEATURE_PASCAL} not found"));
 
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
 
-        ${FEATURE_UPPER}Entity updatedEntity = repository.save(entity);
-
-        return  ${FEATURE_UPPER}ResponseDTO.fromEntity(updatedEntity);
+        ${FEATURE_PASCAL}Entity updated = repository.save(entity);
+        return ${FEATURE_PASCAL}ResponseDTO.fromEntity(updated);
     }
 
     @Transactional
     public void delete(Long id, boolean soft) {
-        ${FEATURE_UPPER}Entity entity = repository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "${FEATURE_UPPER} not found with id: " + id
-                        )
-                );
-
+        ${FEATURE_PASCAL}Entity entity = repository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("${FEATURE_PASCAL} not found"));
         if (soft) {
             entity.setDeleted(true);
             repository.save(entity);
@@ -438,14 +281,13 @@ EOF
 # -------------------------------
 # Controller
 # -------------------------------
-cat <<EOF > "$BASE_DIR/${FEATURE_UPPER}Controller.java"
-package $BASE_PACKAGE.$FEATURE_LOWER;
+cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Controller.java"
+package $BASE_PACKAGE.$FEATURE_SNAKE;
 
 import com.bonnysimon.starter.core.dto.ApiResponse;
 import com.bonnysimon.starter.core.dto.PaginationRequest;
-import com.bonnysimon.starter.core.dto.PaginationResponse;
-import $BASE_PACKAGE.$FEATURE_LOWER.dto.Create${FEATURE_UPPER}DTO;
-import $BASE_PACKAGE.$FEATURE_LOWER.dto.${FEATURE_UPPER}ResponseDTO;
+import $BASE_PACKAGE.$FEATURE_SNAKE.dto.Create${FEATURE_PASCAL}DTO;
+import $BASE_PACKAGE.$FEATURE_SNAKE.dto.${FEATURE_PASCAL}ResponseDTO;
 import com.bonnysimon.starter.core.dto.PagedResponse;
 import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
 import lombok.RequiredArgsConstructor;
@@ -454,100 +296,41 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/${FEATURE_PLURAL_KEBAB}")
 @RequiredArgsConstructor
-public class ${FEATURE_UPPER}Controller {
+public class ${FEATURE_PASCAL}Controller {
 
-    private final ${FEATURE_UPPER}Service service;
+    private final ${FEATURE_PASCAL}Service service;
 
     @GetMapping
-    public PagedResponse<${FEATURE_UPPER}ResponseDTO> findAll(
+    public PagedResponse<${FEATURE_PASCAL}ResponseDTO> findAll(
             PaginationRequest pagination,
-            @RequestParam(required = false) String search
-    ) {
-                return service.findAll(pagination, search);
+            @RequestParam(required = false) String search) {
+        return service.findAll(pagination, search);
     }
 
     @PostMapping
-    public ${FEATURE_UPPER}ResponseDTO  create(
-            @RequestBody Create${FEATURE_UPPER}DTO request
-    ) {
+    public ${FEATURE_PASCAL}ResponseDTO create(@RequestBody Create${FEATURE_PASCAL}DTO request) {
         return service.create(request);
     }
 
-     @GetMapping("/{id}")
-        public ApprovalAwareDTO<${FEATURE_UPPER}ResponseDTO> findOne(
-                @PathVariable Long id
-        ) {
-            return service.findOne(id);
-        }
+    @GetMapping("/{id}")
+    public ApprovalAwareDTO<${FEATURE_PASCAL}ResponseDTO> findOne(@PathVariable Long id) {
+        return service.findOne(id);
+    }
 
     @PatchMapping("/{id}")
-    public ${FEATURE_UPPER}ResponseDTO update(
-            @PathVariable Long id,
-            @RequestBody Create${FEATURE_UPPER}DTO request
-    ) {
+    public ${FEATURE_PASCAL}ResponseDTO update(@PathVariable Long id, @RequestBody Create${FEATURE_PASCAL}DTO request) {
         return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(
-            @PathVariable Long id,
-            @RequestParam(name = "soft", defaultValue = "false") boolean soft
-    ) {
+    public ApiResponse<Void> delete(@PathVariable Long id,
+                                    @RequestParam(name = "soft", defaultValue = "false") boolean soft) {
         service.delete(id, soft);
         return ApiResponse.success(null);
     }
 }
 EOF
 
-
-# -------------------------------
-# HTTP Client Requests (SAFE)
-# -------------------------------
-HTTP_FILE="http-client.http"
-HTTP_MARKER="### FEATURE: ${FEATURE_PLURAL}"
-
-touch "$HTTP_FILE"
-
-if grep -Fxq "$HTTP_MARKER" "$HTTP_FILE"; then
-  echo "⚠️ HTTP requests for '${FEATURE_PLURAL}' already exist — skipping"
-else
-cat <<EOF >> "$HTTP_FILE"
-
-$HTTP_MARKER
-
-###
-GET {{base_url}}/${FEATURE_PLURAL_KEBAB}
-Authorization: Bearer {{token}}
-
-###
-POST {{base_url}}/${FEATURE_PLURAL_KEBAB}
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "Sample Name",
-  "description": "Sample Description"
-}
-
-###
-GET {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
-Authorization: Bearer {{token}}
-
-###
-PATCH {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "Sample Name Edited",
-  "description": "Sample Description Edited"
-}
-
-###
-DELETE {{base_url}}/${FEATURE_PLURAL_KEBAB}/1
-Authorization: Bearer {{token}}
-
-EOF
-fi
-
-echo "✅ Feature '$FEATURE_UPPER' created successfully!"
+echo "✅ Feature '$FEATURE_PASCAL' created successfully!"
+echo "   Location : $BASE_DIR"
+echo "   API Route: /api/v1/${FEATURE_PLURAL_KEBAB}"

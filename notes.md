@@ -13,6 +13,21 @@ Remember to use camelCase incase of naming eg assetCategory
     ./scripts-to-run/add-feature.sh --name department --plural s
     ./scripts-to-run/add-feature.sh --name position --plural s --parent administration
 
+    feature name can be as follow
+        normal name like
+            user
+        other names can be like 
+            newUser
+            new_user
+            new user
+    parent name (where a feature can reside)
+        normal name like
+            management
+        other names can be like 
+            newManagement
+            new_management
+            new management
+
 so far we have handled s es ies so far
   
 
