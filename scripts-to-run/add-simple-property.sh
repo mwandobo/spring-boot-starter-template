@@ -1,7 +1,8 @@
 #!/bin/bash
-# ===============================
-# ADD NORMAL PROPERTY - FIXED (DTOs + Entity)
-# ===============================
+# ================================================
+# ADD PROPERTY - Full Smart Naming (Feature + Parent + Property)
+# ================================================
+
 FEATURE=""
 PROPERTY_NAME=""
 PROPERTY_TYPE=""
@@ -17,7 +18,8 @@ while [[ $# -gt 0 ]]; do
     --parent) PARENT="$2"; shift 2 ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./add-simple-property.sh --feature position --name salary --type BigDecimal --parent administration"
+      echo "Usage: ./add-simple-property.sh --feature department --name code --type String"
+      echo "       ./add-simple-property.sh --feature newDepartment --name basicSalary --type BigDecimal --parent administration"
       exit 1
       ;;
   esac
@@ -28,55 +30,77 @@ if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" || -z "$PROPERTY_TYPE" ]]; then
   exit 1
 fi
 
-FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
-FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
-PROP_CAP="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
+# ====================== SMART NAMING FUNCTIONS ======================
+to_camel_case() {
+    echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[A-Z]/\l&/'
+}
 
+to_snake_case() {
+    echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g' | sed 's/^_//;s/_$//'
+}
+
+to_pascal_case() {
+    echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
+}
+
+# Apply conversions
+FEATURE_PASCAL=$(to_pascal_case "$FEATURE")      # NewDepartment
+FEATURE_SNAKE=$(to_snake_case "$FEATURE")        # new_department
+
+PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")     # basicSalary
+PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")     # basic_salary
+PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")   # BasicSalary
+
+# Parent handling
 if [ -n "$PARENT" ]; then
-  PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+    PARENT_SNAKE=$(to_snake_case "$PARENT")
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
+    BASE_PACKAGE="com.bonnysimon.starter.features.$PARENT_SNAKE.$FEATURE_SNAKE"
 else
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
+    BASE_PACKAGE="com.bonnysimon.starter.features.$FEATURE_SNAKE"
 fi
 
-ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
-CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
-RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
+ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
+CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
+RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
+SERVICE_FILE="$BASE_DIR/${FEATURE_PASCAL}Service.java"
 
-# Validate files
+echo "=================================================="
+echo "Feature        : $FEATURE → $FEATURE_PASCAL ($FEATURE_SNAKE)"
+if [ -n "$PARENT" ]; then
+echo "Parent         : $PARENT → $PARENT_SNAKE"
+fi
+echo "Property       : $PROPERTY_NAME"
+echo "→ Java Field   : $PROP_CAMEL"
+echo "→ DB Column    : $PROP_SNAKE"
+echo "=================================================="
+
+# Validate files exist
 for f in "$ENTITY_FILE" "$CREATE_DTO_FILE" "$RESPONSE_DTO_FILE"; do
   [ ! -f "$f" ] && echo "❌ File not found: $f" && exit 1
 done
 
-echo "🚀 Adding normal property '$PROPERTY_NAME' ($PROPERTY_TYPE) to '$FEATURE_UPPER'"
+echo "🚀 Adding property '$PROP_CAMEL' ($PROPERTY_TYPE) to '$FEATURE_PASCAL'"
 
 # ================================================================
 # 1. ENTITY
 # ================================================================
-if grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$ENTITY_FILE"; then
-  echo "⚠️ Entity already has property '$PROPERTY_NAME'"
+if grep -q "private .* $PROP_CAMEL;" "$ENTITY_FILE"; then
+  echo "⚠️ Entity already has property '$PROP_CAMEL'"
 else
-  # Add import if needed
+  # Add imports if needed
   if [[ "$PROPERTY_TYPE" == "BigDecimal" ]] && ! grep -q "BigDecimal" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a\\
-import java.math.BigDecimal;" "$ENTITY_FILE"
+    sed -i "/import lombok.Data;/a import java.math.BigDecimal;" "$ENTITY_FILE"
   elif [[ "$PROPERTY_TYPE" == "LocalDate" ]] && ! grep -q "LocalDate" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a\\
-import java.time.LocalDate;" "$ENTITY_FILE"
+    sed -i "/import lombok.Data;/a import java.time.LocalDate;" "$ENTITY_FILE"
   fi
 
-  # Insert before last }
-  awk -v type="$PROPERTY_TYPE" -v name="$PROPERTY_NAME" '
-    BEGIN { inserted=0 }
-    /^\s*}$/ && inserted == 0 {
-      print ""
-      print "    @Column(name = \"" tolower(name) "\", nullable = true)"
-      print "    private " type " " name ";"
-      print ""
-      inserted=1
-    }
-    { print }
-  ' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
+  # Add field
+  sed -i "/private String description;/a\\
+\\
+    @Column(name = \"${PROP_SNAKE}\", nullable = ${MANDATORY})\\
+    private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$ENTITY_FILE"
 
   echo "✅ Entity updated"
 fi
@@ -84,104 +108,40 @@ fi
 # ================================================================
 # 2. CreateDTO
 # ================================================================
-if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$CREATE_DTO_FILE"; then
+if ! grep -q "private .* $PROP_CAMEL;" "$CREATE_DTO_FILE"; then
   sed -i "/private String description;/a\\
-    private $PROPERTY_TYPE $PROPERTY_NAME;" "$CREATE_DTO_FILE"
+    private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$CREATE_DTO_FILE"
   echo "✅ CreateDTO updated"
-else
-  echo "⚠️ CreateDTO already has $PROPERTY_NAME"
 fi
 
 # ================================================================
-# 3. ResponseDTO - FIXED
+# 3. ResponseDTO
 # ================================================================
-if ! grep -q "private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"; then
-  # Add the field
+if ! grep -q "private .* $PROP_CAMEL;" "$RESPONSE_DTO_FILE"; then
   sed -i "/private String description;/a\\
-    private $PROPERTY_TYPE $PROPERTY_NAME;" "$RESPONSE_DTO_FILE"
+    private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$RESPONSE_DTO_FILE"
   echo "✅ ResponseDTO field added"
-else
-  echo "⚠️ ResponseDTO already has $PROPERTY_NAME"
 fi
 
-# Add mapping in fromEntity() - Fixed condition
-if ! grep -q "set${PROP_CAP}(" "$RESPONSE_DTO_FILE"; then
-  sed -i "/dto\.setDescription(${FEATURE_LOWER}\.getDescription());/a\\
-            dto.set${PROP_CAP}(${FEATURE_LOWER}.get${PROP_CAP}());" "$RESPONSE_DTO_FILE"
+if ! grep -q "set${PROP_PASCAL}(" "$RESPONSE_DTO_FILE"; then
+  sed -i "/dto\.setDescription(${FEATURE_SNAKE}\.getDescription());/a\\
+            dto.set${PROP_PASCAL}(${FEATURE_SNAKE}.get${PROP_PASCAL}());" "$RESPONSE_DTO_FILE"
   echo "✅ ResponseDTO.fromEntity() mapping added"
 fi
 
 # ================================================================
 # 4. SERVICE
 # ================================================================
-SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
 if [ -f "$SERVICE_FILE" ]; then
-  if ! grep -q "entity\.set${PROP_CAP}(request.get${PROP_CAP}())" "$SERVICE_FILE"; then
+  if ! grep -q "set${PROP_PASCAL}(request.get${PROP_PASCAL}())" "$SERVICE_FILE"; then
     sed -i "/entity\.setDescription(request\.getDescription());/a\\
-        entity.set${PROP_CAP}(request.get${PROP_CAP}());" "$SERVICE_FILE"
+        entity.set${PROP_PASCAL}(request.get${PROP_PASCAL}());" "$SERVICE_FILE"
     echo "✅ Service mapping added"
   fi
 fi
 
-
-
-
-# ================================================================
-# 5. HTTP Client - FIXED (No trailing comma)
-# ================================================================
-HTTP_FILE="http-client.http"
-
-if [ -f "$HTTP_FILE" ]; then
-  FEATURE_PLURAL=$(echo "$FEATURE_LOWER" | sed 's/$/s/')
-
-  echo " → Updating http-client.http for feature: $FEATURE_PLURAL"
-
-  if grep -A 100 "### FEATURE: $FEATURE_PLURAL" "$HTTP_FILE" | grep -q "\"$PROPERTY_NAME\":"; then
-    echo "⚠️ '$PROPERTY_NAME' already exists in $FEATURE_PLURAL block"
-  else
-    awk -v feature="### FEATURE: $FEATURE_PLURAL" -v prop="$PROPERTY_NAME" '
-      BEGIN { in_block=0; in_json=0 }
-
-      $0 == feature { in_block=1; print; next }
-
-      in_block && /^\s*### FEATURE:/ && $0 != feature {
-        in_block=0
-      }
-
-      in_block {
-        if ($0 ~ /^[[:space:]]*\{/) {
-          in_json=1
-          print
-          next
-        }
-
-        if (in_json && /^[[:space:]]*\}/) {
-          # Add new property BEFORE closing brace, without trailing comma
-          print "    \"" prop "\": null"
-          print $0
-          in_json=0
-          next
-        }
-
-        # Ensure previous lines have comma (except if it was the last one)
-        if (in_json && $0 !~ /,$/ && $0 !~ /^[[:space:]]*\}/ && $0 !~ /^[[:space:]]*$/) {
-          print $0 ","
-        } else {
-          print
-        }
-        next
-      }
-
-      { print }
-    ' "$HTTP_FILE" > "$HTTP_FILE.tmp" && mv "$HTTP_FILE.tmp" "$HTTP_FILE"
-
-    echo "✅ Successfully added '$PROPERTY_NAME' to $FEATURE_PLURAL block (no trailing comma)"
-  fi
-else
-  echo "⚠️ http-client.http not found"
-fi
-
 echo ""
-echo "🎉 Property '$PROPERTY_NAME' added successfully!"
-echo "⚠️ Run this migration:"
-echo "   ALTER TABLE MBIMS.${FEATURE_UPPER^^} ADD COLUMN ${PROPERTY_NAME^^} VARCHAR(255);"
+echo "🎉 Property '$PROP_CAMEL' added successfully!"
+echo "DB Column: ${PROP_SNAKE}"
+echo "⚠️ Don't forget to create migration:"
+echo "   ALTER TABLE ${FEATURE_PASCAL^^} ADD COLUMN ${PROP_SNAKE^^} ${PROPERTY_TYPE^^};"

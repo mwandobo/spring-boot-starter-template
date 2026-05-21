@@ -35,6 +35,21 @@ to add property (normal)
 
     ./scripts-to-run/add-simple-property.sh --feature department --name code --type String --mandatory true
 
+
+    # Simple
+    ./add-simple-property.sh --feature department --name code --type String
+    
+    # With complex names
+    ./add-simple-property.sh --feature newDepartment --name basicSalary --type BigDecimal
+    
+    # With parent
+    ./add-simple-property.sh --feature position --name monthlySalary --type BigDecimal --parent administration
+    
+    # With spaces
+    ./add-simple-property.sh --feature "new department" --name dateOfJoining --type LocalDate --parent hr
+
+
+
 to add property (foreign key)
 
     ./scripts-to-run/add-foreign-property.sh --feature position --name department_id --type Long --mandatory true --reference department --parent administration
