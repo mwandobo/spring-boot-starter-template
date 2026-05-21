@@ -56,7 +56,10 @@ to add property (foreign key)
 
 to remove a feature
 
-    ./scripts-to-run/remove-feature.sh --feature position --parent administration
+    ./scripts-to-run/remove-feature.sh --feature newUser
+    ./scripts-to-run/remove-feature.sh --feature "new user" --parent newManagement
+    ./scripts-to-run/remove-feature.sh --feature new_department --parent administration
+
 
 to remove a property
 
