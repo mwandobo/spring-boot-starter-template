@@ -63,7 +63,17 @@ to remove a feature
 
 to remove a property
 
+    # 1. Simple case - no parent
+    ./scripts-to-run/remove-property.sh --feature department --name code
+    
+    # 2. With parent
     ./scripts-to-run/remove-property.sh --feature department --name code --parent administration
+    
+    # 3. Complex feature name
+    ./scripts-to-run/remove-property.sh --feature newUser --name yearlyDate --parent newManagement
+    
+    # 4. With spaces in names
+    ./scripts-to-run/remove-property.sh --feature "new user" --name "date of birth" --parent "hr module"
 
 to remove a foreign property
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# ===============================
-# Remove Property from Feature (Supports --parent)
-# ===============================
+# ================================================
+# REMOVE PROPERTY - Smart Naming + Enhanced Logging
+# ================================================
 
 FEATURE=""
 PROPERTY_NAME=""
@@ -22,106 +22,135 @@ while [[ $# -gt 0 ]]; do
       PARENT="$2"
       shift 2
       ;;
+    --help|-h)
+      echo "Usage: ./remove-property.sh --feature <feature> --name <property> [--parent <parent>]"
+      echo "Example: ./remove-property.sh --feature \"new user\" --name yearlyDate --parent newManagement"
+      exit 0
+      ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./remove-property.sh --feature department --name code [--parent administration]"
       exit 1
       ;;
   esac
 done
 
 if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" ]]; then
-  echo "❌ Usage: ./remove-property.sh --feature <feature> --name <property> [--parent <parent>]"
-  echo "Example: ./remove-property.sh --feature department --name code --parent administration"
+  echo "❌ Missing required parameters"
+  echo "Usage: ./remove-property.sh --feature <feature> --name <property> [--parent <parent>]"
   exit 1
 fi
 
-FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
-FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
-PROP_CAMEL="$(tr '[:lower:]' '[:upper:]' <<< ${PROPERTY_NAME:0:1})${PROPERTY_NAME:1}"
+# ====================== SMART NAMING ======================
+to_camel_case() {
+    echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[A-Z]/\l&/'
+}
 
-# Support for --parent
+to_snake_case() {
+    echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g' | sed 's/^_//;s/_$//'
+}
+
+to_pascal_case() {
+    echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
+}
+
+# Resolve names
+FEATURE_PASCAL=$(to_pascal_case "$FEATURE")
+FEATURE_SNAKE=$(to_snake_case "$FEATURE")
+
+PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")
+PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")
+PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")
+
 if [ -n "$PARENT" ]; then
-  PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+    PARENT_SNAKE=$(to_snake_case "$PARENT")
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
 else
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
 fi
 
-ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
-CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
-RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
-SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
+ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
+CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
+RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
+SERVICE_FILE="$BASE_DIR/${FEATURE_PASCAL}Service.java"
 HTTP_FILE="http-client.http"
 
-echo "🧹 Removing property '$PROPERTY_NAME' from feature '$FEATURE_UPPER'"
+# ====================== ENHANCED LOGGING ======================
+echo "=================================================="
+echo "🧹 REMOVE PROPERTY OPERATION STARTED"
+echo "=================================================="
+echo "Feature Raw     : $FEATURE"
+echo "Feature Resolved: $FEATURE_PASCAL ($FEATURE_SNAKE)"
+if [ -n "$PARENT" ]; then
+echo "Parent Raw      : $PARENT"
+echo "Parent Resolved : $(to_pascal_case "$PARENT") ($(to_snake_case "$PARENT"))"
+fi
+echo "Property Raw    : $PROPERTY_NAME"
+echo "Property Camel  : $PROP_CAMEL"
+echo "DB Column       : $PROP_SNAKE"
+echo "Target Path     : $BASE_DIR"
+echo "=================================================="
 
-# Check if files exist
+# Check if Entity exists
 if [ ! -f "$ENTITY_FILE" ]; then
   echo "❌ Entity file not found: $ENTITY_FILE"
+  echo "   Please check feature name and parent spelling."
   exit 1
 fi
 
-# -------------------------------
-# 1. Entity - Remove field + @Column (Fixed)
-# -------------------------------
-if [ -f "$ENTITY_FILE" ]; then
-  echo "   → Processing Entity..."
+echo "🚀 Starting removal of property '$PROP_CAMEL'..."
 
-  # Remove multi-line @Column + field
-  sed -i "/@Column.*$PROPERTY_NAME/,/private .* $PROPERTY_NAME;/d" "$ENTITY_FILE"
+# ================================================================
+# 1. Entity
+# ================================================================
+echo "🔧 Updating Entity..."
+sed -i "/@Column.*name = \"$PROP_SNAKE\"/,/private .* $PROP_CAMEL;/d" "$ENTITY_FILE"
+sed -i "/private .* $PROP_CAMEL;/d" "$ENTITY_FILE"
+sed -i "/@Column.*nullable.*$/d" "$ENTITY_FILE"
+# Clean extra blank lines
+sed -i '/^$/N;/^\n$/D' "$ENTITY_FILE"
+echo "✅ Entity updated"
 
-  # Remove any remaining field
-  sed -i "/private .* $PROPERTY_NAME;/d" "$ENTITY_FILE"
-
-  # Remove any orphaned @Column line (this fixes your current issue)
-  sed -i "/@Column.*nullable.*$/d" "$ENTITY_FILE"
-
-  # Clean up extra blank lines
-  sed -i '/^$/N;/^\n$/D' "$ENTITY_FILE"
-
-  echo "✅ Entity updated"
-fi
-
-# -------------------------------
-# 2. Create DTO
-# -------------------------------
+# ================================================================
+# 2. CreateDTO
+# ================================================================
+echo "🔧 Updating CreateDTO..."
 if [ -f "$CREATE_DTO_FILE" ]; then
-  sed -i "/private .* $PROPERTY_NAME;/d" "$CREATE_DTO_FILE"
+  sed -i "/private .* $PROP_CAMEL;/d" "$CREATE_DTO_FILE"
   echo "✅ CreateDTO updated"
 fi
 
-# -------------------------------
-# 3. Response DTO
-# -------------------------------
+# ================================================================
+# 3. ResponseDTO
+# ================================================================
+echo "🔧 Updating ResponseDTO..."
 if [ -f "$RESPONSE_DTO_FILE" ]; then
-  sed -i "/private .* $PROPERTY_NAME;/d" "$RESPONSE_DTO_FILE"
-  sed -i "/dto\.set${PROP_CAMEL}(/d" "$RESPONSE_DTO_FILE"
+  sed -i "/private .* $PROP_CAMEL;/d" "$RESPONSE_DTO_FILE"
+  sed -i "/set${PROP_PASCAL}(/d" "$RESPONSE_DTO_FILE"
   echo "✅ ResponseDTO updated"
 fi
 
-# -------------------------------
-# 4. Service - Create/Update mapping
-# -------------------------------
+# ================================================================
+# 4. Service
+# ================================================================
+echo "🔧 Updating Service..."
 if [ -f "$SERVICE_FILE" ]; then
-  sed -i "/entity\.set${PROP_CAMEL}(request\.get${PROP_CAMEL}());/d" "$SERVICE_FILE"
-  echo "✅ Service mapping updated"
+  sed -i "/set${PROP_PASCAL}(request\.get${PROP_PASCAL}());/d" "$SERVICE_FILE"
+  echo "✅ Service mapping removed"
 fi
 
-# -------------------------------
-# 5. Service - Search Specification
-# -------------------------------
-if [ -f "$SERVICE_FILE" ]; then
-  sed -i "/root\.get(\"$PROPERTY_NAME\")/d" "$SERVICE_FILE"
-  echo "✅ Removed from search specification"
-fi
-
-# -------------------------------
-# 6. HTTP Client
-# -------------------------------
+# ================================================================
+# 5. HTTP Client
+# ================================================================
+echo "🔧 Updating HTTP Client..."
 if [ -f "$HTTP_FILE" ]; then
-  sed -i "/\"$PROPERTY_NAME\"/d" "$HTTP_FILE"
+  sed -i "/\"$PROP_SNAKE\"/d" "$HTTP_FILE"
+  sed -i "/\"$PROP_CAMEL\"/d" "$HTTP_FILE"
   echo "✅ HTTP client updated"
 fi
 
-echo "🎉 Property '$PROPERTY_NAME' successfully removed from '$FEATURE_UPPER'"
+echo ""
+echo "🎉 SUCCESS: Property '$PROP_CAMEL' has been removed from '$FEATURE_PASCAL'"
+echo "   DB Column removed: $PROP_SNAKE"
+echo ""
+echo "⚠️  Don't forget to drop the column from database:"
+echo "   ALTER TABLE ${FEATURE_PASCAL^^} DROP COLUMN ${PROP_SNAKE^^};"
