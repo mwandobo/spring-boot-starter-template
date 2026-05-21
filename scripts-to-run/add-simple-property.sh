@@ -1,6 +1,6 @@
 #!/bin/bash
 # ================================================
-# ADD PROPERTY - Full Smart Naming (Feature + Parent + Property)
+# ADD PROPERTY - Enhanced Logging + Smart Imports (All Files)
 # ================================================
 
 FEATURE=""
@@ -18,8 +18,6 @@ while [[ $# -gt 0 ]]; do
     --parent) PARENT="$2"; shift 2 ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./add-simple-property.sh --feature department --name code --type String"
-      echo "       ./add-simple-property.sh --feature newDepartment --name basicSalary --type BigDecimal --parent administration"
       exit 1
       ;;
   esac
@@ -30,7 +28,7 @@ if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" || -z "$PROPERTY_TYPE" ]]; then
   exit 1
 fi
 
-# ====================== SMART NAMING FUNCTIONS ======================
+# ====================== SMART NAMING ======================
 to_camel_case() {
     echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[A-Z]/\l&/'
 }
@@ -43,22 +41,18 @@ to_pascal_case() {
     echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
 }
 
-# Apply conversions
-FEATURE_PASCAL=$(to_pascal_case "$FEATURE")      # NewDepartment
-FEATURE_SNAKE=$(to_snake_case "$FEATURE")        # new_department
+FEATURE_PASCAL=$(to_pascal_case "$FEATURE")
+FEATURE_SNAKE=$(to_snake_case "$FEATURE")
 
-PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")     # basicSalary
-PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")     # basic_salary
-PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")   # BasicSalary
+PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")
+PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")
+PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")
 
-# Parent handling
 if [ -n "$PARENT" ]; then
     PARENT_SNAKE=$(to_snake_case "$PARENT")
     BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-    BASE_PACKAGE="com.bonnysimon.starter.features.$PARENT_SNAKE.$FEATURE_SNAKE"
 else
     BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-    BASE_PACKAGE="com.bonnysimon.starter.features.$FEATURE_SNAKE"
 fi
 
 ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
@@ -66,73 +60,104 @@ CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
 RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
 SERVICE_FILE="$BASE_DIR/${FEATURE_PASCAL}Service.java"
 
+# ====================== ENHANCED LOGGING ======================
+echo "=================================================="
+echo "🚀 ADD PROPERTY OPERATION STARTED"
 echo "=================================================="
 echo "Feature        : $FEATURE → $FEATURE_PASCAL ($FEATURE_SNAKE)"
 if [ -n "$PARENT" ]; then
-echo "Parent         : $PARENT → $PARENT_SNAKE"
+echo "Parent         : $PARENT → $(to_snake_case "$PARENT")"
 fi
-echo "Property       : $PROPERTY_NAME"
-echo "→ Java Field   : $PROP_CAMEL"
-echo "→ DB Column    : $PROP_SNAKE"
+echo "Property       : $PROPERTY_NAME → $PROP_CAMEL"
+echo "DB Column      : $PROP_SNAKE"
+echo "Data Type      : $PROPERTY_TYPE"
 echo "=================================================="
 
-# Validate files exist
+# Validate files
 for f in "$ENTITY_FILE" "$CREATE_DTO_FILE" "$RESPONSE_DTO_FILE"; do
   [ ! -f "$f" ] && echo "❌ File not found: $f" && exit 1
 done
 
-echo "🚀 Adding property '$PROP_CAMEL' ($PROPERTY_TYPE) to '$FEATURE_PASCAL'"
+# Function to add import if needed
+add_import() {
+  local file=$1
+  local import=$2
+  if ! grep -q "$import" "$file"; then
+    sed -i "/import lombok.Data;/a $import" "$file"
+    echo "✅ Added import in $(basename "$file"): $import"
+  fi
+}
 
 # ================================================================
 # 1. ENTITY
 # ================================================================
+echo "🔧 Updating Entity..."
 if grep -q "private .* $PROP_CAMEL;" "$ENTITY_FILE"; then
-  echo "⚠️ Entity already has property '$PROP_CAMEL'"
+  echo "⚠️ Property already exists in Entity"
 else
-  # Add imports if needed
-  if [[ "$PROPERTY_TYPE" == "BigDecimal" ]] && ! grep -q "BigDecimal" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a import java.math.BigDecimal;" "$ENTITY_FILE"
-  elif [[ "$PROPERTY_TYPE" == "LocalDate" ]] && ! grep -q "LocalDate" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a import java.time.LocalDate;" "$ENTITY_FILE"
-  fi
+  case "$PROPERTY_TYPE" in
+    "BigDecimal") add_import "$ENTITY_FILE" "import java.math.BigDecimal;" ;;
+    "LocalDate") add_import "$ENTITY_FILE" "import java.time.LocalDate;" ;;
+    "LocalDateTime") add_import "$ENTITY_FILE" "import java.time.LocalDateTime;" ;;
+    "UUID") add_import "$ENTITY_FILE" "import java.util.UUID;" ;;
+  esac
 
-  # Add field
   sed -i "/private String description;/a\\
 \\
     @Column(name = \"${PROP_SNAKE}\", nullable = ${MANDATORY})\\
     private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$ENTITY_FILE"
-
-  echo "✅ Entity updated"
+  echo "✅ Entity field added"
 fi
 
 # ================================================================
 # 2. CreateDTO
 # ================================================================
+echo "🔧 Updating CreateDTO..."
 if ! grep -q "private .* $PROP_CAMEL;" "$CREATE_DTO_FILE"; then
+  case "$PROPERTY_TYPE" in
+    "BigDecimal") add_import "$CREATE_DTO_FILE" "import java.math.BigDecimal;" ;;
+    "LocalDate") add_import "$CREATE_DTO_FILE" "import java.time.LocalDate;" ;;
+    "LocalDateTime") add_import "$CREATE_DTO_FILE" "import java.time.LocalDateTime;" ;;
+    "UUID") add_import "$CREATE_DTO_FILE" "import java.util.UUID;" ;;
+  esac
+
   sed -i "/private String description;/a\\
     private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$CREATE_DTO_FILE"
   echo "✅ CreateDTO updated"
+else
+  echo "⚠️ CreateDTO already has this property"
 fi
 
 # ================================================================
 # 3. ResponseDTO
 # ================================================================
+echo "🔧 Updating ResponseDTO..."
 if ! grep -q "private .* $PROP_CAMEL;" "$RESPONSE_DTO_FILE"; then
+  case "$PROPERTY_TYPE" in
+    "BigDecimal") add_import "$RESPONSE_DTO_FILE" "import java.math.BigDecimal;" ;;
+    "LocalDate") add_import "$RESPONSE_DTO_FILE" "import java.time.LocalDate;" ;;
+    "LocalDateTime") add_import "$RESPONSE_DTO_FILE" "import java.time.LocalDateTime;" ;;
+    "UUID") add_import "$RESPONSE_DTO_FILE" "import java.util.UUID;" ;;
+  esac
+
   sed -i "/private String description;/a\\
     private ${PROPERTY_TYPE} ${PROP_CAMEL};" "$RESPONSE_DTO_FILE"
   echo "✅ ResponseDTO field added"
+else
+  echo "⚠️ ResponseDTO already has this property"
 fi
 
 if ! grep -q "set${PROP_PASCAL}(" "$RESPONSE_DTO_FILE"; then
   sed -i "/dto\.setDescription(${FEATURE_SNAKE}\.getDescription());/a\\
             dto.set${PROP_PASCAL}(${FEATURE_SNAKE}.get${PROP_PASCAL}());" "$RESPONSE_DTO_FILE"
-  echo "✅ ResponseDTO.fromEntity() mapping added"
+  echo "✅ ResponseDTO mapping added"
 fi
 
 # ================================================================
 # 4. SERVICE
 # ================================================================
 if [ -f "$SERVICE_FILE" ]; then
+  echo "🔧 Updating Service..."
   if ! grep -q "set${PROP_PASCAL}(request.get${PROP_PASCAL}())" "$SERVICE_FILE"; then
     sed -i "/entity\.setDescription(request\.getDescription());/a\\
         entity.set${PROP_PASCAL}(request.get${PROP_PASCAL}());" "$SERVICE_FILE"
@@ -141,7 +166,8 @@ if [ -f "$SERVICE_FILE" ]; then
 fi
 
 echo ""
-echo "🎉 Property '$PROP_CAMEL' added successfully!"
+echo "🎉 SUCCESS: Property '$PROP_CAMEL' ($PROP_SNAKE) added successfully!"
 echo "DB Column: ${PROP_SNAKE}"
-echo "⚠️ Don't forget to create migration:"
+echo ""
+echo "⚠️ Next Step - Run this migration:"
 echo "   ALTER TABLE ${FEATURE_PASCAL^^} ADD COLUMN ${PROP_SNAKE^^} ${PROPERTY_TYPE^^};"
