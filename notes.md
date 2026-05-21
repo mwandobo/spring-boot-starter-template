@@ -37,16 +37,16 @@ to add property (normal)
 
 
     # Simple
-    ./add-simple-property.sh --feature department --name code --type String
+    ./scripts-to-run/add-simple-property.sh --feature department --name code --type String
     
     # With complex names
-    ./add-simple-property.sh --feature newDepartment --name basicSalary --type BigDecimal
+    ./scripts-to-run/add-simple-property.sh --feature newDepartment --name basicSalary --type BigDecimal
     
     # With parent
-    ./add-simple-property.sh --feature position --name monthlySalary --type BigDecimal --parent administration
+    ./scripts-to-run/add-simple-property.sh --feature position --name monthlySalary --type BigDecimal --parent administration
     
     # With spaces
-    ./add-simple-property.sh --feature "new department" --name dateOfJoining --type LocalDate --parent hr
+    ./scripts-to-run/add-simple-property.sh --feature "new department" --name dateOfJoining --type LocalDate --parent hr
 
 
 

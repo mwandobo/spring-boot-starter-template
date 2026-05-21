@@ -78,11 +78,11 @@ for f in "$ENTITY_FILE" "$CREATE_DTO_FILE" "$RESPONSE_DTO_FILE"; do
   [ ! -f "$f" ] && echo "❌ File not found: $f" && exit 1
 done
 
-# Function to add import if needed
+# Function to add import safely
 add_import() {
   local file=$1
   local import=$2
-  if ! grep -q "$import" "$file"; then
+  if ! grep -q "$import" "$file" 2>/dev/null; then
     sed -i "/import lombok.Data;/a $import" "$file"
     echo "✅ Added import in $(basename "$file"): $import"
   fi
@@ -165,9 +165,23 @@ if [ -f "$SERVICE_FILE" ]; then
   fi
 fi
 
+# ====================== DB2 MIGRATION ======================
 echo ""
 echo "🎉 SUCCESS: Property '$PROP_CAMEL' ($PROP_SNAKE) added successfully!"
 echo "DB Column: ${PROP_SNAKE}"
 echo ""
-echo "⚠️ Next Step - Run this migration:"
-echo "   ALTER TABLE ${FEATURE_PASCAL^^} ADD COLUMN ${PROP_SNAKE^^} ${PROPERTY_TYPE^^};"
+
+case "$PROPERTY_TYPE" in
+    "LocalDate")      DB_TYPE="DATE" ;;
+    "LocalDateTime")  DB_TYPE="TIMESTAMP" ;;
+    "BigDecimal")     DB_TYPE="DECIMAL(19,2)" ;;
+    "Boolean")        DB_TYPE="SMALLINT" ;;
+    *)                DB_TYPE="${PROPERTY_TYPE^^}" ;;
+esac
+
+echo "⚠️ Next Step - Run this migration in DB2:"
+echo "   ALTER TABLE ${FEATURE_PASCAL^^} ADD COLUMN ${PROP_SNAKE^^} ${DB_TYPE};"
+
+if [ "$MANDATORY" = "true" ]; then
+    echo "   (Column is NOT NULL - be careful if table has existing data)"
+fi
