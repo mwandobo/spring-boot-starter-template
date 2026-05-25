@@ -81,61 +81,6 @@ done
 
 [ "$MANDATORY" = "true" ] && NULLABLE="false" || NULLABLE="true"
 
-## ================================================================
-## 1. ENTITY
-## ================================================================
-#echo "🔧 Updating Entity..."
-#if ! grep -q "private ${REF_PASCAL}Entity ${REF_SNAKE}" "$ENTITY_FILE"; then
-#  if ! grep -q "${REF_PASCAL}Entity" "$ENTITY_FILE"; then
-#    sed -i "/import lombok.Data;/a\\
-#import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.${REF_PASCAL}Entity;" "$ENTITY_FILE"
-#  fi
-#
-#  awk '
-#    /private String description;/ {
-#      print $0
-#      print ""
-#      print "    @ManyToOne(fetch = FetchType.LAZY)"
-#      print "    @JoinColumn(name = \"'"${PROP_SNAKE}"'\")"
-#      print "    private '"${REF_PASCAL}Entity ${REF_SNAKE}"';"
-#      print ""
-#      next
-#    }
-#    { print }
-#  ' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
-#
-#  echo "✅ Entity updated with foreign key"
-#fi
-#
-## ================================================================
-## 2. Create DTO
-## ================================================================
-#echo "🔧 Updating CreateDTO..."
-#if ! grep -q "private $PROPERTY_TYPE $PROP_CAMEL" "$CREATE_DTO_FILE"; then
-#  sed -i "/private String description;/a\\
-#    private $PROPERTY_TYPE $PROP_CAMEL;" "$CREATE_DTO_FILE"
-#  echo "✅ CreateDTO updated"
-#fi
-#
-## ================================================================
-## 3. Response DTO
-## ================================================================
-#echo "🔧 Updating ResponseDTO..."
-#
-#if ! grep -q "${REF_PASCAL}ResponseDTO" "$RESPONSE_DTO_FILE"; then
-#  sed -i "/import lombok.Data;/a\\
-#import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.dto.${REF_PASCAL}ResponseDTO;" "$RESPONSE_DTO_FILE"
-#fi
-#
-#if ! grep -q "private ${REF_PASCAL}ResponseDTO ${REF_SNAKE}" "$RESPONSE_DTO_FILE"; then
-#  sed -i "/private String description;/a\\
-#    private ${REF_PASCAL}ResponseDTO ${REF_SNAKE};" "$RESPONSE_DTO_FILE"
-#fi
-#
-#if ! grep -q "private String ${REF_SNAKE}Name" "$RESPONSE_DTO_FILE"; then
-#  sed -i "/private ${REF_PASCAL}ResponseDTO ${REF_SNAKE};/a\\
-#    private String ${REF_SNAKE}Name;" "$RESPONSE_DTO_FILE"
-#fi
 
 # ====================== ENTITY ======================
 echo "🔧 Updating Entity..."
