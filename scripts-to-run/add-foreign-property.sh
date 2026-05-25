@@ -81,15 +81,74 @@ done
 
 [ "$MANDATORY" = "true" ] && NULLABLE="false" || NULLABLE="true"
 
-# ================================================================
-# 1. ENTITY
-# ================================================================
+## ================================================================
+## 1. ENTITY
+## ================================================================
+#echo "🔧 Updating Entity..."
+#if ! grep -q "private ${REF_PASCAL}Entity ${REF_SNAKE}" "$ENTITY_FILE"; then
+#  if ! grep -q "${REF_PASCAL}Entity" "$ENTITY_FILE"; then
+#    sed -i "/import lombok.Data;/a\\
+#import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.${REF_PASCAL}Entity;" "$ENTITY_FILE"
+#  fi
+#
+#  awk '
+#    /private String description;/ {
+#      print $0
+#      print ""
+#      print "    @ManyToOne(fetch = FetchType.LAZY)"
+#      print "    @JoinColumn(name = \"'"${PROP_SNAKE}"'\")"
+#      print "    private '"${REF_PASCAL}Entity ${REF_SNAKE}"';"
+#      print ""
+#      next
+#    }
+#    { print }
+#  ' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
+#
+#  echo "✅ Entity updated with foreign key"
+#fi
+#
+## ================================================================
+## 2. Create DTO
+## ================================================================
+#echo "🔧 Updating CreateDTO..."
+#if ! grep -q "private $PROPERTY_TYPE $PROP_CAMEL" "$CREATE_DTO_FILE"; then
+#  sed -i "/private String description;/a\\
+#    private $PROPERTY_TYPE $PROP_CAMEL;" "$CREATE_DTO_FILE"
+#  echo "✅ CreateDTO updated"
+#fi
+#
+## ================================================================
+## 3. Response DTO
+## ================================================================
+#echo "🔧 Updating ResponseDTO..."
+#
+#if ! grep -q "${REF_PASCAL}ResponseDTO" "$RESPONSE_DTO_FILE"; then
+#  sed -i "/import lombok.Data;/a\\
+#import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.dto.${REF_PASCAL}ResponseDTO;" "$RESPONSE_DTO_FILE"
+#fi
+#
+#if ! grep -q "private ${REF_PASCAL}ResponseDTO ${REF_SNAKE}" "$RESPONSE_DTO_FILE"; then
+#  sed -i "/private String description;/a\\
+#    private ${REF_PASCAL}ResponseDTO ${REF_SNAKE};" "$RESPONSE_DTO_FILE"
+#fi
+#
+#if ! grep -q "private String ${REF_SNAKE}Name" "$RESPONSE_DTO_FILE"; then
+#  sed -i "/private ${REF_PASCAL}ResponseDTO ${REF_SNAKE};/a\\
+#    private String ${REF_SNAKE}Name;" "$RESPONSE_DTO_FILE"
+#fi
+
+# ====================== ENTITY ======================
 echo "🔧 Updating Entity..."
 if ! grep -q "private ${REF_PASCAL}Entity ${REF_SNAKE}" "$ENTITY_FILE"; then
-  if ! grep -q "${REF_PASCAL}Entity" "$ENTITY_FILE"; then
-    sed -i "/import lombok.Data;/a\\
-import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.${REF_PASCAL}Entity;" "$ENTITY_FILE"
+
+  # Build correct reference import path
+  if [ -n "$REFERENCE_PARENT" ]; then
+    REF_IMPORT_PATH="com.bonnysimon.starter.features.$REF_PARENT_SNAKE.$REF_SNAKE"
+  else
+    REF_IMPORT_PATH="com.bonnysimon.starter.features.$REF_SNAKE"
   fi
+
+  sed -i "/import lombok.Data;/a import ${REF_IMPORT_PATH}.${REF_PASCAL}Entity;" "$ENTITY_FILE"
 
   awk '
     /private String description;/ {
@@ -104,12 +163,10 @@ import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNA
     { print }
   ' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
 
-  echo "✅ Entity updated with foreign key"
+  echo "✅ Entity updated with @ManyToOne"
 fi
 
-# ================================================================
-# 2. Create DTO
-# ================================================================
+# ====================== CreateDTO ======================
 echo "🔧 Updating CreateDTO..."
 if ! grep -q "private $PROPERTY_TYPE $PROP_CAMEL" "$CREATE_DTO_FILE"; then
   sed -i "/private String description;/a\\
@@ -117,14 +174,11 @@ if ! grep -q "private $PROPERTY_TYPE $PROP_CAMEL" "$CREATE_DTO_FILE"; then
   echo "✅ CreateDTO updated"
 fi
 
-# ================================================================
-# 3. Response DTO
-# ================================================================
+# ====================== ResponseDTO ======================
 echo "🔧 Updating ResponseDTO..."
 
 if ! grep -q "${REF_PASCAL}ResponseDTO" "$RESPONSE_DTO_FILE"; then
-  sed -i "/import lombok.Data;/a\\
-import com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}.dto.${REF_PASCAL}ResponseDTO;" "$RESPONSE_DTO_FILE"
+  sed -i "/import lombok.Data;/a import ${REF_IMPORT_PATH}.dto.${REF_PASCAL}ResponseDTO;" "$RESPONSE_DTO_FILE"
 fi
 
 if ! grep -q "private ${REF_PASCAL}ResponseDTO ${REF_SNAKE}" "$RESPONSE_DTO_FILE"; then
@@ -140,31 +194,38 @@ fi
 echo "✅ ResponseDTO updated"
 
 # ================================================================
-# 4. SERVICE - Full Logic (Updated with Smart Naming)
+# 4. SERVICE - Full Logic (Fixed Smart Naming)
 # ================================================================
 if [ -f "$SERVICE_FILE" ]; then
   echo "🔧 Updating Service..."
 
-  # Package path for reference
-  REF_PACKAGE="com.bonnysimon.starter.features.${REF_PARENT_SNAKE:-$REF_SNAKE}.${REF_SNAKE}"
+  # Build correct package path for Reference
+  if [ -n "$REFERENCE_PARENT" ]; then
+    REF_PACKAGE="com.bonnysimon.starter.features.$REF_PARENT_SNAKE.$REF_SNAKE"
+  else
+    REF_PACKAGE="com.bonnysimon.starter.features.$REF_SNAKE"
+  fi
 
-  # Clean old imports
+  # Clean old/duplicate imports
   sed -i "/${REF_PASCAL}Entity/d" "$SERVICE_FILE"
   sed -i "/${REF_PASCAL}Repository/d" "$SERVICE_FILE"
 
-  # Add imports
+  # Add correct imports
   sed -i "/^package /a\\
 import ${REF_PACKAGE}.${REF_PASCAL}Entity;" "$SERVICE_FILE"
   sed -i "/^package /a\\
 import ${REF_PACKAGE}.${REF_PASCAL}Repository;" "$SERVICE_FILE"
 
-  # Inject repository
-  if ! grep -q "${REF_PASCAL}Repository ${REF_SNAKE}Repository" "$SERVICE_FILE"; then
+  echo "✅ Added imports for ${REF_PASCAL}Entity & Repository"
+
+  # Inject Repository (if not exists)
+  if ! grep -q "private final ${REF_PASCAL}Repository ${REF_SNAKE}Repository" "$SERVICE_FILE"; then
     sed -i "/private final ${FEATURE_PASCAL}Repository repository;/a\\
     private final ${REF_PASCAL}Repository ${REF_SNAKE}Repository;" "$SERVICE_FILE"
+    echo "✅ Injected ${REF_PASCAL}Repository"
   fi
 
-  # Add validation method
+  # Add validation method (returns Entity)
   if ! grep -q "validate${REF_PASCAL}Exists" "$SERVICE_FILE"; then
     sed -i '$i\
 \
@@ -179,16 +240,19 @@ import ${REF_PACKAGE}.${REF_PASCAL}Repository;" "$SERVICE_FILE"
                 .orElseThrow(() -> new IllegalStateException("'"${REF_PASCAL}"' not found with id: " + id));\
     }\
 ' "$SERVICE_FILE"
+    echo "✅ Added validate${REF_PASCAL}Exists() method"
   fi
 
-  # Add FK logic
+  # Add FK assignment logic (only if not exists)
   if ! grep -q "validate${REF_PASCAL}Exists(request.get${PROP_PASCAL}())" "$SERVICE_FILE"; then
     sed -i "/entity\.setDescription(request\.getDescription());/a\\
         ${REF_PASCAL}Entity ${REF_SNAKE} = validate${REF_PASCAL}Exists(request.get${PROP_PASCAL}());\\
         entity.set${REF_PASCAL}(${REF_SNAKE});" "$SERVICE_FILE"
+    echo "✅ Added foreign key validation + assignment"
+  else
+    echo "⚠️ FK logic already exists"
   fi
 
-  echo "✅ Service updated with relationship logic"
 fi
 
 echo ""
