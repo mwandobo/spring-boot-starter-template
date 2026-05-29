@@ -1,22 +1,26 @@
 #!/bin/bash
-# ===============================
-# Remove Foreign Property - Entity Only
-# ===============================
+
+# ================================================
+# REMOVE FOREIGN PROPERTY - Careful & Smart
+# ================================================
+
 FEATURE=""
-PROPERTY_NAME=""      # e.g. department_id
-REFERENCE=""          # e.g. department
+PROPERTY_NAME=""
 PARENT=""
+REFERENCE=""
+REFERENCE_PARENT=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --feature)   FEATURE="$2"; shift 2 ;;
-    --name)      PROPERTY_NAME="$2"; shift 2 ;;
-    --reference) REFERENCE="$2"; shift 2 ;;
-    --parent)    PARENT="$2"; shift 2 ;;
+    --feature)          FEATURE="$2";           shift 2 ;;
+    --name)             PROPERTY_NAME="$2";     shift 2 ;;
+    --parent)           PARENT="$2";            shift 2 ;;
+    --reference)        REFERENCE="$2";         shift 2 ;;
+    --reference-parent) REFERENCE_PARENT="$2";  shift 2 ;;
     *)
       echo "❌ Unknown parameter: $1"
-      echo "Usage: ./remove-foreign-property.sh --feature position --name department_id --reference department [--parent administration]"
-      exit 1 ;;
+      exit 1
+      ;;
   esac
 done
 
@@ -25,197 +29,90 @@ if [[ -z "$FEATURE" || -z "$PROPERTY_NAME" || -z "$REFERENCE" ]]; then
   exit 1
 fi
 
-# ====================== Naming Conventions ======================
-FEATURE_LOWER=$(echo "$FEATURE" | tr '[:upper:]' '[:lower:]')
-FEATURE_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${FEATURE_LOWER:0:1})${FEATURE_LOWER:1}"
+# ====================== SMART NAMING ======================
+to_camel_case() { echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[A-Z]/\l&/'; }
+to_snake_case() { echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g' | sed 's/^_//;s/_$//'; }
+to_pascal_case() { echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'; }
 
-REF_LOWER=$(echo "$REFERENCE" | tr '[:upper:]' '[:lower:]')
-REF_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${REF_LOWER:0:1})${REF_LOWER:1}"
+FEATURE_PASCAL=$(to_pascal_case "$FEATURE")
+FEATURE_SNAKE=$(to_snake_case "$FEATURE")
 
-# Support for nested features (--parent)
+PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")
+PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")
+
+REF_PASCAL=$(to_pascal_case "$REFERENCE")
+REF_SNAKE=$(to_snake_case "$REFERENCE")
+
+PARENT_SNAKE=$( [ -n "$PARENT" ] && to_snake_case "$PARENT" || echo "" )
+REF_PARENT_SNAKE=$( [ -n "$REFERENCE_PARENT" ] && to_snake_case "$REFERENCE_PARENT" || echo "" )
+
 if [ -n "$PARENT" ]; then
-  PARENT_LOWER=$(echo "$PARENT" | tr '[:upper:]' '[:lower:]')
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_LOWER/$FEATURE_LOWER"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
 else
-  BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_LOWER"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
 fi
 
-ENTITY_FILE="$BASE_DIR/${FEATURE_UPPER}Entity.java"
+ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
+CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
+RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
+SERVICE_FILE="$BASE_DIR/${FEATURE_PASCAL}Service.java"
 
-echo "🧹 Removing foreign relationship to '$REF_UPPER' from ${FEATURE_UPPER}Entity"
+echo "=================================================="
+echo "🧹 REMOVE FOREIGN PROPERTY"
+echo "=================================================="
+echo "Feature    : $FEATURE → $FEATURE_PASCAL"
+echo "Property   : $PROPERTY_NAME → $PROP_CAMEL"
+echo "Reference  : $REFERENCE → $REF_PASCAL"
+echo "=================================================="
 
-if [ ! -f "$ENTITY_FILE" ]; then
-  echo "❌ Entity file not found: $ENTITY_FILE"
-  exit 1
-fi
+# ====================== 1. ENTITY ======================
+echo "🔧 Cleaning Entity..."
 
-# ====================== Remove FK from Entity ======================
-echo " → Processing Entity..."
+# Remove the entire @ManyToOne block + field (more robust)
+sed -i "/@ManyToOne/,/private .*${REF_PASCAL}Entity ${REF_SNAKE};/d" "$ENTITY_FILE"
 
-# Robust removal using awk - removes @ManyToOne block cleanly
-awk -v ref="${REF_UPPER}" -v field="${REF_LOWER}" '
-  BEGIN { skip = 0 }
-  # Start skipping when we find @ManyToOne
-  /@ManyToOne/ { skip = 1; next }
-  # End skipping after the private field line
-  skip && $0 ~ "private " ref "Entity " field ";" { skip = 0; next }
-  # Skip all lines while inside the block
-  skip { next }
-  # Print everything else
-  { print }
-' "$ENTITY_FILE" > "$ENTITY_FILE.tmp" && mv "$ENTITY_FILE.tmp" "$ENTITY_FILE"
+# Extra safety removals
+sed -i "/${REF_PASCAL}Entity ${REF_SNAKE}/d" "$ENTITY_FILE"
+sed -i "/@JoinColumn(name = \"${PROP_SNAKE}\")/d" "$ENTITY_FILE"
+sed -i "/@ManyToOne(fetch = FetchType.LAZY)/d" "$ENTITY_FILE"
 
-# Remove import for the referenced Entity
-sed -i "/${REF_UPPER}Entity/d" "$ENTITY_FILE"
-
-# Optional: Remove jakarta.persistence.* if it might no longer be needed
-# sed -i "/import jakarta.persistence\.\*;/d" "$ENTITY_FILE"
-
-# ================================================================
-# 2. Create DTO - Remove the ID field (e.g. department_id)
-# ================================================================
-CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_UPPER}DTO.java"
-
-if [ -f "$CREATE_DTO_FILE" ]; then
-  echo " → Processing Create${FEATURE_UPPER}DTO..."
-
-  sed -i "/private .* $PROPERTY_NAME;/d" "$CREATE_DTO_FILE"
-
-  # Clean up extra blank lines
-  sed -i '/^$/N;/^\n$/D' "$CREATE_DTO_FILE"
-
-  echo "✅ CreateDTO cleaned (removed $PROPERTY_NAME)"
-else
-  echo "⚠️  CreateDTO file not found (skipped)"
-fi
-
-# ================================================================
-# 3. Response DTO - Remove nested DTO, name field and mappings
-# ================================================================
-RESPONSE_DTO_FILE="$BASE_DIR/dto/${FEATURE_UPPER}ResponseDTO.java"
-
-if [ -f "$RESPONSE_DTO_FILE" ]; then
-  echo " → Processing ${FEATURE_UPPER}ResponseDTO..."
-
-  # Remove import
-  sed -i "/${REF_UPPER}ResponseDTO/d" "$RESPONSE_DTO_FILE"
-
-  # Remove fields
-  sed -i "/private ${REF_UPPER}ResponseDTO ${REF_LOWER};/d" "$RESPONSE_DTO_FILE"
-  sed -i "/private String ${REF_LOWER}Name;/d" "$RESPONSE_DTO_FILE"
-
-  # Remove mapping lines in fromEntity() method
-  sed -i "/set${REF_UPPER}(${FEATURE_LOWER}\.get${REF_UPPER}()/d" "$RESPONSE_DTO_FILE"
-  sed -i "/set${REF_UPPER}Name(/d" "$RESPONSE_DTO_FILE"
-
-  # Clean up extra blank lines
-  sed -i '/^$/N;/^\n$/D' "$RESPONSE_DTO_FILE"
-
-  echo "✅ ResponseDTO cleaned (removed nested ${REF_UPPER}ResponseDTO and ${REF_LOWER}Name)"
-else
-  echo "⚠️  ResponseDTO file not found (skipped)"
-fi
-
-# Clean up extra blank lines
+# Clean extra blank lines
 sed -i '/^$/N;/^\n$/D' "$ENTITY_FILE"
 
+echo "✅ Entity cleaned"
 
-## ================================================================
-## 4. SERVICE - Remove repository, validation method & logic
-## ================================================================
-#SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
-#
-#if [ -f "$SERVICE_FILE" ]; then
-#  echo " → Processing ${FEATURE_UPPER}Service..."
-#
-#  # ------------------- Remove Imports -------------------
-#  sed -i "/${REF_UPPER}Entity/d" "$SERVICE_FILE"
-#  sed -i "/${REF_UPPER}Repository/d" "$SERVICE_FILE"
-#
-#  # ------------------- Remove Injected Repository -------------------
-#  sed -i "/private final ${REF_UPPER}Repository ${REF_LOWER}Repository;/d" "$SERVICE_FILE"
-#
-#  # ------------------- Remove validateXXXExists Method (Robust) -------------------
-#  echo "   → Removing validate${REF_UPPER}Exists method..."
-#
-#  # Multiple patterns to catch broken or normal validation methods
-#  sed -i "/private ${REF_UPPER}Entity validate${REF_UPPER}Exists/,/^[[:space:]]*}/d" "$SERVICE_FILE"
-#  sed -i "/validate${REF_UPPER}Exists(Long id)/,/^[[:space:]]*}/d" "$SERVICE_FILE"
-#  sed -i "/if (id == null)/,/orElseThrow.*${REF_UPPER}/d" "$SERVICE_FILE"
-#
-#  # Extra safety passes
-#  sed -i "/validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
-#
-#  # ------------------- Remove Usage in create/update -------------------
-#  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
-#  sed -i "/entity\.set${REF_UPPER}(${REF_LOWER});/d" "$SERVICE_FILE"
-#
-#  # ------------------- Remove the ONE extra trailing closing brace -------------------
-#  echo "   → Removing extra trailing closing brace..."
-#
-#  # This safely removes only the very last } in the file if it's on its own line (extra class closing)
-#  sed -i '$s/^[[:space:]]*}[[:space:]]*$//' "$SERVICE_FILE"
-#
-#  # ------------------- Final Cleanup -------------------
-#  sed -i '/^$/N;/^\n$/D' "$SERVICE_FILE"
-#
-#  echo "✅ Service cleaned successfully"
-#else
-#  echo "⚠️  Service file not found (skipped)"
-#fi
-
-
-# ================================================================
-# 4. SERVICE - Remove repository, validation method & logic
-# ================================================================
-SERVICE_FILE="$BASE_DIR/${FEATURE_UPPER}Service.java"
-
-if [ -f "$SERVICE_FILE" ]; then
-  echo " → Processing ${FEATURE_UPPER}Service..."
-
-  # ------------------- Remove Imports -------------------
-  sed -i "/${REF_UPPER}Entity/d" "$SERVICE_FILE"
-  sed -i "/${REF_UPPER}Repository/d" "$SERVICE_FILE"
-
-  # ------------------- Remove Injected Repository -------------------
-  sed -i "/private final ${REF_UPPER}Repository ${REF_LOWER}Repository;/d" "$SERVICE_FILE"
-
-  # ------------------- Remove validateXXXExists Method (Robust) -------------------
-  echo "   → Removing validate${REF_UPPER}Exists method..."
-
-  # Multiple patterns to catch broken or normal validation methods
-  sed -i "/private ${REF_UPPER}Entity validate${REF_UPPER}Exists/,/^[[:space:]]*}/d" "$SERVICE_FILE"
-  sed -i "/validate${REF_UPPER}Exists(Long id)/,/^[[:space:]]*}/d" "$SERVICE_FILE"
-  sed -i "/if (id == null)/,/orElseThrow.*${REF_UPPER}/d" "$SERVICE_FILE"
-
-  # Extra safety passes
-  sed -i "/validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
-
-  # ------------------- Remove Usage in create/update -------------------
-  sed -i "/${REF_LOWER}Entity ${REF_LOWER} = validate${REF_UPPER}Exists/d" "$SERVICE_FILE"
-  sed -i "/entity\.set${REF_UPPER}(${REF_LOWER});/d" "$SERVICE_FILE"
-
-  # ------------------- Remove the ONE extra trailing closing brace -------------------
-  echo "   → Removing extra trailing closing brace..."
-  sed -i '$s/^[[:space:]]*}[[:space:]]*$//' "$SERVICE_FILE"
-
-  # ------------------- Final Cleanup: Remove extra empty lines + trim last } -------------------
-  echo "   → Cleaning trailing empty lines and spaces..."
-
-  # Remove all trailing empty lines
-  sed -i -e :a -e '/^\n*$/{$d;N;ba}' "$SERVICE_FILE"
-
-  # Trim spaces before the final class closing }
-  sed -i '$s/^[[:space:]]*\(}\)[[:space:]]*$/\1/' "$SERVICE_FILE"
-
-  # One final blank line cleanup
-  sed -i '/^$/N;/^\n$/D' "$SERVICE_FILE"
-
-  echo "✅ Service cleaned successfully"
-else
-  echo "⚠️  Service file not found (skipped)"
+# ====================== 2. CreateDTO ======================
+echo "🔧 Cleaning CreateDTO..."
+if [ -f "$CREATE_DTO_FILE" ]; then
+  sed -i "/private .* $PROP_CAMEL;/d" "$CREATE_DTO_FILE"
+  sed -i '/^$/N;/^\n$/D' "$CREATE_DTO_FILE"
+  echo "✅ CreateDTO cleaned"
 fi
 
+# ====================== 3. ResponseDTO ======================
+echo "🔧 Cleaning ResponseDTO..."
+if [ -f "$RESPONSE_DTO_FILE" ]; then
 
+  # Remove import - more specific
+  sed -i "/import .*${REF_PASCAL}ResponseDTO/d" "$RESPONSE_DTO_FILE"
 
-echo "✅ Entity successfully cleaned (${REF_UPPER} relationship removed)"
+  # Remove fields - only lines starting with private
+  sed -i "/^[[:space:]]*private ${REF_PASCAL}ResponseDTO ${REF_SNAKE};/d" "$RESPONSE_DTO_FILE"
+  sed -i "/^[[:space:]]*private String ${REF_SNAKE}Name;/d" "$RESPONSE_DTO_FILE"
+
+  # Remove mapping lines inside fromEntity method
+  sed -i "/dto\.set${REF_PASCAL}(/d" "$RESPONSE_DTO_FILE"
+  sed -i "/dto\.set${REF_PASCAL}Name(/d" "$RESPONSE_DTO_FILE"
+
+  # Clean extra blank lines
+  sed -i '/^$/N;/^\n$/D' "$RESPONSE_DTO_FILE"
+
+  echo "✅ ResponseDTO cleaned (removed ${REF_PASCAL}ResponseDTO fields)"
+fi
+
+echo ""
+echo "🎉 SUCCESS: Foreign key '$PROP_CAMEL' removed from '$FEATURE_PASCAL'"
+echo "DB Column : $PROP_SNAKE"
+echo ""
+echo "⚠️ Run this SQL:"
+echo "   ALTER TABLE ${FEATURE_PASCAL^^} DROP COLUMN ${PROP_SNAKE^^};"
