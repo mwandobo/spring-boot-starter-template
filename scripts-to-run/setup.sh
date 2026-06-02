@@ -14,6 +14,15 @@ fi
 NEW_PACKAGE=$1
 MAIN_CLASS=$2
 
+# ====================== .path-to-packages Handling ======================
+PATH_FILE=".path-to-packages"
+
+echo "📁 Managing package path file: $PATH_FILE"
+
+# Create or update .path-to-packages (in project root)
+echo "$NEW_PACKAGE" > "$PATH_FILE"
+echo "✅ Package name saved to .path-to-packages"
+
 # === DYNAMIC DETECTION OF OLD PACKAGE AND MAIN CLASS ===
 echo "🔍 Detecting current package and main class..."
 
