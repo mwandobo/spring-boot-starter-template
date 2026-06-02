@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ================================================
-# Spring Boot Feature Generator - Smart Naming + Enhanced Logging
+# Spring Boot Feature Generator - FULLY DYNAMIC
 # ================================================
 
 FEATURE_NAME=""
@@ -24,7 +24,6 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --help|-h)
       echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural s|es|ies] [--parent <parent>]"
-      echo "Example: ./generate-feature.sh --name \"new user\" --parent newManagement"
       exit 0
       ;;
     *)
@@ -38,6 +37,23 @@ if [ -z "$FEATURE_NAME" ]; then
   echo "❌ Feature name is required"
   exit 1
 fi
+
+# ====================== READ BASE PACKAGE (NO HARDCODING) ======================
+PATH_FILE=".path-to-packages"
+
+if [ ! -f "$PATH_FILE" ]; then
+  echo "❌ Error: $PATH_FILE not found!"
+  echo "   Run ./setup.sh first to set your package name."
+  exit 1
+fi
+
+BASE_PACKAGE=$(cat "$PATH_FILE" | tr -d ' \t\r\n')
+if [ -z "$BASE_PACKAGE" ]; then
+  echo "❌ Error: Package name in $PATH_FILE is empty!"
+  exit 1
+fi
+
+echo "📦 Using base package: $BASE_PACKAGE"
 
 # ====================== SMART NAMING ======================
 to_pascal_case() {
@@ -57,77 +73,44 @@ FEATURE_PASCAL=$(to_pascal_case "$RAW_INPUT")
 FEATURE_SNAKE=$(to_snake_case "$RAW_INPUT")
 FEATURE_KEBAB=$(to_kebab_case "$RAW_INPUT")
 
-# Parent Resolution
+# Parent handling
 if [ -n "$PARENT" ]; then
-    PARENT_RAW="$PARENT"
     PARENT_SNAKE=$(to_snake_case "$PARENT")
-    PARENT_PASCAL=$(to_pascal_case "$PARENT")
+    FULL_PACKAGE="$BASE_PACKAGE.features.$PARENT_SNAKE.$FEATURE_SNAKE"
 else
-    PARENT_SNAKE=""
-    PARENT_PASCAL=""
+    FULL_PACKAGE="$BASE_PACKAGE.features.$FEATURE_SNAKE"
 fi
 
-# Plural handling for API Route only
-if [ -n "$PLURAL_SUFFIX" ]; then
-    case "$PLURAL_SUFFIX" in
-        s)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
-        es)  FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es" ;;
-        ies)
-            if [[ "$FEATURE_KEBAB" == *y ]]; then
-                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB%y}ies"
-            else
-                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es"
-            fi ;;
-        *)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
-    esac
-else
-    FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s"
-fi
-
-# ====================== ENHANCED LOGGING ======================
-echo "=================================================="
-echo "🚀 Feature Generation Started"
-echo "=================================================="
-echo "Raw Input       : $RAW_INPUT"
-echo "Feature Name    : $FEATURE_PASCAL"
-echo "Folder Name     : $FEATURE_SNAKE"
-if [ -n "$PARENT" ]; then
-echo "Parent Raw      : $PARENT_RAW"
-echo "Parent Resolved : $PARENT_PASCAL ($PARENT_SNAKE)"
-echo "Base Location   : features/$PARENT_SNAKE/$FEATURE_SNAKE"
-else
-echo "Parent          : (None - Root level)"
-fi
-echo "API Route       : /api/v1/${FEATURE_PLURAL_KEBAB}"
-echo "Plural Strategy : ${PLURAL_SUFFIX:-default (s)}"
-echo "=================================================="
-
-# ====================== SETUP PATHS ======================
-BASE_PACKAGE="com.bonnysimon.starter.features"
-if [ -n "$PARENT" ]; then
-    BASE_PACKAGE="$BASE_PACKAGE.$PARENT_SNAKE"
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-else
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-fi
+BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
 
 mkdir -p "$BASE_DIR/dto"
 
-echo "📁 Creating files in: $BASE_DIR"
+# ====================== DYNAMIC CORE PACKAGES ======================
+CORE_DTO="$BASE_PACKAGE.core.dto"
+CORE_ENTITY="$BASE_PACKAGE.core.entity"
+CORE_SERVICES="$BASE_PACKAGE.core.services"
+APPROVAL_UTIL="$BASE_PACKAGE.features.approval.util"
+APPROVAL_DTO="$BASE_PACKAGE.features.approval.dto"
+
+# ====================== LOGGING ======================
+echo "=================================================="
+echo "🚀 Feature Generation Started"
+echo "=================================================="
+echo "Base Package : $BASE_PACKAGE"
+echo "Feature      : $FEATURE_PASCAL"
+echo "Full Package : $FULL_PACKAGE"
+echo "Location     : $BASE_DIR"
+echo "API Route    : /api/v1/${FEATURE_PLURAL_KEBAB}"
+echo "=================================================="
 echo ""
-
-# ... [Rest of your script remains the same - Entity, Repository, DTOs, Service, Controller]
-
-# (Keep the rest of your generation code unchanged from here onwards)
-echo "🚀 Creating feature: $FEATURE_PASCAL"
 
 # -------------------------------
 # Entity
 # -------------------------------
 cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Entity.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE;
+package $FULL_PACKAGE;
 
-import com.bonnysimon.starter.core.entity.BaseEntity;
+import $CORE_ENTITY.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -152,7 +135,7 @@ EOF
 # Repository
 # -------------------------------
 cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Repository.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE;
+package $FULL_PACKAGE;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -162,16 +145,15 @@ import java.util.Optional;
 
 public interface ${FEATURE_PASCAL}Repository extends JpaRepository<${FEATURE_PASCAL}Entity, Long> {
     Optional<${FEATURE_PASCAL}Entity> findByName(String name);
-
     Page<${FEATURE_PASCAL}Entity> findAll(Specification<${FEATURE_PASCAL}Entity> spec, Pageable pageable);
 }
 EOF
 
 # -------------------------------
-# DTO - Create
+# DTOs
 # -------------------------------
 cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE.dto;
+package $FULL_PACKAGE.dto;
 
 import lombok.Data;
 
@@ -182,13 +164,10 @@ public class Create${FEATURE_PASCAL}DTO {
 }
 EOF
 
-# -------------------------------
-# DTO - Response
-# -------------------------------
 cat <<EOF > "$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE.dto;
+package $FULL_PACKAGE.dto;
 
-import $BASE_PACKAGE.$FEATURE_SNAKE.${FEATURE_PASCAL}Entity;
+import $FULL_PACKAGE.${FEATURE_PASCAL}Entity;
 import lombok.Data;
 
 @Data
@@ -216,22 +195,22 @@ EOF
 # Service
 # -------------------------------
 cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Service.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE;
+package $FULL_PACKAGE;
 
-import com.bonnysimon.starter.core.dto.PaginationRequest;
-import $BASE_PACKAGE.$FEATURE_SNAKE.dto.Create${FEATURE_PASCAL}DTO;
-import $BASE_PACKAGE.$FEATURE_SNAKE.dto.${FEATURE_PASCAL}ResponseDTO;
-import $BASE_PACKAGE.$FEATURE_SNAKE.${FEATURE_PASCAL}Entity;
+import $CORE_DTO.PaginationRequest;
+import $FULL_PACKAGE.dto.Create${FEATURE_PASCAL}DTO;
+import $FULL_PACKAGE.dto.${FEATURE_PASCAL}ResponseDTO;
+import $FULL_PACKAGE.${FEATURE_PASCAL}Entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.bonnysimon.starter.core.dto.PagedResponse;
-import com.bonnysimon.starter.core.dto.PaginationDto;
-import com.bonnysimon.starter.features.approval.util.ApprovalStatusUtil;
-import com.bonnysimon.starter.core.services.CurrentUserService;
-import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
+import $CORE_DTO.PagedResponse;
+import $CORE_DTO.PaginationDto;
+import $APPROVAL_UTIL.ApprovalStatusUtil;
+import $CORE_SERVICES.CurrentUserService;
+import $APPROVAL_DTO.ApprovalAwareDTO;
 import java.util.*;
 
 @Service
@@ -243,7 +222,6 @@ public class ${FEATURE_PASCAL}Service {
 
     public PagedResponse<${FEATURE_PASCAL}ResponseDTO> findAll(PaginationRequest pagination, String search) {
         Specification<${FEATURE_PASCAL}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
-        // Add search logic here if needed
 
         Page<${FEATURE_PASCAL}Entity> page = repository.findAll(spec, pagination.toPageable());
 
@@ -308,14 +286,14 @@ EOF
 # Controller
 # -------------------------------
 cat <<EOF > "$BASE_DIR/${FEATURE_PASCAL}Controller.java"
-package $BASE_PACKAGE.$FEATURE_SNAKE;
+package $FULL_PACKAGE;
 
-import com.bonnysimon.starter.core.dto.ApiResponse;
-import com.bonnysimon.starter.core.dto.PaginationRequest;
-import $BASE_PACKAGE.$FEATURE_SNAKE.dto.Create${FEATURE_PASCAL}DTO;
-import $BASE_PACKAGE.$FEATURE_SNAKE.dto.${FEATURE_PASCAL}ResponseDTO;
-import com.bonnysimon.starter.core.dto.PagedResponse;
-import com.bonnysimon.starter.features.approval.dto.ApprovalAwareDTO;
+import $CORE_DTO.ApiResponse;
+import $CORE_DTO.PaginationRequest;
+import $FULL_PACKAGE.dto.Create${FEATURE_PASCAL}DTO;
+import $FULL_PACKAGE.dto.${FEATURE_PASCAL}ResponseDTO;
+import $CORE_DTO.PagedResponse;
+import $APPROVAL_DTO.ApprovalAwareDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -359,4 +337,4 @@ EOF
 
 echo "✅ Feature '$FEATURE_PASCAL' created successfully!"
 echo "   Location : $BASE_DIR"
-echo "   API Route: /api/v1/${FEATURE_PLURAL_KEBAB}"
+echo "   Package  : $FULL_PACKAGE"
