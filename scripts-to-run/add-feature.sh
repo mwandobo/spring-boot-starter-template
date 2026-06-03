@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ================================================
-# Spring Boot Feature Generator - FULLY DYNAMIC
+# Spring Boot Feature Generator - Smart Naming + Enhanced Logging
 # ================================================
 
 FEATURE_NAME=""
@@ -24,6 +24,7 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --help|-h)
       echo "Usage: ./generate-feature.sh --name <FeatureName> [--plural s|es|ies] [--parent <parent>]"
+      echo "Example: ./generate-feature.sh --name \"new user\" --parent newManagement"
       exit 0
       ;;
     *)
@@ -32,6 +33,7 @@ while [[ "$#" -gt 0 ]]; do
       ;;
   esac
 done
+
 
 if [ -z "$FEATURE_NAME" ]; then
   echo "❌ Feature name is required"
@@ -55,6 +57,13 @@ fi
 
 echo "📦 Using base package: $BASE_PACKAGE"
 
+
+
+
+
+
+
+
 # ====================== SMART NAMING ======================
 to_pascal_case() {
     echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
@@ -73,17 +82,41 @@ FEATURE_PASCAL=$(to_pascal_case "$RAW_INPUT")
 FEATURE_SNAKE=$(to_snake_case "$RAW_INPUT")
 FEATURE_KEBAB=$(to_kebab_case "$RAW_INPUT")
 
-# Parent handling
+# Parent Resolution
 if [ -n "$PARENT" ]; then
+    PARENT_RAW="$PARENT"
     PARENT_SNAKE=$(to_snake_case "$PARENT")
+    PARENT_PASCAL=$(to_pascal_case "$PARENT")
     FULL_PACKAGE="$BASE_PACKAGE.features.$PARENT_SNAKE.$FEATURE_SNAKE"
 else
     FULL_PACKAGE="$BASE_PACKAGE.features.$FEATURE_SNAKE"
+    PARENT_SNAKE=""
+    PARENT_PASCAL=""
 fi
 
-BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
+# Plural handling for API Route only
+if [ -n "$PLURAL_SUFFIX" ]; then
+    case "$PLURAL_SUFFIX" in
+        s)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
+        es)  FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es" ;;
+        ies)
+            if [[ "$FEATURE_KEBAB" == *y ]]; then
+                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB%y}ies"
+            else
+                FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}es"
+            fi ;;
+        *)   FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s" ;;
+    esac
+else
+    FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s"
+fi
 
-mkdir -p "$BASE_DIR/dto"
+if [ -n "$PARENT" ]; then
+#    BASE_PACKAGE="$BASE_PACKAGE.$PARENT_SNAKE"
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
+else
+    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
+fi
 
 # ====================== DYNAMIC CORE PACKAGES ======================
 CORE_DTO="$BASE_PACKAGE.core.dto"
@@ -92,17 +125,42 @@ CORE_SERVICES="$BASE_PACKAGE.core.services"
 APPROVAL_UTIL="$BASE_PACKAGE.features.approval.util"
 APPROVAL_DTO="$BASE_PACKAGE.features.approval.dto"
 
-# ====================== LOGGING ======================
+# ====================== ENHANCED LOGGING ======================
 echo "=================================================="
 echo "🚀 Feature Generation Started"
 echo "=================================================="
+echo "Raw Input       : $RAW_INPUT"
 echo "Base Package : $BASE_PACKAGE"
 echo "Feature      : $FEATURE_PASCAL"
 echo "Full Package : $FULL_PACKAGE"
+echo "Folder Name     : $FEATURE_SNAKE"
+if [ -n "$PARENT" ]; then
+echo "Parent Raw      : $PARENT_RAW"
+echo "Parent Resolved : $PARENT_PASCAL ($PARENT_SNAKE)"
 echo "Location     : $BASE_DIR"
 echo "API Route    : /api/v1/${FEATURE_PLURAL_KEBAB}"
+else
+echo "Parent          : (None - Root level)"
+fi
+echo "API Route       : /api/v1/${FEATURE_PLURAL_KEBAB}"
+echo "Plural Strategy : ${PLURAL_SUFFIX:-default (s)}"
 echo "=================================================="
+
+# ====================== SETUP PATHS ======================
+
+
+BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
+
+mkdir -p "$BASE_DIR/dto"
+
+
+echo "📁 Creating files in: $BASE_DIR"
 echo ""
+
+# ... [Rest of your script remains the same - Entity, Repository, DTOs, Service, Controller]
+
+# (Keep the rest of your generation code unchanged from here onwards)
+echo "🚀 Creating feature: $FEATURE_PASCAL"
 
 # -------------------------------
 # Entity
@@ -145,12 +203,13 @@ import java.util.Optional;
 
 public interface ${FEATURE_PASCAL}Repository extends JpaRepository<${FEATURE_PASCAL}Entity, Long> {
     Optional<${FEATURE_PASCAL}Entity> findByName(String name);
+
     Page<${FEATURE_PASCAL}Entity> findAll(Specification<${FEATURE_PASCAL}Entity> spec, Pageable pageable);
 }
 EOF
 
 # -------------------------------
-# DTOs
+# DTO - Create
 # -------------------------------
 cat <<EOF > "$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
 package $FULL_PACKAGE.dto;
@@ -164,6 +223,9 @@ public class Create${FEATURE_PASCAL}DTO {
 }
 EOF
 
+# -------------------------------
+# DTO - Response
+# -------------------------------
 cat <<EOF > "$BASE_DIR/dto/${FEATURE_PASCAL}ResponseDTO.java"
 package $FULL_PACKAGE.dto;
 
@@ -222,6 +284,7 @@ public class ${FEATURE_PASCAL}Service {
 
     public PagedResponse<${FEATURE_PASCAL}ResponseDTO> findAll(PaginationRequest pagination, String search) {
         Specification<${FEATURE_PASCAL}Entity> spec = (root, query, cb) -> cb.isFalse(root.get("deleted"));
+        // Add search logic here if needed
 
         Page<${FEATURE_PASCAL}Entity> page = repository.findAll(spec, pagination.toPageable());
 
@@ -337,4 +400,4 @@ EOF
 
 echo "✅ Feature '$FEATURE_PASCAL' created successfully!"
 echo "   Location : $BASE_DIR"
-echo "   Package  : $FULL_PACKAGE"
+echo "   API Route: /api/v1/${FEATURE_PLURAL_KEBAB}"
