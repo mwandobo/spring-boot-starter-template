@@ -49,11 +49,33 @@ REF_SNAKE=$(to_snake_case "$REFERENCE")
 PARENT_SNAKE=$( [ -n "$PARENT" ] && to_snake_case "$PARENT" || echo "" )
 REF_PARENT_SNAKE=$( [ -n "$REFERENCE_PARENT" ] && to_snake_case "$REFERENCE_PARENT" || echo "" )
 
-if [ -n "$PARENT" ]; then
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-else
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
+# ====================== READ BASE PACKAGE (NO HARDCODING) ======================
+PATH_FILE=".path-to-packages"
+
+if [ ! -f "$PATH_FILE" ]; then
+  echo "❌ Error: $PATH_FILE not found!"
+  echo "   Run ./setup.sh first to set your package name."
+  exit 1
 fi
+
+BASE_PACKAGE=$(cat "$PATH_FILE" | tr -d ' \t\r\n')
+if [ -z "$BASE_PACKAGE" ]; then
+  echo "❌ Error: Package name in $PATH_FILE is empty!"
+  exit 1
+fi
+
+echo "📦 Using base package: $BASE_PACKAGE"
+
+# Parent Resolution
+if [ -n "$PARENT" ]; then
+    PARENT_SNAKE=$(to_snake_case "$PARENT")
+    FULL_PACKAGE="$BASE_PACKAGE.features.$PARENT_SNAKE.$FEATURE_SNAKE"
+else
+    FULL_PACKAGE="$BASE_PACKAGE.features.$FEATURE_SNAKE"
+    PARENT_SNAKE=""
+fi
+
+BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
 
 ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
 CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
@@ -66,6 +88,8 @@ echo "🚀 ADD RELATIONSHIP PROPERTY STARTED"
 echo "=================================================="
 echo "Feature         : $FEATURE → $FEATURE_PASCAL ($FEATURE_SNAKE)"
 if [ -n "$PARENT" ]; then echo "Feature Parent  : $PARENT → $PARENT_SNAKE"; fi
+echo "BASE_DIR        : $BASE_DIR"
+echo "BASE_PACKAGE    : $BASE_PACKAGE"
 echo "Property        : $PROPERTY_NAME → $PROP_CAMEL ($PROP_SNAKE)"
 echo "Reference       : $REFERENCE → $REF_PASCAL ($REF_SNAKE)"
 if [ -n "$REFERENCE_PARENT" ]; then echo "Ref Parent      : $REFERENCE_PARENT → $REF_PARENT_SNAKE"; fi
@@ -82,9 +106,9 @@ done
 echo "🔧 Updating Entity..."
 if ! grep -q "private ${REF_PASCAL}Entity ${REF_SNAKE}" "$ENTITY_FILE"; then
   if [ -n "$REFERENCE_PARENT" ]; then
-    REF_IMPORT="com.bonnysimon.starter.features.$REF_PARENT_SNAKE.$REF_SNAKE"
+    REF_IMPORT="$BASE_PACKAGE.features.$REF_PARENT_SNAKE.$REF_SNAKE"
   else
-    REF_IMPORT="com.bonnysimon.starter.features.$REF_SNAKE"
+    REF_IMPORT="$BASE_PACKAGE.starter.features.$REF_SNAKE"
   fi
 
   sed -i "/import lombok.Data;/a import ${REF_IMPORT}.${REF_PASCAL}Entity;" "$ENTITY_FILE"
@@ -115,9 +139,9 @@ fi
 # ====================== ResponseDTO ======================
 echo "🔧 Updating ResponseDTO..."
 if [ -n "$REFERENCE_PARENT" ]; then
-  REF_DTO_IMPORT="com.bonnysimon.starter.features.$REF_PARENT_SNAKE.$REF_SNAKE.dto"
+  REF_DTO_IMPORT="$BASE_PACKAGE.features.$REF_PARENT_SNAKE.$REF_SNAKE.dto"
 else
-  REF_DTO_IMPORT="com.bonnysimon.starter.features.$REF_SNAKE.dto"
+  REF_DTO_IMPORT="$BASE_PACKAGE.features.$REF_SNAKE.dto"
 fi
 
 sed -i "/import lombok.Data;/a import ${REF_DTO_IMPORT}.${REF_PASCAL}ResponseDTO;" "$RESPONSE_DTO_FILE"
@@ -135,9 +159,9 @@ if [ -f "$SERVICE_FILE" ]; then
   echo "🔧 Updating Service..."
 
   if [ -n "$REFERENCE_PARENT" ]; then
-    REF_PACKAGE="com.bonnysimon.starter.features.$REF_PARENT_SNAKE.$REF_SNAKE"
+    REF_PACKAGE="$BASE_PACKAGE.features.$REF_PARENT_SNAKE.$REF_SNAKE"
   else
-    REF_PACKAGE="com.bonnysimon.starter.features.$REF_SNAKE"
+    REF_PACKAGE="$BASE_PACKAGE.features.$REF_SNAKE"
   fi
 
   # Add imports

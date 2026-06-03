@@ -48,21 +48,6 @@ PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")
 PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")
 PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")
 
-#if [ -n "$PARENT" ]; then
-#    PARENT_SNAKE=$(to_snake_case "$PARENT")
-#    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-#else
-#    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-#fi
-
-#if [ -n "$PARENT" ]; then
-##    BASE_PACKAGE="$BASE_PACKAGE.$PARENT_SNAKE"
-#    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-#else
-#    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-#fi
-
-
 # ====================== READ BASE PACKAGE (NO HARDCODING) ======================
 PATH_FILE=".path-to-packages"
 
