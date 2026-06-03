@@ -57,13 +57,6 @@ fi
 
 echo "📦 Using base package: $BASE_PACKAGE"
 
-
-
-
-
-
-
-
 # ====================== SMART NAMING ======================
 to_pascal_case() {
     echo "$1" | sed -E 's/[_ -]+(.)/\U\1/g' | sed 's/^[a-z]/\U&/'
@@ -111,13 +104,6 @@ else
     FEATURE_PLURAL_KEBAB="${FEATURE_KEBAB}s"
 fi
 
-if [ -n "$PARENT" ]; then
-#    BASE_PACKAGE="$BASE_PACKAGE.$PARENT_SNAKE"
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-else
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-fi
-
 # ====================== DYNAMIC CORE PACKAGES ======================
 CORE_DTO="$BASE_PACKAGE.core.dto"
 CORE_ENTITY="$BASE_PACKAGE.core.entity"
@@ -148,11 +134,9 @@ echo "=================================================="
 
 # ====================== SETUP PATHS ======================
 
-
 BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
 
 mkdir -p "$BASE_DIR/dto"
-
 
 echo "📁 Creating files in: $BASE_DIR"
 echo ""
