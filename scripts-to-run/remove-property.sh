@@ -61,12 +61,33 @@ PROP_CAMEL=$(to_camel_case "$PROPERTY_NAME")
 PROP_SNAKE=$(to_snake_case "$PROPERTY_NAME")
 PROP_PASCAL=$(to_pascal_case "$PROPERTY_NAME")
 
+# ====================== READ BASE PACKAGE (NO HARDCODING) ======================
+PATH_FILE=".path-to-packages"
+
+if [ ! -f "$PATH_FILE" ]; then
+  echo "❌ Error: $PATH_FILE not found!"
+  echo "   Run ./setup.sh first to set your package name."
+  exit 1
+fi
+
+BASE_PACKAGE=$(cat "$PATH_FILE" | tr -d ' \t\r\n')
+if [ -z "$BASE_PACKAGE" ]; then
+  echo "❌ Error: Package name in $PATH_FILE is empty!"
+  exit 1
+fi
+
+echo "📦 Using base package: $BASE_PACKAGE"
+
+# Parent Resolution
 if [ -n "$PARENT" ]; then
     PARENT_SNAKE=$(to_snake_case "$PARENT")
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
+    FULL_PACKAGE="$BASE_PACKAGE.features.$PARENT_SNAKE.$FEATURE_SNAKE"
 else
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
+    FULL_PACKAGE="$BASE_PACKAGE.features.$FEATURE_SNAKE"
+    PARENT_SNAKE=""
 fi
+
+BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
 
 ENTITY_FILE="$BASE_DIR/${FEATURE_PASCAL}Entity.java"
 CREATE_DTO_FILE="$BASE_DIR/dto/Create${FEATURE_PASCAL}DTO.java"
