@@ -47,16 +47,33 @@ RAW_FEATURE="$FEATURE"
 FEATURE_PASCAL=$(to_pascal_case "$RAW_FEATURE")
 FEATURE_SNAKE=$(to_snake_case "$RAW_FEATURE")
 
-if [ -n "$PARENT" ]; then
-    RAW_PARENT="$PARENT"
-    PARENT_SNAKE=$(to_snake_case "$RAW_PARENT")
-    PARENT_PASCAL=$(to_pascal_case "$RAW_PARENT")
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$PARENT_SNAKE/$FEATURE_SNAKE"
-    FEATURE_PATH="$PARENT_SNAKE/$FEATURE_SNAKE"
-else
-    BASE_DIR="src/main/java/com/bonnysimon/starter/features/$FEATURE_SNAKE"
-    FEATURE_PATH="$FEATURE_SNAKE"
+# ====================== READ BASE PACKAGE (NO HARDCODING) ======================
+PATH_FILE=".path-to-packages"
+
+if [ ! -f "$PATH_FILE" ]; then
+  echo "❌ Error: $PATH_FILE not found!"
+  echo "   Run ./setup.sh first to set your package name."
+  exit 1
 fi
+
+BASE_PACKAGE=$(cat "$PATH_FILE" | tr -d ' \t\r\n')
+if [ -z "$BASE_PACKAGE" ]; then
+  echo "❌ Error: Package name in $PATH_FILE is empty!"
+  exit 1
+fi
+
+echo "📦 Using base package: $BASE_PACKAGE"
+
+# Parent Resolution
+if [ -n "$PARENT" ]; then
+    PARENT_SNAKE=$(to_snake_case "$PARENT")
+    FULL_PACKAGE="$BASE_PACKAGE.features.$PARENT_SNAKE.$FEATURE_SNAKE"
+else
+    FULL_PACKAGE="$BASE_PACKAGE.features.$FEATURE_SNAKE"
+    PARENT_SNAKE=""
+fi
+
+BASE_DIR="src/main/java/$(echo "$FULL_PACKAGE" | tr '.' '/')"
 
 HTTP_FILE="http-client.http"
 HTTP_MARKER="### FEATURE: $FEATURE_SNAKE"
